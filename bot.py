@@ -54,9 +54,9 @@ def SendHelpNonAdmin(message):
 
 def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
-    error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя:\n"
-    error_text += "Пример: @assassinsgwbot 13:40 14:00"
-    bot.send_message(chat_id, error_text)
+    error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
+    error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
+    bot.send_message(chat_id, error_text, parse_mode="markdown")
 
 @bot.callback_query_handler(func=lambda call: True)
 def battle_check_user(call):
