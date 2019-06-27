@@ -21,8 +21,22 @@ with open("TOKEN", "r") as tfile:
 
 bot = telebot.TeleBot(TOKEN)
 
-admins = {}
+ROOT_ADMIN = 187678932 # creator
+admins = { 187678932: "alex1489" }
+
 current_battle = None
+
+def IsUserAdmin(message):
+    global admins
+    if message.from_user.id in admins:
+        return True
+    else:
+        return False
+
+def IsInPrivateChat(message):
+    if message.chat.id == message.from_user.id:
+        return True
+    return False
 
 def CanStartNewBattle():
     global current_battle
@@ -30,6 +44,13 @@ def CanStartNewBattle():
     if not res:
         res = current_battle.is_postponed
     return res
+
+def SendHelpNonAdmin(message):
+    text =  "Извините, мной могут управлять только офицеры гильдии!\n"
+    text += "Обратитесь к одному из офицеров за подробностями:\n\n"
+    for admin in admins:
+        text += "[%s](tg://user?id=%d)\n" % (admins[admin], admin)
+    bot.send_message(message.chat.id, text, parse_mode="markdown")
 
 def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
@@ -72,6 +93,9 @@ def query_inline_text(q):
     global current_battle
     print(q)
     print(current_battle)
+    if not IsUserAdmin(q): # non-admins cannot post votes
+        bot.answer_callback_query(q.id)
+        return
     times = re.findall(r'(?:\d|[01]\d|2[0-3]):[0-5]\d', q.query)
     if times != [] and len(times) == 2:
         if CanStartNewBattle():
@@ -90,11 +114,36 @@ def query_inline_text(q):
             bot.answer_inline_query(q.id, [], is_personal=True, cache_time=30,
                                     switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
+@bot.message_handler(commands=["help"])
+def show_help(m):
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    userid = m.from_user.id
+    text =  "⚔️ Привет! Я военный бот гильдии *Assassins*\n"
+    text += "🎮 Игра: *Dungeon Hunter V*"
+    text += "\n📃 *Список моих команд*:\n"
+    text += "/help - вывод этой справки\n"
+    text += "/start - вывод информации о текущем бое (если есть).\n"
+    text += "/admin list - вывод текущего списка офицеров\n"
+    if userid == ROOT_ADMIN:
+        text += "/admin delete <ID> - удаление офицера по ID\n"
+    text += "\n*При наличии текущего боя:*\n"
+    text += "/bstart - начать бой\n"
+    text += "/bstop  - завершить/отменить бой\n"
+    bot.send_message(userid, text, parse_mode="markdown")
+
+
+
 @bot.message_handler(commands=['start'])
 def command_start(m):
     global current_battle
     print("start_message")
     print(m)
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
     if not CanStartNewBattle():
         text =  "Текущий бой: %0.2d:%0.2d / %0.2d:%0.2d\n" \
             % (current_battle.time["check"].hour, current_battle.time["check"].minute, 
@@ -108,6 +157,10 @@ def command_start(m):
 @bot.message_handler(commands=['bstart'])
 def command_battle_start(m):
     global current_battle
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
     if not CanStartNewBattle():
         text = "Запустить текущий бой [%0.2d / %0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
@@ -118,6 +171,10 @@ def command_battle_start(m):
 @bot.message_handler(commands=['bstop'])
 def command_battle_stop(m):
     global current_battle
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
     if not CanStartNewBattle():
         text = "Завершить текущий бой [%0.2d / %0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
@@ -125,9 +182,69 @@ def command_battle_stop(m):
     else:
         SendHelpNoBattle(m.chat.id)
 
+@bot.message_handler(commands=["admin"])
+def manage_admins(m):
+    global admins
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    userid = m.from_user.id
+    nick   = m.from_user.username
+    command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
+    if command == "": # save admin
+        # cannot use command in private chat
+        if IsInPrivateChat(m):
+            bot.send_message(userid, "Используйте команду /admin в военном чате, чтобы внести себя в список офицеров!")
+            return
+        for admin in bot.get_chat_administrators(m.chat.id):
+            if admin.user.id == userid:
+                if not userid in admins:
+                    admins[userid] = nick
+                    bot.send_message(userid, "Вы успешно добавлены в список офицеров!")
+                else:
+                    bot.send_message(userid, "Вы уже есть в списке офицеров!")
+                return
+        bot.send_message(userid, "Извините, вы не являетесь офицером чата '%s'" % m.chat.title)
+    elif command == "list": # list admins
+        text =  "Текущий список офицеров:\n\n"
+        for admin in admins:
+            if admin != ROOT_ADMIN:
+                if userid == ROOT_ADMIN: # show admins IDs for root admin
+                    text += "👤 %s _(ID=%d)_\n" % (admins[admin], admin)
+                else:
+                    text += "👤 %s\n" % admins[admin]
+            else:
+                text += "👁 %s _(администратор бота)_\n" % admins[admin]
+        if userid == ROOT_ADMIN:
+            text += "\nСписок действий:\n"
+            text += "/admin delete _ID_ - удалить офицера"
+        bot.send_message(userid, text, parse_mode="markdown")
+        return
+    elif command[:6] == "delete":
+        if userid == ROOT_ADMIN: # deleting admins is for root admin only
+            try:
+                admin_id = int(command.replace("delete ", ""))
+                if admin_id == ROOT_ADMIN:
+                    bot.send_message(userid, "Не могу удалить *%s* - это администратор бота." % admins[admin_id], parse_mode="markdown")
+                    return
+                if admin_id in admins:
+                    admin_nick = admins[admin_id]
+                    del admins[admin_id]
+                    bot.send_message(userid, "Офицер *%s* успешно удален." % admin_nick, parse_mode="markdown")
+                else:
+                    bot.send_message(userid, "Офицер c ID %d не найден." % admin_id)
+            except ValueError:
+                bot.send_message(userid, "Неверный фомат ID офицера.")
+    else:
+        bot.send_message(userid, "Неизвестная команда. Для справки используйте /help.")
+
 @bot.message_handler(func=lambda message: message.text in [buttonStart.text, buttonStop.text, buttonCancel.text])
 def battle_control(m):
     global current_battle
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
     markup = types.ReplyKeyboardRemove(selective=False)
     if m.text == buttonStart.text:
         current_battle.DoStartBattle()
@@ -142,20 +259,23 @@ def battle_control(m):
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
 
-
 @bot.message_handler(func=lambda message: True)
 def check_doubleshop(m):
-    global DOUBLESHOP_TIME_CALLED
-    print(m)
-    now = datetime.datetime.now()
-    time_to_check = [now.weekday(), now.hour, now.minute]
-    if now.weekday() == DOUBLESHOP_TIME[0]:
-        if now.hour >= DOUBLESHOP_TIME[1][0] and now.hour <= DOUBLESHOP_TIME[2][0]:
-            if now.minute >= DOUBLESHOP_TIME[1][1] and now.minute <= DOUBLESHOP_TIME[2][1]:
-                if not DOUBLESHOP_TIME_CALLED:
-                    bot.send_message(m.chat.id, "*Двойная закупка в лавке гильдии!*", parse_mode="markdown")
-                    DOUBLESHOP_TIME_CALLED = True
-    else:
-        DOUBLESHOP_TIME_CALLED = False
+    if not IsInPrivateChat(m):
+        global DOUBLESHOP_TIME_CALLED
+        # print(m)
+        now = datetime.datetime.now()
+        time_to_check = [now.weekday(), now.hour, now.minute]
+        if now.weekday() == DOUBLESHOP_TIME[0]:
+            if now.hour >= DOUBLESHOP_TIME[1][0] and now.hour <= DOUBLESHOP_TIME[2][0]:
+                if now.minute >= DOUBLESHOP_TIME[1][1] and now.minute <= DOUBLESHOP_TIME[2][1]:
+                    if not DOUBLESHOP_TIME_CALLED:
+                        bot.send_message(m.chat.id, "💰 *Двойная закупка в лавке гильдии!*", parse_mode="markdown")
+                        DOUBLESHOP_TIME_CALLED = True
+        else:
+            DOUBLESHOP_TIME_CALLED = False
+    elif not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+
 
 bot.polling(none_stop=False, interval=0, timeout=20)
