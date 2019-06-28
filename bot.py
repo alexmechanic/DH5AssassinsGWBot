@@ -8,6 +8,7 @@
 
 import telebot, datetime, re
 from battle import *
+from warprecheck import *
 from telebot import types
 from keyboards import *
 
@@ -25,6 +26,7 @@ ROOT_ADMIN = 187678932 # creator
 admins = { 187678932: "alex1489" }
 
 current_battle = None
+current_precheck = None
 time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
 
 #####################
@@ -42,12 +44,25 @@ def IsInPrivateChat(message):
         return True
     return False
 
+def CanStartNewPrecheck():
+    global current_precheck
+    res = current_precheck == None
+    if not res:
+        res = current_precheck.is_postponed
+    return res
+
 def CanStartNewBattle():
     global current_battle
     res = current_battle == None
     if not res:
         res = current_battle.is_postponed
     return res
+
+def IsCheckTime(query): # return if query contains check time and check time list
+    times = re.findall(time_pattern, query.query)
+    if times != [] and len(times) == 2:
+        return True, times
+    return False, None
 
 def SendHelpNonAdmin(message):
     text =  "Извините, мной могут управлять только офицеры гильдии!\n"
@@ -66,6 +81,78 @@ def SendHelpNoBattle(chat_id):
 # Callback handlers #
 #####################
 
+#
+# GW Pre-check
+#
+@bot.callback_query_handler(func=lambda call: call.data in PRECHECK_OPTIONS)
+def precheck_check_user(call):
+    global current_precheck
+    # print("precheck_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    userChoice = call.data
+    if message_id == current_precheck.check_id:
+        ret = current_precheck.CheckUser(user, userChoice)
+        if (ret):
+            bot.edit_message_text(current_precheck.GetText(), inline_message_id=message_id, 
+                                parse_mode="markdown", reply_markup=KEYBOARD_PRECHECK)
+            bot.answer_callback_query(call.id, current_precheck.GetVotedText(user, userChoice))
+        else:
+            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice)
+        return
+    print("ERROR: pre-check not found!")
+
+@bot.callback_query_handler(func=lambda call: call.data in PRECHECK_CONTROL_OPTIONS)
+def precheck_control(call):
+    global current_precheck
+    # print("precheck_control")
+    # print(call)
+    if not IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком!")
+        return
+    userChoice = call.data
+    if userChoice == PRECHECK_CONTROL_OPTIONS[0]: # stop
+        current_precheck.DoEndPrecheck()
+        bot.edit_message_text(current_precheck.GetText(), inline_message_id=current_precheck.check_id, 
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Чек завершен")
+        return
+    print("ERROR: pre-check not found!")
+
+@bot.chosen_inline_handler(lambda result: result.result_id == '1')
+def precheck_init_vote(r):
+    global current_precheck
+    # print("battle_init_vote")
+    # print(r)
+    current_precheck = WarPreCheck()
+    current_precheck.SetMessageID(r.inline_message_id)
+
+@bot.inline_handler(lambda query: query.query == "precheck")
+def query_inline_precheck(q):
+    global current_precheck
+    # print("query_inline_precheck")
+    # print(q)
+    if not IsUserAdmin(q): # non-admins cannot post votes
+        SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if CanStartNewBattle():
+        res = types.InlineQueryResultArticle('1',
+                                            'Создать чек перед ВГ ✅💤❌', 
+                                            types.InputTextMessageContent(WarPreCheck().GetHeader(),
+                                            parse_mode="markdown"),
+                                            reply_markup=KEYBOARD_PRECHECK)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
+    else:
+        print("ERROR: trying to set another pre-check while current is not finished")
+        error_text = "Уже имеется активный чек"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=30,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
+
+#
+# Battle check
+#
 @bot.callback_query_handler(func=lambda call: call.data in CHECK_OPTIONS)
 def battle_check_user(call):
     global current_battle
