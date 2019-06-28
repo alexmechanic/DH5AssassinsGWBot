@@ -30,29 +30,29 @@ class WarPreCheck():
         self.is_postponed = True
 
     def GetHeader(self):
-        return "*Чек перед ВГ:*"
+        return "📝 *Чек перед ВГ:*\n"
 
     def GetText(self):
         text = self.GetHeader()
-        text += "\n🛑 Голование завершено 🛑" * self.is_postponed
+        text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
-        text += ("\n\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)) * len(self.friday)
+        text += ("\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)) * len(self.friday)
         for user in self.friday:
             text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.friday[user][0], self.friday[user][1], user)
 
-        text += ("\n\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)) * len(self.saturday)
+        text += ("\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)) * len(self.saturday)
         for user in self.saturday:
             text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.saturday[user][0], self.saturday[user][1], user)
 
-        text += ("\n\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)) * len(self.sunday)
+        text += ("\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)) * len(self.sunday)
         for user in self.sunday:
             text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.sunday[user][0], self.sunday[user][1], user)
 
-        text += ("\n\n" + "*Думают (%d):*\n" % len(self.thinking)) * len(self.thinking)
+        text += ("\n" + "*Думают (%d):*\n" % len(self.thinking)) * len(self.thinking)
         for user in self.thinking:
             text += ICON_THINK + " [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
 
-        text += ("\n\n" + "*Не идут (%d):*\n" % len(self.cancels)) * len(self.cancels)
+        text += ("\n" + "*Не идут (%d):*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
             text += ICON_CANCEL + " [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
 

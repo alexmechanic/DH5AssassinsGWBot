@@ -47,23 +47,23 @@ class Battle():
         self.is_postponed = True
 
     def GetHeader(self):
-        text = "*Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d" \
+        text = "⚔️ *Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d\n" \
                 % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute)
         return text
 
     def GetText(self):
         text = self.GetHeader()
-        text += "\n❗ Бой начался ❗" * (self.is_started and not self.is_postponed)
+        text += "❗ Бой начался ❗\n" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
-            text += "\n🛑 Бой"
+            text += "🛑 Бой"
             if self.is_started:
                 text += " завершился "
             else:
                 text += " отменен "
-            text += "в %0.2d:%0.2d 🛑" % (self.time["end"].hour, self.time["end"].minute)
+            text += "в %0.2d:%0.2d 🛑\n" % (self.time["end"].hour, self.time["end"].minute)
 
         if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
-            text += "\n\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
+            text += "\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
         for user in self.checks:
             text += ICON_CHECK + " [%s (%s)](tg://user?id=%d)\n" % (self.checks[user][0], self.checks[user][1], user)
         for user in self.rages:
@@ -71,19 +71,19 @@ class Battle():
         for user in self.fasts:
             text += ICON_FAST + " [%s (%s)](tg://user?id=%d)\n" % (self.fasts[user][0], self.fasts[user][1], user)
 
-        text += ("\n\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
+        text += ("\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
         for user in self.arsenals:
             text += ICON_ARS + " [%s (%s)](tg://user?id=%d)\n" % (self.arsenals[user][0], self.arsenals[user][1], user)
 
-        text += ("\n\n" + "*%d думают:*\n" % len(self.thinking)) * len(self.thinking)
+        text += ("\n" + "*%d думают:*\n" % len(self.thinking)) * len(self.thinking)
         for user in self.thinking:
             text += ICON_THINK + " [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
 
-        text += ("\n\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
+        text += ("\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
             text += ICON_CANCEL + " [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
 
-        text += ("\n\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
+        text += ("\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
         for user in self.lates:
             text += ICON_LATE + " [%s (%s)](tg://user?id=%d)\n" % (self.lates[user][0], self.lates[user][1], user)
         return text
