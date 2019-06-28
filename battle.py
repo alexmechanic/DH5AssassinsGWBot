@@ -130,11 +130,11 @@ class Battle():
             if userid == user: # cannot check more than once
                 return False
         # remove user from other lists
-        if (userid in self.rages): del self.rages[userid]
-        if (userid in self.arsenals): del self.arsenals[userid]
-        if (userid in self.fasts): del self.fasts[userid]
-        if (userid in self.thinking): del self.thinking[userid]
-        if (userid in self.cancels): del self.cancels[userid]
+        if userid in self.rages: del self.rages[userid]
+        if userid in self.arsenals: del self.arsenals[userid]
+        if userid in self.fasts: del self.fasts[userid]
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.cancels: del self.cancels[userid]
         self.checks[userid] = [name, nick]
         return True
 
@@ -146,11 +146,11 @@ class Battle():
             if userid == user: # cannot check more than once
                 return False
         # remove user from other lists
-        if (userid in self.checks): del self.checks[userid]
-        if (userid in self.arsenals): del self.arsenals[userid]
-        if (userid in self.fasts): del self.fasts[userid]
-        if (userid in self.thinking): del self.thinking[userid]
-        if (userid in self.cancels): del self.cancels[userid]
+        if userid in self.checks: del self.checks[userid]
+        if userid in self.arsenals: del self.arsenals[userid]
+        if userid in self.fasts: del self.fasts[userid]
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.cancels: del self.cancels[userid]
         self.rages[userid] = [name, nick]
         return True
 
@@ -162,11 +162,11 @@ class Battle():
             if userid == user: # cannot check more than once
                 return False
         # remove user from other lists
-        if (userid in self.checks): del self.checks[userid]
-        if (userid in self.rages): del self.rages[userid]
-        if (userid in self.arsenals): del self.arsenals[userid]
-        if (userid in self.thinking): del self.thinking[userid]
-        if (userid in self.cancels): del self.cancels[userid]
+        if userid in self.checks: del self.checks[userid]
+        if userid in self.rages: del self.rages[userid]
+        if userid in self.arsenals: del self.arsenals[userid]
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.cancels: del self.cancels[userid]
         self.fasts[userid] = [name, nick]
         return True
 
@@ -178,11 +178,11 @@ class Battle():
             if userid == user: # cannot check more than once
                 return False
         # remove user from other lists
-        if (userid in self.checks): del self.checks[userid]
-        if (userid in self.rages): del self.rages[userid]
-        if (userid in self.fasts): del self.fasts[userid]
-        if (userid in self.thinking): del self.thinking[userid]
-        if (userid in self.cancels): del self.cancels[userid]
+        if userid in self.checks: del self.checks[userid]
+        if userid in self.rages: del self.rages[userid]
+        if userid in self.fasts: del self.fasts[userid]
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.cancels: del self.cancels[userid]
         self.arsenals[userid] = [name, nick]
         return True
 
@@ -194,11 +194,11 @@ class Battle():
             if userid == user: # cannot think more than once
                 return False
         # remove user from other lists
-        if (userid in self.checks): del self.checks[userid]
-        if (userid in self.rages): del self.rages[userid]
-        if (userid in self.fasts): del self.fasts[userid]
-        if (userid in self.arsenals): del self.arsenals[userid]
-        if (userid in self.cancels): del self.cancels[userid]
+        if userid in self.checks: del self.checks[userid]
+        if userid in self.rages: del self.rages[userid]
+        if userid in self.fasts: del self.fasts[userid]
+        if userid in self.arsenals: del self.arsenals[userid]
+        if userid in self.cancels: del self.cancels[userid]
         self.thinking[userid] = [name, nick]
         return True
 
@@ -210,12 +210,12 @@ class Battle():
             if userid == user: # cannot cancel more than once
                 return False
         # remove user from other lists
-        if (userid in self.checks): del self.checks[userid]
-        if (userid in self.rages): del self.rages[userid]
-        if (userid in self.fasts): del self.fasts[userid]
-        if (userid in self.arsenals): del self.arsenals[userid]
-        if (userid in self.thinking): del self.thinking[userid]
-        if (userid in self.lates): del self.lates[userid]
+        if userid in self.checks: del self.checks[userid]
+        if userid in self.rages: del self.rages[userid]
+        if userid in self.fasts: del self.fasts[userid]
+        if userid in self.arsenals: del self.arsenals[userid]
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.lates: del self.lates[userid]
         self.cancels[userid] = [name, nick]
         return True
 
@@ -232,5 +232,6 @@ class Battle():
             userid in self.arsenals:
             return False
         if userid in self.cancels: del self.cancels[userid]
+        if userid in self.thinking: del self.thinking[userid]
         self.lates[userid] = [name, nick]
         return True
