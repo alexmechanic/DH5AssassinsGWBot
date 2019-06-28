@@ -89,36 +89,36 @@ class Battle():
         return text
 
     def GetVotedText(self, action):
-        if action == ICON_CHECK:
+        if action == CHECK_CHECK_CALLBACK:
             return action + " Вы идете. Ожидайте росписи!"
-        if action == ICON_RAGE:
+        elif action == CHECK_RAGE_CALLBACK:
             return action + " Вы придете к ярости"
-        if action == ICON_FAST:
+        elif action == CHECK_FAST_CALLBACK:
             return action + " Вы сливаете энку"
-        elif action == ICON_ARS:
+        elif action == CHECK_ARS_CALLBACK:
             return action + " Вы идете только в арсенал. Не атакуйте без росписи!"
-        elif action == ICON_THINK:
+        elif action == CHECK_THINK_CALLBACK:
             return action + " Вы еще не решили. Постарайтесь определиться к началу боя!"
-        elif action == ICON_CANCEL:
+        elif action == CHECK_CANCEL_CALLBACK:
             return action + " Вы не придете на бой. Жаль"
-        elif action == ICON_LATE:
+        elif action == CHECK_LATE_CALLBACK:
             return action + " Вы опоздали к началу. Дождитесь росписи от офицера!"
 
     def CheckUser(self, user, action):
         ret = True
-        if action == ICON_CHECK:
+        if action == CHECK_CHECK_CALLBACK:
             ret = self.SetCheck(user)
-        if action == ICON_FAST:
-            ret = self.SetFast(user)
-        if action == ICON_RAGE:
+        elif action == CHECK_RAGE_CALLBACK:
             ret = self.SetRageOnly(user)
-        elif action == ICON_ARS:
+        elif action == CHECK_FAST_CALLBACK:
+            ret = self.SetFast(user)
+        elif action == CHECK_ARS_CALLBACK:
             ret = self.SetArsenalOnly(user)
-        elif action == ICON_THINK:
+        elif action == CHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
-        elif action == ICON_CANCEL:
+        elif action == CHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
-        elif action == ICON_LATE:
+        elif action == CHECK_LATE_CALLBACK:
             ret = self.SetLate(user)
         return ret
 
