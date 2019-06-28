@@ -231,6 +231,33 @@ def battle_query_inline(q):
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=30,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
+#
+# Urgent message from non-admin user
+#
+@bot.chosen_inline_handler(lambda result: result.result_id == '2')
+def urgent_remind_user(r):
+    # print("urgent_remind_user")
+    # print(r)
+    bot.send_message(r.from_user.id, "Пожалуйста, не забывайте, что " + 
+                     "отправлять в военный чат следует только особо важные сведения!")
+
+@bot.inline_handler(lambda query: query.query[:3] == "!!!")
+def urgent_query_inline(q):
+    # print("query_inline_urgent")
+    # print(q)
+    if IsUserAdmin(q): # non-admins cannot post votes
+        bot.send_message(q.from_user.id, "Офицеры могут писать сообщения в чат напрямую.")
+        bot.answer_callback_query(q.id)
+        return
+    text =  "[%s (%s)](tg://user?id=%d):" % (q.from_user.first_name, q.from_user.username, q.from_user.id)
+    message = q.query.replace("!!!", "")
+    if message != "" or message != " ":
+        text += message
+        urgent_message = types.InputTextMessageContent(text, parse_mode="markdown")
+        res = types.InlineQueryResultArticle('2',
+                                             '‼️ Отправить срочное сообщение', 
+                                             urgent_message)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
 
 ###################
 # Command handlers #
