@@ -26,6 +26,9 @@ admins = { 187678932: "alex1489" }
 
 current_battle = None
 
+#####################
+# Support functions #
+#####################
 def IsUserAdmin(message):
     global admins
     if message.from_user.id in admins:
@@ -58,11 +61,18 @@ def SendHelpNoBattle(chat_id):
     error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
     bot.send_message(chat_id, error_text, parse_mode="markdown")
 
-@bot.callback_query_handler(func=lambda call: True)
+#####################
+# Callback handlers #
+#####################
+@bot.callback_query_handler(func=lambda call: call.data == "spacer")
+def battle_spacer_pressed(call):
+    bot.answer_callback_query(call.id, "") # just do nothing
+
+@bot.callback_query_handler(func=lambda call: call.data in CHECK_OPTIONS)
 def battle_check_user(call):
     global current_battle
-    print("check_user")
-    print(call)
+    # print("battle_check_user")
+    # print(call)
     message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
@@ -74,29 +84,54 @@ def battle_check_user(call):
                 markup = KEYBOARD_LATE
             bot.edit_message_text(current_battle.GetText(), inline_message_id=message_id, 
                                 parse_mode="markdown", reply_markup=markup)
+            bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
+        else:
+            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice)
+        return
+    print("ERROR: battle not found!")
+
+@bot.callback_query_handler(func=lambda call: call.data in CONTROL_OPTIONS)
+def battle_control(call):
+    global current_battle
+    # print("battle_control")
+    # print(call)
+    if not IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
+        return
+    userChoice = call.data
+    if userChoice == CONTROL_OPTIONS[0]: # start
+        current_battle.DoStartBattle()
+        bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
+                              parse_mode="markdown", reply_markup=KEYBOARD_LATE)
+        bot.answer_callback_query(call.id, "⚔️ Бой запущен")
+        return
+    elif userChoice == CONTROL_OPTIONS[1]: # stop
+        current_battle.DoEndBattle()
+        bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Бой завершен")
         return
     print("ERROR: battle not found!")
 
 @bot.chosen_inline_handler(lambda chosen_inline_result: True)
 def battle_init_vote(r):
     global current_battle
-    print("test_chosen")
-    print(r)
+    # print("battle_init_vote")
+    # print(r)
     if r.result_id == '0':
-        times = re.findall(r'(?:\d|[01]\d|2[0-3]):[0-5]\d', r.query)
+        times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', r.query)
         current_battle = Battle(times[0], times[1])
         current_battle.SetMessageID(r.inline_message_id)
-
 
 @bot.inline_handler(lambda query: True)
 def query_inline_text(q):
     global current_battle
-    print(q)
-    print(current_battle)
+    # print("query_inline_text")
+    # print(q)
     if not IsUserAdmin(q): # non-admins cannot post votes
         bot.answer_callback_query(q.id)
         return
-    times = re.findall(r'(?:\d|[01]\d|2[0-3]):[0-5]\d', q.query)
+    times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', q.query)
     if times != [] and len(times) == 2:
         if CanStartNewBattle():
             new_battle = Battle(times[0], times[1]) # here we create new battle just to get complete message text below
@@ -105,7 +140,6 @@ def query_inline_text(q):
                                                 types.InputTextMessageContent(new_battle.GetText(),
                                                 parse_mode="markdown"),
                                                 reply_markup=KEYBOARD_CHECK)
-            bot.answer_callback_query(q.id)
             bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
         else:
             print("ERROR: trying to set another battle while current is not finished")
@@ -114,6 +148,10 @@ def query_inline_text(q):
             bot.answer_inline_query(q.id, [], is_personal=True, cache_time=30,
                                     switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
+
+###################
+# Comand handlers #
+###################
 @bot.message_handler(commands=["help"])
 def show_help(m):
     if not IsUserAdmin(m):
@@ -133,13 +171,11 @@ def show_help(m):
     text += "/bstop  - завершить/отменить бой\n"
     bot.send_message(userid, text, parse_mode="markdown")
 
-
-
 @bot.message_handler(commands=['start'])
 def command_start(m):
     global current_battle
-    print("start_message")
-    print(m)
+    # print("start_message")
+    # print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
@@ -162,7 +198,7 @@ def command_battle_start(m):
         SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
-        text = "Запустить текущий бой [%0.2d / %0.2d]?" \
+        text = "Запустить текущий бой [%0.2d:%0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=KEYBOARD_START)
     else:
@@ -176,7 +212,7 @@ def command_battle_stop(m):
         SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
-        text = "Завершить текущий бой [%0.2d / %0.2d]?" \
+        text = "Завершить текущий бой [%0.2d:%0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=KEYBOARD_STOP)
     else:
@@ -278,4 +314,4 @@ def check_doubleshop(m):
         SendHelpNonAdmin(m)
 
 
-bot.polling(none_stop=False, interval=0, timeout=20)
+bot.polling(none_stop=True, interval=0, timeout=20)
