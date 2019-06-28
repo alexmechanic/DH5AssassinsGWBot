@@ -184,13 +184,13 @@ def battle_control(call):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
         return
     userChoice = call.data
-    if userChoice == CONTROL_OPTIONS[0]: # start
+    if userChoice == CHECK_CONTROL_OPTIONS[0]: # start
         current_battle.DoStartBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown", reply_markup=KEYBOARD_LATE)
         bot.answer_callback_query(call.id, "⚔️ Бой запущен")
         return
-    elif userChoice == CONTROL_OPTIONS[1]: # stop
+    elif userChoice == CHECK_CONTROL_OPTIONS[1]: # stop
         current_battle.DoEndBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown")
