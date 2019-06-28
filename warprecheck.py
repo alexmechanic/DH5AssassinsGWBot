@@ -72,6 +72,8 @@ class WarPreCheck():
             if user[0] not in self.sunday:
                 text += "не "
             return text + "участвуете в воскресенье"
+        elif action == PRECHECK_FULL_CALLBACK:
+            return text + "участвуете все дни"
         elif action == PRECHECK_THINK_CALLBACK:
             return text + "еще не решили. Постарайтесь определиться к началу ВГ!"
         elif action == PRECHECK_CANCEL_CALLBACK:
@@ -85,6 +87,8 @@ class WarPreCheck():
             ret = self.SetSaturday(user)
         if action == PRECHECK_SUN_CALLBACK:
             ret = self.SetSunday(user)
+        elif action == PRECHECK_FULL_CALLBACK:
+            ret = self.SetFull(user)
         elif action == PRECHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
         elif action == PRECHECK_CANCEL_CALLBACK:
@@ -124,6 +128,21 @@ class WarPreCheck():
         if userid in self.sunday: # if already checked - uncheck
             del self.sunday[userid]
         else: # if not - check
+            self.sunday[userid] = [name, nick]
+        # remove user from other lists
+        if userid in self.thinking: del self.thinking[userid]
+        if userid in self.cancels: del self.cancels[userid]
+        return True
+
+    def SetFull(self, user):
+        userid = user[0]
+        nick = user[1]
+        name = user[2]
+        if userid not in self.friday:
+            self.friday[userid] = [name, nick]
+        if userid not in self.saturday:
+            self.saturday[userid] = [name, nick]
+        if userid not in self.sunday:
             self.sunday[userid] = [name, nick]
         # remove user from other lists
         if userid in self.thinking: del self.thinking[userid]

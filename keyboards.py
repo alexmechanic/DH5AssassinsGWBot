@@ -55,17 +55,18 @@ KEYBOARD_PRECHECK = types.InlineKeyboardMarkup(row_width=3)
 buttonFr = types.InlineKeyboardButton(text=ICON_FR, callback_data=PRECHECK_FR_CALLBACK)
 buttonSat = types.InlineKeyboardButton(text=ICON_SAT, callback_data=PRECHECK_SAT_CALLBACK)
 buttonSun = types.InlineKeyboardButton(text=ICON_SUN, callback_data=PRECHECK_SUN_CALLBACK)
+buttonFull = types.InlineKeyboardButton(text=ICON_CHECK, callback_data=PRECHECK_FULL_CALLBACK)
 buttonThinking = types.InlineKeyboardButton(text=ICON_THINK, callback_data=PRECHECK_THINK_CALLBACK)
-buttonSpacer = types.InlineKeyboardButton(text=" ", callback_data="PreCheck_spacer")
 buttonCancel = types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=PRECHECK_CANCEL_CALLBACK)
 buttonStop = types.InlineKeyboardButton(text=ICON_STOP, callback_data=PRECHECK_STOP_CALLBACK)
 KEYBOARD_PRECHECK.add(buttonFr, buttonSat, buttonSun,
-                      buttonThinking, buttonSpacer, buttonCancel,
+                      buttonFull, buttonThinking, buttonCancel,
                       buttonStop)
 
 PRECHECK_OPTIONS = [buttonFr.callback_data,
                     buttonSat.callback_data,
                     buttonSun.callback_data,
+                    buttonFull.callback_data,
                     buttonThinking.callback_data,
                     buttonCancel.callback_data,
                    ]
