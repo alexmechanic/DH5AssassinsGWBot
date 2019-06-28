@@ -129,7 +129,7 @@ def precheck_init_vote(r):
     current_precheck.SetMessageID(r.inline_message_id)
 
 @bot.inline_handler(lambda query: query.query == "precheck")
-def query_inline_precheck(q):
+def precheck_query_inline(q):
     global current_precheck
     # print("query_inline_precheck")
     # print(q)
@@ -208,7 +208,7 @@ def battle_init_vote(r):
     current_battle.SetMessageID(r.inline_message_id)
 
 @bot.inline_handler(lambda query: IsCheckTime(query)[0])
-def query_inline_check(q):
+def battle_query_inline(q):
     global current_battle
     # print("query_inline_check")
     # print(q)
@@ -233,7 +233,7 @@ def query_inline_check(q):
 
 
 ###################
-# Comand handlers #
+# Command handlers #
 ###################
 @bot.message_handler(commands=["help"])
 def show_help(m):
