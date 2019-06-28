@@ -65,7 +65,7 @@ def IsCheckTime(query): # return if query contains check time and check time lis
     return False, None
 
 def SendHelpNonAdmin(message):
-    text =  "Извините, мной могут управлять только офицеры гильдии!\n"
+    text =  "Мной могут управлять только офицеры гильдии.\n"
     text += "Обратитесь к одному из офицеров за подробностями:\n\n"
     for admin in admins:
         text += "[%s](tg://user?id=%d)\n" % (admins[admin], admin)
@@ -264,22 +264,28 @@ def urgent_query_inline(q):
 ###################
 @bot.message_handler(commands=["help"])
 def show_help(m):
-    if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
-        return
     userid = m.from_user.id
     text =  "⚔️ Привет! Я военный бот гильдии *Assassins*\n"
     text += "🎮 Игра: *Dungeon Hunter V*"
-    text += "\n📃 *Список моих команд*:\n"
+    text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
-    text += "/start - вывод информации о текущем бое (если есть).\n"
-    text += "/admin list - вывод текущего списка офицеров\n"
-    if userid == ROOT_ADMIN:
-        text += "/admin delete <ID> - удаление офицера по ID\n"
-    text += "\n*При наличии текущего боя:*\n"
-    text += "/bstart - начать бой\n"
-    text += "/bstop  - завершить/отменить бой\n"
+    if IsUserAdmin(m):
+        text += "/start - вывод информации о текущем бое (если есть).\n"
+        text += "/admin list - вывод текущего списка офицеров\n"
+        if userid == ROOT_ADMIN:
+            text += "/admin delete <ID> - удаление офицера по ID\n"
+        text += "\n*При наличии текущего боя:*\n"
+        text += "/bstart - начать бой\n"
+        text += "/bstop  - завершить/отменить бой\n"
+        text += "\n*В военном чате:*\n" + \
+                "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
+                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой"
+    if not IsUserAdmin(m):
+        text += "\n*В военном чате:*\n" + \
+                "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
     bot.send_message(userid, text, parse_mode="markdown")
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
 
 @bot.message_handler(commands=['start'])
 def command_start(m):
