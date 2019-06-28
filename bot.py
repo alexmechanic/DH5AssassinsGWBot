@@ -25,6 +25,7 @@ ROOT_ADMIN = 187678932 # creator
 admins = { 187678932: "alex1489" }
 
 current_battle = None
+time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
 
 #####################
 # Support functions #
@@ -53,7 +54,7 @@ def SendHelpNonAdmin(message):
     text += "Обратитесь к одному из офицеров за подробностями:\n\n"
     for admin in admins:
         text += "[%s](tg://user?id=%d)\n" % (admins[admin], admin)
-    bot.send_message(message.chat.id, text, parse_mode="markdown")
+    bot.send_message(message.from_user.id, text, parse_mode="markdown")
 
 def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
@@ -64,9 +65,6 @@ def SendHelpNoBattle(chat_id):
 #####################
 # Callback handlers #
 #####################
-@bot.callback_query_handler(func=lambda call: call.data == "spacer")
-def battle_spacer_pressed(call):
-    bot.answer_callback_query(call.id, "") # just do nothing
 
 @bot.callback_query_handler(func=lambda call: call.data in CHECK_OPTIONS)
 def battle_check_user(call):
@@ -119,7 +117,7 @@ def battle_init_vote(r):
     # print("battle_init_vote")
     # print(r)
     if r.result_id == '0':
-        times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', r.query)
+        times = re.findall(time_pattern, r.query)
         current_battle = Battle(times[0], times[1])
         current_battle.SetMessageID(r.inline_message_id)
 
@@ -129,9 +127,10 @@ def query_inline_text(q):
     # print("query_inline_text")
     # print(q)
     if not IsUserAdmin(q): # non-admins cannot post votes
+        SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', q.query)
+    times = re.findall(time_pattern, q.query)
     if times != [] and len(times) == 2:
         if CanStartNewBattle():
             new_battle = Battle(times[0], times[1]) # here we create new battle just to get complete message text below
@@ -174,7 +173,7 @@ def show_help(m):
 @bot.message_handler(commands=['start'])
 def command_start(m):
     global current_battle
-    # print("start_message")
+    # print("command_start")
     # print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
@@ -274,7 +273,7 @@ def manage_admins(m):
     else:
         bot.send_message(userid, "Неизвестная команда. Для справки используйте /help.")
 
-@bot.message_handler(func=lambda message: message.text in [buttonStart.text, buttonStop.text, buttonCancel.text])
+@bot.message_handler(func=lambda message: message.text in CONTROL_OPTIONS_PRIVATE)
 def battle_control(m):
     global current_battle
     if not IsInPrivateChat(m): return

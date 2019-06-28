@@ -3,9 +3,9 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
-#
 
 import datetime
+from icons import *
 
 class Battle():
     check_id = None
@@ -14,9 +14,10 @@ class Battle():
     is_postponed = False
     checks = {}
     rages = {}
-    cancels = {}
-    thinking = {}
+    fasts = {}
     arsenals = {}
+    thinking = {}
+    cancels = {}
     lates = {}
 
     def __init__(self, check, start):
@@ -25,13 +26,14 @@ class Battle():
         self.time["start"] = now.replace(hour=int(start[:2]), minute=int(start[3:]))
         self.checks = {}
         self.rages = {}
-        self.cancels = {}
-        self.thinking = {}
+        self.fasts = {}
         self.arsenals = {}
+        self.thinking = {}
+        self.cancels = {}
         self.lates = {}
 
     def SetMessageID(self, message_id):
-        print("Set ID: " + str(message_id))
+        # print("Set ID: " + str(message_id))
         self.check_id = message_id
 
     def DoStartBattle(self):
@@ -53,59 +55,70 @@ class Battle():
         text = self.GetHeader()
         text += "\n❗ Бой начался ❗" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
-            text += "\n🛑 Бой завершился в %0.2d:%0.2d 🛑" % (self.time["end"].hour, self.time["end"].minute)
+            text += "\n🛑 Бой"
+            if self.is_started:
+                text += " завершился "
+            else:
+                text += " отменен "
+            text += "в %0.2d:%0.2d 🛑" % (self.time["end"].hour, self.time["end"].minute)
 
-        if len(self.checks) + len(self.rages) > 0:
-            text += "\n\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages))
+        if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
+            text += "\n\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
         for user in self.checks:
-            text += "✅ [%s (%s)](tg://user?id=%d)\n" % (self.checks[user][0], self.checks[user][1], user)
+            text += ICON_CHECK + " [%s (%s)](tg://user?id=%d)\n" % (self.checks[user][0], self.checks[user][1], user)
         for user in self.rages:
-            text += "🔥 [%s (%s)](tg://user?id=%d)\n" % (self.rages[user][0], self.rages[user][1], user)
+            text += ICON_RAGE + " [%s (%s)](tg://user?id=%d)\n" % (self.rages[user][0], self.rages[user][1], user)
+        for user in self.fasts:
+            text += ICON_FAST + " [%s (%s)](tg://user?id=%d)\n" % (self.fasts[user][0], self.fasts[user][1], user)
 
         text += ("\n\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
         for user in self.arsenals:
-            text += "📦 [%s (%s)](tg://user?id=%d)\n" % (self.arsenals[user][0], self.arsenals[user][1], user)
+            text += ICON_ARS + " [%s (%s)](tg://user?id=%d)\n" % (self.arsenals[user][0], self.arsenals[user][1], user)
 
         text += ("\n\n" + "*%d думают:*\n" % len(self.thinking)) * len(self.thinking)
         for user in self.thinking:
-            text += "💤 [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
+            text += ICON_THINK + " [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
 
         text += ("\n\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
-            text += "❌ [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
+            text += ICON_CANCEL + " [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
 
         text += ("\n\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
         for user in self.lates:
-            text += "⏰ [%s (%s)](tg://user?id=%d)\n" % (self.lates[user][0], self.lates[user][1], user)
+            text += ICON_LATE + " [%s (%s)](tg://user?id=%d)\n" % (self.lates[user][0], self.lates[user][1], user)
         return text
 
     def GetVotedText(self, action):
-        if action == "✅":
-            return "✅ Вы идете. Ожидайте росписи!"
-        if action == "🔥":
-            return "🔥 Вы придете к ярости"
-        elif action == "📦":
-            return "📦 Вы идете только в арсенал.\nНе атакуйте без росписи!"
-        elif action == "💤":
-            return "💤 Вы еще не решили.\nПостарайтесь определиться к началу боя!"
-        elif action == "❌":
-            return "❌ Вы не придете на бой. Жаль"
-        elif action == "⏰":
-            return "⏰ Вы опоздали к началу.\nДождитесь росписи от офицера!"
+        if action == ICON_CHECK:
+            return action + " Вы идете. Ожидайте росписи!"
+        if action == ICON_RAGE:
+            return action + " Вы придете к ярости"
+        if action == ICON_FAST:
+            return action + " Вы сливаете энку"
+        elif action == ICON_ARS:
+            return action + " Вы идете только в арсенал. Не атакуйте без росписи!"
+        elif action == ICON_THINK:
+            return action + " Вы еще не решили. Постарайтесь определиться к началу боя!"
+        elif action == ICON_CANCEL:
+            return action + " Вы не придете на бой. Жаль"
+        elif action == ICON_LATE:
+            return action + " Вы опоздали к началу. Дождитесь росписи от офицера!"
 
     def CheckUser(self, user, action):
         ret = True
-        if action == "✅":
+        if action == ICON_CHECK:
             ret = self.SetCheck(user)
-        if action == "🔥":
+        if action == ICON_FAST:
+            ret = self.SetFast(user)
+        if action == ICON_RAGE:
             ret = self.SetRageOnly(user)
-        elif action == "📦":
+        elif action == ICON_ARS:
             ret = self.SetArsenalOnly(user)
-        elif action == "💤":
+        elif action == ICON_THINK:
             ret = self.SetThinking(user)
-        elif action == "❌":
+        elif action == ICON_CANCEL:
             ret = self.SetCancel(user)
-        elif action == "⏰":
+        elif action == ICON_LATE:
             ret = self.SetLate(user)
         return ret
 
@@ -119,6 +132,7 @@ class Battle():
         # remove user from other lists
         if (userid in self.rages): del self.rages[userid]
         if (userid in self.arsenals): del self.arsenals[userid]
+        if (userid in self.fasts): del self.fasts[userid]
         if (userid in self.thinking): del self.thinking[userid]
         if (userid in self.cancels): del self.cancels[userid]
         self.checks[userid] = [name, nick]
@@ -134,9 +148,26 @@ class Battle():
         # remove user from other lists
         if (userid in self.checks): del self.checks[userid]
         if (userid in self.arsenals): del self.arsenals[userid]
+        if (userid in self.fasts): del self.fasts[userid]
         if (userid in self.thinking): del self.thinking[userid]
         if (userid in self.cancels): del self.cancels[userid]
         self.rages[userid] = [name, nick]
+        return True
+
+    def SetFast(self, user):
+        userid = user[0]
+        nick = user[1]
+        name = user[2]
+        for user in self.fasts:
+            if userid == user: # cannot check more than once
+                return False
+        # remove user from other lists
+        if (userid in self.checks): del self.checks[userid]
+        if (userid in self.rages): del self.rages[userid]
+        if (userid in self.arsenals): del self.arsenals[userid]
+        if (userid in self.thinking): del self.thinking[userid]
+        if (userid in self.cancels): del self.cancels[userid]
+        self.fasts[userid] = [name, nick]
         return True
 
     def SetArsenalOnly(self, user):
@@ -149,6 +180,7 @@ class Battle():
         # remove user from other lists
         if (userid in self.checks): del self.checks[userid]
         if (userid in self.rages): del self.rages[userid]
+        if (userid in self.fasts): del self.fasts[userid]
         if (userid in self.thinking): del self.thinking[userid]
         if (userid in self.cancels): del self.cancels[userid]
         self.arsenals[userid] = [name, nick]
@@ -164,6 +196,7 @@ class Battle():
         # remove user from other lists
         if (userid in self.checks): del self.checks[userid]
         if (userid in self.rages): del self.rages[userid]
+        if (userid in self.fasts): del self.fasts[userid]
         if (userid in self.arsenals): del self.arsenals[userid]
         if (userid in self.cancels): del self.cancels[userid]
         self.thinking[userid] = [name, nick]
@@ -179,6 +212,7 @@ class Battle():
         # remove user from other lists
         if (userid in self.checks): del self.checks[userid]
         if (userid in self.rages): del self.rages[userid]
+        if (userid in self.fasts): del self.fasts[userid]
         if (userid in self.arsenals): del self.arsenals[userid]
         if (userid in self.thinking): del self.thinking[userid]
         if (userid in self.lates): del self.lates[userid]
@@ -194,6 +228,7 @@ class Battle():
                 return False
         if  userid in self.checks or \
             userid in self.rages or \
+            userid in self.fasts or \
             userid in self.arsenals:
             return False
         if userid in self.cancels: del self.cancels[userid]
