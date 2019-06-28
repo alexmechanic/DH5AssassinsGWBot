@@ -44,20 +44,25 @@ class Battle():
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
 
-    def GetText(self):
+    def GetHeader(self):
         text = "*Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d" \
                 % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute)
+        return text
+
+    def GetText(self):
+        text = self.GetHeader()
         text += "\n❗ Бой начался ❗" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
             text += "\n🛑 Бой завершился в %0.2d:%0.2d 🛑" % (self.time["end"].hour, self.time["end"].minute)
 
-        text += ("\n\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages))) * (len(self.checks) + len(self.rages))
+        if len(self.checks) + len(self.rages) > 0:
+            text += "\n\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages))
         for user in self.checks:
             text += "✅ [%s (%s)](tg://user?id=%d)\n" % (self.checks[user][0], self.checks[user][1], user)
         for user in self.rages:
             text += "🔥 [%s (%s)](tg://user?id=%d)\n" % (self.rages[user][0], self.rages[user][1], user)
 
-        text += ("\n\n" + "* %d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
+        text += ("\n\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
         for user in self.arsenals:
             text += "📦 [%s (%s)](tg://user?id=%d)\n" % (self.arsenals[user][0], self.arsenals[user][1], user)
 
@@ -65,14 +70,28 @@ class Battle():
         for user in self.thinking:
             text += "💤 [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
 
-        text += ("\n\n" + "* %d передумали:*\n" % len(self.cancels)) * len(self.cancels)
+        text += ("\n\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
             text += "❌ [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
 
-        text += ("\n\n" + "* %d опоздали:*\n" % len(self.lates)) * len(self.lates)
+        text += ("\n\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
         for user in self.lates:
             text += "⏰ [%s (%s)](tg://user?id=%d)\n" % (self.lates[user][0], self.lates[user][1], user)
         return text
+
+    def GetVotedText(self, action):
+        if action == "✅":
+            return "✅ Вы идете. Ожидайте росписи!"
+        if action == "🔥":
+            return "🔥 Вы придете к ярости"
+        elif action == "📦":
+            return "📦 Вы идете только в арсенал.\nНе атакуйте без росписи!"
+        elif action == "💤":
+            return "💤 Вы еще не решили.\nПостарайтесь определиться к началу боя!"
+        elif action == "❌":
+            return "❌ Вы не придете на бой. Жаль"
+        elif action == "⏰":
+            return "⏰ Вы опоздали к началу.\nДождитесь росписи от офицера!"
 
     def CheckUser(self, user, action):
         ret = True
@@ -162,6 +181,7 @@ class Battle():
         if (userid in self.rages): del self.rages[userid]
         if (userid in self.arsenals): del self.arsenals[userid]
         if (userid in self.thinking): del self.thinking[userid]
+        if (userid in self.lates): del self.lates[userid]
         self.cancels[userid] = [name, nick]
         return True
 
@@ -172,7 +192,10 @@ class Battle():
         for user in self.lates:
             if userid == user: # cannot check late more than once
                 return False
-        if  userid in [self.checks, self.rages, self.arsenals, self.thinking]:
+        if  userid in self.checks or \
+            userid in self.rages or \
+            userid in self.arsenals:
             return False
+        if userid in self.cancels: del self.cancels[userid]
         self.lates[userid] = [name, nick]
         return True
