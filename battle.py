@@ -12,6 +12,7 @@ class Battle():
     time = {"check": None, "start": None, "end": None}
     is_started = False
     is_postponed = False
+    # dicts with lists formatted [name, nick]
     checks = {}
     rages = {}
     fasts = {}
@@ -33,7 +34,7 @@ class Battle():
         self.lates = {}
 
     def SetMessageID(self, message_id):
-        # print("Set ID: " + str(message_id))
+        # print("Set Check ID: " + str(message_id))
         self.check_id = message_id
 
     def DoStartBattle(self):
@@ -90,19 +91,19 @@ class Battle():
 
     def GetVotedText(self, action):
         if action == CHECK_CHECK_CALLBACK:
-            return action + " Вы идете. Ожидайте росписи!"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы идете. Ожидайте росписи!"
         elif action == CHECK_RAGE_CALLBACK:
-            return action + " Вы придете к ярости"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы придете к ярости"
         elif action == CHECK_FAST_CALLBACK:
-            return action + " Вы сливаете энку"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы сливаете энку"
         elif action == CHECK_ARS_CALLBACK:
-            return action + " Вы идете только в арсенал. Не атакуйте без росписи!"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы идете только в арсенал. Не атакуйте без росписи!"
         elif action == CHECK_THINK_CALLBACK:
-            return action + " Вы еще не решили. Постарайтесь определиться к началу боя!"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы еще не решили. Постарайтесь определиться к началу боя!"
         elif action == CHECK_CANCEL_CALLBACK:
-            return action + " Вы не придете на бой. Жаль"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы не придете на бой. Жаль"
         elif action == CHECK_LATE_CALLBACK:
-            return action + " Вы опоздали к началу. Дождитесь росписи от офицера!"
+            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы опоздали к началу. Дождитесь росписи от офицера!"
 
     def CheckUser(self, user, action):
         ret = True

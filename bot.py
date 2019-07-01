@@ -171,7 +171,7 @@ def battle_check_user(call):
                                 parse_mode="markdown", reply_markup=markup)
             bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
         else:
-            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice)
+            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(CHECK_CALLBACK_PREFIX, ""))
         return
     print("ERROR: battle not found!")
 
@@ -259,9 +259,9 @@ def urgent_query_inline(q):
                                              urgent_message)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
 
-###################
+####################
 # Command handlers #
-###################
+####################
 @bot.message_handler(commands=["help"])
 def show_help(m):
     userid = m.from_user.id
