@@ -66,27 +66,48 @@ class Battle():
         if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
             text += "\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
         for user in self.checks:
-            text += ICON_CHECK + " [%s (%s)](tg://user?id=%d)\n" % (self.checks[user][0], self.checks[user][1], user)
+            text += ICON_CHECK + " [%s" % self.checks[user][0]
+            if self.checks[user][1] != None:
+                text += " (%s)" % self.checks[user][1]
+            text += "](tg://user?id=%d)\n" % user
         for user in self.rages:
-            text += ICON_RAGE + " [%s (%s)](tg://user?id=%d)\n" % (self.rages[user][0], self.rages[user][1], user)
+            text += ICON_RAGE + " [%s" % self.rages[user][0]
+            if self.rages[user][1] != None:
+                text += " (%s)" % self.rages[user][1]
+            text += "](tg://user?id=%d)\n" % user
         for user in self.fasts:
-            text += ICON_FAST + " [%s (%s)](tg://user?id=%d)\n" % (self.fasts[user][0], self.fasts[user][1], user)
+            text += ICON_FAST + " [%s" % self.fasts[user][0]
+            if self.fasts[user][1] != None:
+                text += " (%s)" % self.fasts[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
         for user in self.arsenals:
-            text += ICON_ARS + " [%s (%s)](tg://user?id=%d)\n" % (self.arsenals[user][0], self.arsenals[user][1], user)
+            text += ICON_ARS + " [%s" % self.arsenals[user][0]
+            if self.arsenals[user][1] != None:
+                text += " (%s)" % self.arsenals[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*%d думают:*\n" % len(self.thinking)) * len(self.thinking)
         for user in self.thinking:
-            text += ICON_THINK + " [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
+            text += ICON_THINK + " [%s" % self.thinking[user][0]
+            if self.thinking[user][1] != None:
+                text += " (%s)" % self.thinking[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
-            text += ICON_CANCEL + " [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
+            text += ICON_CANCEL + " [%s" % self.cancels[user][0]
+            if self.cancels[user][1] != None:
+                text += " (%s)" % self.cancels[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
         for user in self.lates:
-            text += ICON_LATE + " [%s (%s)](tg://user?id=%d)\n" % (self.lates[user][0], self.lates[user][1], user)
+            text += ICON_LATE + " [%s" % self.lates[user][0]
+            if self.lates[user][1] != None:
+                text += " (%s)" % self.lates[user][1]
+            text += "](tg://user?id=%d)\n" % user
         return text
 
     def GetVotedText(self, action):

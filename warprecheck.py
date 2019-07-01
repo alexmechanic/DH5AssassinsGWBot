@@ -38,23 +38,38 @@ class WarPreCheck():
 
         text += ("\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)) * len(self.friday)
         for user in self.friday:
-            text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.friday[user][0], self.friday[user][1], user)
+            text += "👤 [%s" % + self.friday[user][0]
+            if self.friday[user][1] != None:
+                text += " (%s)" % self.friday[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)) * len(self.saturday)
         for user in self.saturday:
-            text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.saturday[user][0], self.saturday[user][1], user)
+            text += "👤 [%s" % + self.saturday[user][0]
+            if self.saturday[user][1] != None:
+                text += " (%s)" % self.saturday[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)) * len(self.sunday)
         for user in self.sunday:
-            text += "👤 [%s (%s)](tg://user?id=%d)\n" % (self.sunday[user][0], self.sunday[user][1], user)
+            text += "👤 [%s" % + self.sunday[user][0]
+            if self.sunday[user][1] != None:
+                text += " (%s)" % self.sunday[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*Думают (%d):*\n" % len(self.thinking)) * len(self.thinking)
         for user in self.thinking:
-            text += ICON_THINK + " [%s (%s)](tg://user?id=%d)\n" % (self.thinking[user][0], self.thinking[user][1], user)
+            text += ICON_THINK + " [%s" % + self.thinking[user][0]
+            if self.thinking[user][1] != None:
+                text += " (%s)" % self.thinking[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         text += ("\n" + "*Не идут (%d):*\n" % len(self.cancels)) * len(self.cancels)
         for user in self.cancels:
-            text += ICON_CANCEL + " [%s (%s)](tg://user?id=%d)\n" % (self.cancels[user][0], self.cancels[user][1], user)
+            text += ICON_CANCEL + " [%s" % + self.cancels[user][0]
+            if self.cancels[user][1] != None:
+                text += " (%s)" % self.cancels[user][1]
+            text += "](tg://user?id=%d)\n" % user
 
         return text
 
