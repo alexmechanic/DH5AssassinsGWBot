@@ -9,6 +9,7 @@
 import telebot, datetime, re
 from battle import *
 from warprecheck import *
+from arsenal import *
 from telebot import types
 from keyboards import *
 
@@ -25,8 +26,9 @@ bot = telebot.TeleBot(TOKEN)
 ROOT_ADMIN = 187678932 # creator
 admins = { 187678932: "alex1489" }
 
-current_battle = None
+current_battle   = None
 current_precheck = None
+current_arscheck = None
 time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
 
 #####################
@@ -58,6 +60,13 @@ def CanStartNewBattle():
         res = current_battle.is_postponed
     return res
 
+def CanStartNewArs():
+    global current_arscheck
+    res = current_arscheck == None
+    if not res:
+        res = current_arscheck.is_fired
+    return res
+
 def IsCheckTime(query): # return if query contains check time and check time list
     times = re.findall(time_pattern, query.query)
     if times != [] and len(times) == 2:
@@ -80,6 +89,30 @@ def SendHelpNoBattle(chat_id):
 #####################
 # Callback handlers #
 #####################
+
+#
+# Chosen inline result handler
+#
+@bot.chosen_inline_handler(lambda result: True)
+def chosen_inline_handler(r):
+    # print("chosen_inline_handler")
+    # print(r)
+    if r.result_id == '0': # battle check
+        global current_battle
+        times = re.findall(time_pattern, r.query)
+        current_battle = Battle(times[0], times[1])
+        current_battle.SetMessageID(r.inline_message_id)
+    elif r.result_id == '1': # pre-check
+        global current_precheck
+        current_precheck = WarPreCheck()
+        current_precheck.SetMessageID(r.inline_message_id)
+    elif r.result_id == '2': # send urgent message
+        bot.send_message(r.from_user.id, "Пожалуйста, не забывайте, что " +
+                         "отправлять в военный чат следует только особо важные сведения!")
+    elif r.result_id == '3': # ars check
+        global current_arscheck
+        current_arscheck = Arsenal()
+        current_arscheck.SetMessageID(r.inline_message_id)
 
 #
 # GW Pre-check
@@ -119,14 +152,6 @@ def precheck_control(call):
         bot.answer_callback_query(call.id, "🏁 Чек завершен")
         return
     print("ERROR: pre-check not found!")
-
-@bot.chosen_inline_handler(lambda result: result.result_id == '1')
-def precheck_init_vote(r):
-    global current_precheck
-    # print("battle_init_vote")
-    # print(r)
-    current_precheck = WarPreCheck()
-    current_precheck.SetMessageID(r.inline_message_id)
 
 @bot.inline_handler(lambda query: query.query == "precheck")
 def precheck_query_inline(q):
@@ -198,15 +223,6 @@ def battle_control(call):
         return
     print("ERROR: battle not found!")
 
-@bot.chosen_inline_handler(lambda result: result.result_id == '0')
-def battle_init_vote(r):
-    global current_battle
-    # print("battle_init_vote")
-    # print(r)
-    times = re.findall(time_pattern, r.query)
-    current_battle = Battle(times[0], times[1])
-    current_battle.SetMessageID(r.inline_message_id)
-
 @bot.inline_handler(lambda query: IsCheckTime(query)[0])
 def battle_query_inline(q):
     global current_battle
@@ -232,15 +248,53 @@ def battle_query_inline(q):
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
 #
+# Arsenal progress for battle
+#
+@bot.callback_query_handler(func=lambda call: call.data in ARS_OPTIONS)
+def arsenal_check_user(call):
+    global current_arscheck
+    # print("ars_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    userChoice = call.data
+    if message_id == current_arscheck.check_id:
+        ret = current_arscheck.Increment(user, userChoice)
+        if (ret):
+            bot.edit_message_text(current_arscheck.GetProgressText(), inline_message_id=message_id, 
+                                parse_mode="markdown", reply_markup=KEYBOARD_ARS)
+            bot.answer_callback_query(call.id)
+        else:
+            bot.answer_callback_query(call.id)
+        return
+    print("ERROR: ars check not found!")
+
+@bot.inline_handler(lambda query: query.query[:3] == "ars")
+def arsenal_query_inline(q):
+    # print("arsenal_query_inline")
+    # print(q)
+    if not IsUserAdmin(q): # non-admins cannot post votes
+        SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if CanStartNewBattle():
+        print("ERROR: trying to set ars check with no current battle")
+        error_text = "Отсутствует активный бой"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=30,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
+        return
+    if CanStartNewArs():
+        res = types.InlineQueryResultArticle('3',
+                                             'Добавить прогресс арса 📦 |████--| Х/120',
+                                             types.InputTextMessageContent(Arsenal().GetHeader(), parse_mode="markdown"),
+                                             reply_markup=KEYBOARD_ARS)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
+    else:
+        bot.send_message(q.from_user.id, "Прогресс арсенала уже создан!")
+
+#
 # Urgent message from non-admin user
 #
-@bot.chosen_inline_handler(lambda result: result.result_id == '2')
-def urgent_remind_user(r):
-    # print("urgent_remind_user")
-    # print(r)
-    bot.send_message(r.from_user.id, "Пожалуйста, не забывайте, что " + 
-                     "отправлять в военный чат следует только особо важные сведения!")
-
 @bot.inline_handler(lambda query: query.query[:3] == "!!!")
 def urgent_query_inline(q):
     # print("query_inline_urgent")
