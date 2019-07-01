@@ -40,29 +40,28 @@ CHECK_CONTROL_OPTIONS = [buttonStart.callback_data,
                         ]
 
 # battle arsenal
-KEYBOARD_ARS  = types.InlineKeyboardMarkup(row_width=8)
-buttonArs0    = types.InlineKeyboardButton(text="+0", callback_data=ARS_0_CALLBACK)
-buttonArs8    = types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CALLBACK)
-buttonArs9    = types.InlineKeyboardButton(text="+9", callback_data=ARS_9_CALLBACK)
-buttonArs10   = types.InlineKeyboardButton(text="+10", callback_data=ARS_10_CALLBACK)
-buttonArs11   = types.InlineKeyboardButton(text="+11", callback_data=ARS_11_CALLBACK)
-buttonArs12   = types.InlineKeyboardButton(text="+12", callback_data=ARS_12_CALLBACK)
-buttonArs13   = types.InlineKeyboardButton(text="+13", callback_data=ARS_13_CALLBACK)
-buttonArs14   = types.InlineKeyboardButton(text="+14", callback_data=ARS_14_CALLBACK)
-buttonArs24   = types.InlineKeyboardButton(text="+24", callback_data=ARS_24_CALLBACK)
-buttonArs27   = types.InlineKeyboardButton(text="+27", callback_data=ARS_27_CALLBACK)
-buttonArs30   = types.InlineKeyboardButton(text="+30", callback_data=ARS_30_CALLBACK)
-buttonArs33   = types.InlineKeyboardButton(text="+33", callback_data=ARS_33_CALLBACK)
-buttonArs36   = types.InlineKeyboardButton(text="+36", callback_data=ARS_36_CALLBACK)
-buttonArs39   = types.InlineKeyboardButton(text="+39", callback_data=ARS_39_CALLBACK)
-buttonArs42   = types.InlineKeyboardButton(text="+42", callback_data=ARS_42_CALLBACK)
-buttonArsFull = types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK)
-KEYBOARD_ARS.add(buttonArs0,
-                 buttonArs8, buttonArs9, buttonArs10, buttonArs11, buttonArs12, buttonArs13, buttonArs14,
+KEYBOARD_ARS    = types.InlineKeyboardMarkup(row_width=7)
+buttonArs8      = types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CALLBACK)
+buttonArs9      = types.InlineKeyboardButton(text="+9", callback_data=ARS_9_CALLBACK)
+buttonArs10     = types.InlineKeyboardButton(text="+10", callback_data=ARS_10_CALLBACK)
+buttonArs11     = types.InlineKeyboardButton(text="+11", callback_data=ARS_11_CALLBACK)
+buttonArs12     = types.InlineKeyboardButton(text="+12", callback_data=ARS_12_CALLBACK)
+buttonArs13     = types.InlineKeyboardButton(text="+13", callback_data=ARS_13_CALLBACK)
+buttonArs14     = types.InlineKeyboardButton(text="+14", callback_data=ARS_14_CALLBACK)
+buttonArs24     = types.InlineKeyboardButton(text="+24", callback_data=ARS_24_CALLBACK)
+buttonArs27     = types.InlineKeyboardButton(text="+27", callback_data=ARS_27_CALLBACK)
+buttonArs30     = types.InlineKeyboardButton(text="+30", callback_data=ARS_30_CALLBACK)
+buttonArs33     = types.InlineKeyboardButton(text="+33", callback_data=ARS_33_CALLBACK)
+buttonArs36     = types.InlineKeyboardButton(text="+36", callback_data=ARS_36_CALLBACK)
+buttonArs39     = types.InlineKeyboardButton(text="+39", callback_data=ARS_39_CALLBACK)
+buttonArs42     = types.InlineKeyboardButton(text="+42", callback_data=ARS_42_CALLBACK)
+buttonArs0      = types.InlineKeyboardButton(text="+0", callback_data=ARS_0_CALLBACK)
+buttonArsCancel = types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=ARS_CANCEL_CALLBACK)
+buttonArsFull   = types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK)
+KEYBOARD_ARS.add(buttonArs8, buttonArs9, buttonArs10, buttonArs11, buttonArs12, buttonArs13, buttonArs14,
                  buttonArs24, buttonArs27, buttonArs30, buttonArs33, buttonArs36, buttonArs39, buttonArs42,
-                 buttonArsFull)
-ARS_OPTIONS = [ buttonArs0.callback_data,
-                buttonArs8.callback_data,
+                 buttonArs0, buttonArsCancel, buttonArsFull)
+ARS_OPTIONS = [ buttonArs8.callback_data,
                 buttonArs9.callback_data,
                 buttonArs10.callback_data,
                 buttonArs11.callback_data,
@@ -76,6 +75,8 @@ ARS_OPTIONS = [ buttonArs0.callback_data,
                 buttonArs36.callback_data,
                 buttonArs39.callback_data,
                 buttonArs42.callback_data,
+                buttonArs0.callback_data,
+                buttonArsCancel.callback_data,
                 buttonArsFull.callback_data
               ]
 # battle control (from the bot chat)
