@@ -23,8 +23,9 @@ with open("TOKEN", "r") as tfile:
 
 bot = telebot.TeleBot(TOKEN)
 
-ROOT_ADMIN = ['187678932', 'alex1489'] # creator
-admins = { ROOT_ADMIN[0]: ROOT_ADMIN[1] }
+BOT_USERNAME = "assassinsgwbot"
+ROOT_ADMIN = [] # creator
+admins = {}
 
 current_battle   = None
 current_precheck = None
@@ -36,42 +37,29 @@ time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
 #
 # load initial list
 with open("ADMINS", "r") as f:
-    admins = json.load(f)
+    admins_list = json.load(f)
+    ROOT_ADMIN = admins_list[0]
+    admins = admins_list[1]
     f.close()
+    print("Load root admin: ", ROOT_ADMIN)
     print("Load admins list: ", admins)
 
 # save edited list
 def SaveAdminsList():
     global admins
+    admins_list = [ROOT_ADMIN, admins]
     with open("ADMINS", "w") as f:
-        f.write(json.dump(admins))
-        f.cose()
-    print("Saved admins list: ", admins)
-
-# add new admin
-def AddAdmin(userid, nick):
-    global admins
-    if not str(userid) in admins:
-        admins[userid] = nick
-        SaveAdminsList()
-        return True
-    return False
-
-# delete admin
-def DeleteAdmin(admin_id):
-    global admins
-    deleted_nick = admins[admin_id]
-    del admins[admin_id]
-    SaveAdminsList()
-    return deleted_nick
-
+        json.dump(admins_list, f)
+        f.close()
+    print("Saved admins list: ", admins_list)
 
 #####################
 # Support functions #
 #####################
 def IsUserAdmin(message):
     global admins
-    if str(message.from_user.id) in admins:
+    if str(message.from_user.id) in admins or \
+       str(message.from_user.id) == ROOT_ADMIN[0]:
         return True
     else:
         return False
@@ -361,16 +349,16 @@ def show_help(m):
     if IsUserAdmin(m):
         text += "/start - вывод информации о текущем бое (если есть).\n"
         text += "/admin list - вывод текущего списка офицеров\n"
-        if str(userid) == ROOT_ADMIN[0]:
-            text += "/admin delete <ID> - удаление офицера по ID\n"
         text += "\n*При наличии текущего боя:*\n"
         text += "/bstart - начать бой\n"
         text += "/bstop  - завершить/отменить бой\n"
+        if str(userid) == ROOT_ADMIN[0]:
+            text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
                 "_@assassinsgwbot ars_ - создать чек арсенала (при наличии боя)"
-    if not IsUserAdmin(m):
+    else:
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
     bot.send_message(userid, text, parse_mode="markdown")
@@ -424,58 +412,73 @@ def command_battle_stop(m):
     else:
         SendHelpNoBattle(m.chat.id)
 
-@bot.message_handler(commands=["admin"])
-def manage_admins(m):
+@bot.message_handler(commands=["setadmins"])
+def setup_admins(m):
     global admins
+    # print("setup_admins")
+    # print(m)
+    userid = m.from_user.id
+    name   = m.from_user.first_name
+    nick   = m.from_user.username
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
+    if IsInPrivateChat(m):
+        bot.send_message(userid, "Используйте команду /setadmins в военном чате, чтобы обновить список офицеров!")
+        return
+    is_chat_admin = False
+    chat_admins = bot.get_chat_administrators(m.chat.id)
+    for admin in chat_admins:
+        if admin.user.id == userid:
+            is_chat_admin = True
+            break
+    if not is_chat_admin:
+        SendHelpNonAdmin(m)
+        return
+    admins = {}
+    for admin in chat_admins:
+        if str(admin.user.id) != ROOT_ADMIN[0] and admin.user.username != BOT_USERNAME:
+            name_record = admin.user.first_name
+            if admin.user.username != None:
+                name_record += " (" + admin.user.username + ")"
+            admins[str(admin.user.id)] = name_record
+    SaveAdminsList()
+    bot.send_message(m.chat.id, "👮🏻‍♂️ Список офицеров обновлен")
+
+
+@bot.message_handler(commands=["admin"])
+def manage_admins(m):
+    global admins
+    # print("manage_admins")
+    # print(m)
     userid = m.from_user.id
-    nick   = m.from_user.username
-    command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
-    if command == "": # save admin
-        # cannot use command in private chat
-        if IsInPrivateChat(m):
-            bot.send_message(userid, "Используйте команду /admin в военном чате, чтобы внести себя в список офицеров!")
-            return
+    name   = m.from_user.first_name
+    nick   = m.from_user.username if m.from_user.username != None else ""
+    name_record = name + " " + nick
+    is_chat_admin = False
+    if not IsInPrivateChat(m):
         for admin in bot.get_chat_administrators(m.chat.id):
             if admin.user.id == userid:
-                if AddAdmin(userid, nick):
-                    bot.send_message(userid, "Вы успешно добавлены в список офицеров!")
-                else:
-                    bot.send_message(userid, "Вы уже есть в списке офицеров!")
-                return
-        bot.send_message(userid, "Извините, вы не являетесь офицером чата '%s'" % m.chat.title)
-    elif command == "list": # list admins
+                is_chat_admin = True
+                break
+        if not is_chat_admin:
+            SendHelpNonAdmin(m)
+            return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
+    if command == "list": # list admins
         text =  "Список офицеров:\n\n"
+        text += "👁 %s _[администратор бота]_\n" % ROOT_ADMIN[1]
         for admin in admins:
-            if admin != ROOT_ADMIN[0]:
-                if userid == ROOT_ADMIN[0]: # show admins IDs for root admin
+            if BOT_USERNAME not in admin or admin != ROOT_ADMIN[1]:
+                if str(userid) == ROOT_ADMIN[0]: # show admins IDs for root admin
                     text += "👤 %s _(ID=%s)_\n" % (admins[admin], admin)
                 else:
-                    text += "👤 %s\n" % admins[admin]
-            else:
-                text += "👁 %s _(администратор бота)_\n" % admins[admin]
-        if userid == ROOT_ADMIN[0]:
-            text += "\nСписок действий:\n"
-            text += "/admin add _ID_ - добавить офицера\n"
-            text += "/admin delete _ID_ - удалить офицера"
+                    text += ("👤 %s\n" % admins[admin])
         bot.send_message(userid, text, parse_mode="markdown")
         return
-    elif command[:6] == "delete":
-        if str(userid) == ROOT_ADMIN[0]: # deleting admins is for root admin only
-            try:
-                admin_id = command.replace("delete ", "")
-                if admin_id == ROOT_ADMIN[0]:
-                    bot.send_message(userid, "Не могу удалить *%s* - это администратор бота." % admins[admin_id], parse_mode="markdown")
-                    return
-                if admin_id in admins:
-                    admin_nick = DeleteAdmin(admin_id)
-                    bot.send_message(userid, "Офицер *%s* успешно удален." % admin_nick, parse_mode="markdown")
-                else:
-                    bot.send_message(userid, "Офицер c ID %s не найден." % admin_id)
-            except ValueError:
-                bot.send_message(userid, "Неверный фомат ID офицера.")
     else:
         bot.send_message(userid, "Неизвестная команда. Для справки используйте /help.")
 
@@ -499,6 +502,14 @@ def battle_control(m):
         bot.send_message(m.chat.id, "❎ Бой успешно завершен", reply_markup=markup)
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
+
+@bot.message_handler(func=lambda message: not IsUserAdmin(message))
+def nonadmin_message(m):
+    print(m)
+    message_id = m.message_id
+    chat_id = m.chat.id
+    bot.delete_message(chat_id, message_id)
+    SendHelpNonAdmin(m)
 
 @bot.message_handler(func=lambda message: True)
 def check_doubleshop(m):
