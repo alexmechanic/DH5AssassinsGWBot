@@ -106,3 +106,5 @@ class Arsenal():
         self.progress -= dec
         if self.progress < 120:
             self.is_fired = False
+            for user in self.done_users:
+                self.done_users[user][4] = False
