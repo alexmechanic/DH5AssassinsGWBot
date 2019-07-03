@@ -36,37 +36,42 @@ class WarPreCheck():
         text = self.GetHeader()
         text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
-        text += ("\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)) * len(self.friday)
+        if len(self.friday) > 0:
+            text += "\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)
         for user in self.friday:
-            text += "👤 [%s" % + self.friday[user][0]
+            text += "👤 [%s" % self.friday[user][0]
             if self.friday[user][1] != None:
                 text += " (%s)" % self.friday[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)) * len(self.saturday)
+        if len(self.saturday) > 0:
+            text += "\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)
         for user in self.saturday:
-            text += "👤 [%s" % + self.saturday[user][0]
+            text += "👤 [%s" % self.saturday[user][0]
             if self.saturday[user][1] != None:
                 text += " (%s)" % self.saturday[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)) * len(self.sunday)
+        if len(self.sunday) > 0:
+            text += "\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)
         for user in self.sunday:
-            text += "👤 [%s" % + self.sunday[user][0]
+            text += "👤 [%s" % self.sunday[user][0]
             if self.sunday[user][1] != None:
                 text += " (%s)" % self.sunday[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*Думают (%d):*\n" % len(self.thinking)) * len(self.thinking)
+        if len(self.thinking) > 0:
+            text += "\n" + "*Думают (%d):*\n" % len(self.thinking)
         for user in self.thinking:
-            text += ICON_THINK + " [%s" % + self.thinking[user][0]
+            text += ICON_THINK + " [%s" % self.thinking[user][0]
             if self.thinking[user][1] != None:
                 text += " (%s)" % self.thinking[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*Не идут (%d):*\n" % len(self.cancels)) * len(self.cancels)
+        if len(self.cancels) > 0:
+            text += "\n" + "*Не идут (%d):*\n" % len(self.cancels)
         for user in self.cancels:
-            text += ICON_CANCEL + " [%s" % + self.cancels[user][0]
+            text += ICON_CANCEL + " [%s" % self.cancels[user][0]
             if self.cancels[user][1] != None:
                 text += " (%s)" % self.cancels[user][1]
             text += "](tg://user?id=%d)\n" % user

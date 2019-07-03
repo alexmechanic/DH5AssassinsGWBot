@@ -81,28 +81,32 @@ class Battle():
                 text += " (%s)" % self.fasts[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*%d только в арс:*\n" % len(self.arsenals)) * len(self.arsenals)
+        if len(self.arsenals) > 0:
+            text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
         for user in self.arsenals:
             text += ICON_ARS + " [%s" % self.arsenals[user][0]
             if self.arsenals[user][1] != None:
                 text += " (%s)" % self.arsenals[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*%d думают:*\n" % len(self.thinking)) * len(self.thinking)
+        if len(self.thinking) > 0:
+            text += "\n" + "*%d думают:*\n" % len(self.thinking)
         for user in self.thinking:
             text += ICON_THINK + " [%s" % self.thinking[user][0]
             if self.thinking[user][1] != None:
                 text += " (%s)" % self.thinking[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*%d передумали:*\n" % len(self.cancels)) * len(self.cancels)
+        if len(self.cancels) > 0:
+            text += "\n" + "*%d передумали:*\n" % len(self.cancels)
         for user in self.cancels:
             text += ICON_CANCEL + " [%s" % self.cancels[user][0]
             if self.cancels[user][1] != None:
                 text += " (%s)" % self.cancels[user][1]
             text += "](tg://user?id=%d)\n" % user
 
-        text += ("\n" + "*%d опоздали:*\n" % len(self.lates)) * len(self.lates)
+        if len(self.lates) > 0:
+            text += "\n" + "*%d опоздали:*\n" % len(self.lates)
         for user in self.lates:
             text += ICON_LATE + " [%s" % self.lates[user][0]
             if self.lates[user][1] != None:
