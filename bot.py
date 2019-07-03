@@ -6,7 +6,7 @@
 # @assassinsgwbot
 #
 
-import telebot, datetime, re
+import telebot, datetime, re, json
 from battle import *
 from warprecheck import *
 from arsenal import *
@@ -23,20 +23,55 @@ with open("TOKEN", "r") as tfile:
 
 bot = telebot.TeleBot(TOKEN)
 
-ROOT_ADMIN = 187678932 # creator
-admins = { 187678932: "alex1489" }
+ROOT_ADMIN = ['187678932', 'alex1489'] # creator
+admins = { ROOT_ADMIN[0]: ROOT_ADMIN[1] }
 
 current_battle   = None
 current_precheck = None
 current_arscheck = None
 time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
 
+#
+# Manage admins list through file
+#
+# load initial list
+with open("ADMINS", "r") as f:
+    admins = json.load(f)
+    f.close()
+    print("Load admins list: ", admins)
+
+# save edited list
+def SaveAdminsList():
+    global admins
+    with open("ADMINS", "w") as f:
+        f.write(json.dump(admins))
+        f.cose()
+    print("Saved admins list: ", admins)
+
+# add new admin
+def AddAdmin(userid, nick):
+    global admins
+    if not str(userid) in admins:
+        admins[userid] = nick
+        SaveAdminsList()
+        return True
+    return False
+
+# delete admin
+def DeleteAdmin(admin_id):
+    global admins
+    deleted_nick = admins[admin_id]
+    del admins[admin_id]
+    SaveAdminsList()
+    return deleted_nick
+
+
 #####################
 # Support functions #
 #####################
 def IsUserAdmin(message):
     global admins
-    if message.from_user.id in admins:
+    if str(message.from_user.id) in admins:
         return True
     else:
         return False
@@ -77,7 +112,7 @@ def SendHelpNonAdmin(message):
     text =  "Мной могут управлять только офицеры гильдии.\n"
     text += "Обратитесь к одному из офицеров за подробностями:\n\n"
     for admin in admins:
-        text += "[%s](tg://user?id=%d)\n" % (admins[admin], admin)
+        text += "[%s](tg://user?id=%s)\n" % (admins[admin], admin)
     bot.send_message(message.from_user.id, text, parse_mode="markdown")
 
 def SendHelpNoBattle(chat_id):
@@ -326,14 +361,15 @@ def show_help(m):
     if IsUserAdmin(m):
         text += "/start - вывод информации о текущем бое (если есть).\n"
         text += "/admin list - вывод текущего списка офицеров\n"
-        if userid == ROOT_ADMIN:
+        if str(userid) == ROOT_ADMIN[0]:
             text += "/admin delete <ID> - удаление офицера по ID\n"
         text += "\n*При наличии текущего боя:*\n"
         text += "/bstart - начать бой\n"
         text += "/bstop  - завершить/отменить бой\n"
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
-                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой"
+                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
+                "_@assassinsgwbot ars_ - создать чек арсенала (при наличии боя)"
     if not IsUserAdmin(m):
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
@@ -404,41 +440,40 @@ def manage_admins(m):
             return
         for admin in bot.get_chat_administrators(m.chat.id):
             if admin.user.id == userid:
-                if not userid in admins:
-                    admins[userid] = nick
+                if AddAdmin(userid, nick):
                     bot.send_message(userid, "Вы успешно добавлены в список офицеров!")
                 else:
                     bot.send_message(userid, "Вы уже есть в списке офицеров!")
                 return
         bot.send_message(userid, "Извините, вы не являетесь офицером чата '%s'" % m.chat.title)
     elif command == "list": # list admins
-        text =  "Текущий список офицеров:\n\n"
+        text =  "Список офицеров:\n\n"
         for admin in admins:
-            if admin != ROOT_ADMIN:
-                if userid == ROOT_ADMIN: # show admins IDs for root admin
-                    text += "👤 %s _(ID=%d)_\n" % (admins[admin], admin)
+            if admin != ROOT_ADMIN[0]:
+                if userid == ROOT_ADMIN[0]: # show admins IDs for root admin
+                    text += "👤 %s _(ID=%s)_\n" % (admins[admin], admin)
                 else:
                     text += "👤 %s\n" % admins[admin]
             else:
                 text += "👁 %s _(администратор бота)_\n" % admins[admin]
-        if userid == ROOT_ADMIN:
+        if userid == ROOT_ADMIN[0]:
             text += "\nСписок действий:\n"
+            text += "/admin add _ID_ - добавить офицера\n"
             text += "/admin delete _ID_ - удалить офицера"
         bot.send_message(userid, text, parse_mode="markdown")
         return
     elif command[:6] == "delete":
-        if userid == ROOT_ADMIN: # deleting admins is for root admin only
+        if str(userid) == ROOT_ADMIN[0]: # deleting admins is for root admin only
             try:
-                admin_id = int(command.replace("delete ", ""))
-                if admin_id == ROOT_ADMIN:
+                admin_id = command.replace("delete ", "")
+                if admin_id == ROOT_ADMIN[0]:
                     bot.send_message(userid, "Не могу удалить *%s* - это администратор бота." % admins[admin_id], parse_mode="markdown")
                     return
                 if admin_id in admins:
-                    admin_nick = admins[admin_id]
-                    del admins[admin_id]
+                    admin_nick = DeleteAdmin(admin_id)
                     bot.send_message(userid, "Офицер *%s* успешно удален." % admin_nick, parse_mode="markdown")
                 else:
-                    bot.send_message(userid, "Офицер c ID %d не найден." % admin_id)
+                    bot.send_message(userid, "Офицер c ID %s не найден." % admin_id)
             except ValueError:
                 bot.send_message(userid, "Неверный фомат ID офицера.")
     else:
@@ -467,9 +502,10 @@ def battle_control(m):
 
 @bot.message_handler(func=lambda message: True)
 def check_doubleshop(m):
+    # print("check_doubleshop")
+    # print(m)
     if not IsInPrivateChat(m):
         global DOUBLESHOP_TIME_CALLED
-        # print(m)
         now = datetime.datetime.now()
         time_to_check = [now.weekday(), now.hour, now.minute]
         if now.weekday() == DOUBLESHOP_TIME[0]:
@@ -482,6 +518,5 @@ def check_doubleshop(m):
             DOUBLESHOP_TIME_CALLED = False
     elif not IsUserAdmin(m):
         SendHelpNonAdmin(m)
-
 
 bot.polling(none_stop=True, interval=0, timeout=20)
