@@ -6,7 +6,7 @@
 # @assassinsgwbot
 #
 
-import telebot, datetime, re, json
+import telebot, datetime, re, json, sys
 from battle import *
 from warprecheck import *
 from arsenal import *
@@ -15,6 +15,11 @@ from keyboards import *
 
 DOUBLESHOP_TIME = [4, [17, 58], [18, 13]]
 DOUBLESHOP_TIME_CALLED = False
+
+# setup proxy if asked
+if len(sys.argv) > 1:
+    if sys.argv[1] == '1':
+        telebot.apihelper.proxy = {'http':'http://73.55.76.54:8080'}
 
 with open("TOKEN", "r") as tfile:
     TOKEN = tfile.readline().strip('\n')
