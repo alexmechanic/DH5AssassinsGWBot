@@ -103,7 +103,12 @@ def SetupNumbersKeyboard(count):
     if count <= 8:
         KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=count)
     else:
-        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=8)
+        new_count = 8
+        for i in range(2, 5):
+            if (count // i + count % i) <= 8:
+                new_count = count // i + count % i
+                break
+        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=new_count)
     if count > 0 and count <= 30:
         buttons = []
         for i in range(count):
