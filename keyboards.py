@@ -41,44 +41,77 @@ CHECK_CONTROL_OPTIONS = [buttonStart.callback_data,
 
 # battle arsenal
 KEYBOARD_ARS    = types.InlineKeyboardMarkup(row_width=7)
-buttonArs8      = types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CALLBACK)
-buttonArs9      = types.InlineKeyboardButton(text="+9", callback_data=ARS_9_CALLBACK)
-buttonArs10     = types.InlineKeyboardButton(text="+10", callback_data=ARS_10_CALLBACK)
-buttonArs11     = types.InlineKeyboardButton(text="+11", callback_data=ARS_11_CALLBACK)
-buttonArs12     = types.InlineKeyboardButton(text="+12", callback_data=ARS_12_CALLBACK)
-buttonArs13     = types.InlineKeyboardButton(text="+13", callback_data=ARS_13_CALLBACK)
-buttonArs14     = types.InlineKeyboardButton(text="+14", callback_data=ARS_14_CALLBACK)
-buttonArs24     = types.InlineKeyboardButton(text="+24", callback_data=ARS_24_CALLBACK)
-buttonArs27     = types.InlineKeyboardButton(text="+27", callback_data=ARS_27_CALLBACK)
-buttonArs30     = types.InlineKeyboardButton(text="+30", callback_data=ARS_30_CALLBACK)
-buttonArs33     = types.InlineKeyboardButton(text="+33", callback_data=ARS_33_CALLBACK)
-buttonArs36     = types.InlineKeyboardButton(text="+36", callback_data=ARS_36_CALLBACK)
-buttonArs39     = types.InlineKeyboardButton(text="+39", callback_data=ARS_39_CALLBACK)
-buttonArs42     = types.InlineKeyboardButton(text="+42", callback_data=ARS_42_CALLBACK)
-buttonArs0      = types.InlineKeyboardButton(text="+0", callback_data=ARS_0_CALLBACK)
-buttonArsCancel = types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=ARS_CANCEL_CALLBACK)
-buttonArsFull   = types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK)
-KEYBOARD_ARS.add(buttonArs8, buttonArs9, buttonArs10, buttonArs11, buttonArs12, buttonArs13, buttonArs14,
-                 buttonArs24, buttonArs27, buttonArs30, buttonArs33, buttonArs36, buttonArs39, buttonArs42,
-                 buttonArs0, buttonArsCancel, buttonArsFull)
-ARS_OPTIONS = [ buttonArs8.callback_data,
-                buttonArs9.callback_data,
-                buttonArs10.callback_data,
-                buttonArs11.callback_data,
-                buttonArs12.callback_data,
-                buttonArs13.callback_data,
-                buttonArs14.callback_data,
-                buttonArs24.callback_data,
-                buttonArs27.callback_data,
-                buttonArs30.callback_data,
-                buttonArs33.callback_data,
-                buttonArs36.callback_data,
-                buttonArs39.callback_data,
-                buttonArs42.callback_data,
-                buttonArs0.callback_data,
-                buttonArsCancel.callback_data,
-                buttonArsFull.callback_data
-              ]
+buttonsArs      = [types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CALLBACK),
+                   types.InlineKeyboardButton(text="+9", callback_data=ARS_9_CALLBACK),
+                   types.InlineKeyboardButton(text="+10", callback_data=ARS_10_CALLBACK),
+                   types.InlineKeyboardButton(text="+11", callback_data=ARS_11_CALLBACK),
+                   types.InlineKeyboardButton(text="+12", callback_data=ARS_12_CALLBACK),
+                   types.InlineKeyboardButton(text="+13", callback_data=ARS_13_CALLBACK),
+                   types.InlineKeyboardButton(text="+14", callback_data=ARS_14_CALLBACK),
+                   types.InlineKeyboardButton(text="+24", callback_data=ARS_24_CALLBACK),
+                   types.InlineKeyboardButton(text="+27", callback_data=ARS_27_CALLBACK),
+                   types.InlineKeyboardButton(text="+30", callback_data=ARS_30_CALLBACK),
+                   types.InlineKeyboardButton(text="+33", callback_data=ARS_33_CALLBACK),
+                   types.InlineKeyboardButton(text="+36", callback_data=ARS_36_CALLBACK),
+                   types.InlineKeyboardButton(text="+39", callback_data=ARS_39_CALLBACK),
+                   types.InlineKeyboardButton(text="+42", callback_data=ARS_42_CALLBACK),
+                   types.InlineKeyboardButton(text="+0", callback_data=ARS_0_CALLBACK),
+                   types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=ARS_CANCEL_CALLBACK),
+                   types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK)
+                   ]
+KEYBOARD_ARS.add(*buttonsArs)
+
+ARS_OPTIONS = [ button.callback_data for button in buttonsArs ]
+
+# battle numbers
+KEYBOARD_NUMBERS = types.InlineKeyboardMarkup()
+buttonsNums      = [types.InlineKeyboardButton(text="1", callback_data=NUMBERS_1_CALLBACK),
+                    types.InlineKeyboardButton(text="2", callback_data=NUMBERS_2_CALLBACK),
+                    types.InlineKeyboardButton(text="3", callback_data=NUMBERS_3_CALLBACK),
+                    types.InlineKeyboardButton(text="4", callback_data=NUMBERS_4_CALLBACK),
+                    types.InlineKeyboardButton(text="5", callback_data=NUMBERS_5_CALLBACK),
+                    types.InlineKeyboardButton(text="6", callback_data=NUMBERS_6_CALLBACK),
+                    types.InlineKeyboardButton(text="7", callback_data=NUMBERS_7_CALLBACK),
+                    types.InlineKeyboardButton(text="8", callback_data=NUMBERS_8_CALLBACK),
+                    types.InlineKeyboardButton(text="9", callback_data=NUMBERS_9_CALLBACK),
+                    types.InlineKeyboardButton(text="10", callback_data=NUMBERS_10_CALLBACK),
+                    types.InlineKeyboardButton(text="11", callback_data=NUMBERS_11_CALLBACK),
+                    types.InlineKeyboardButton(text="12", callback_data=NUMBERS_12_CALLBACK),
+                    types.InlineKeyboardButton(text="13", callback_data=NUMBERS_13_CALLBACK),
+                    types.InlineKeyboardButton(text="14", callback_data=NUMBERS_14_CALLBACK),
+                    types.InlineKeyboardButton(text="15", callback_data=NUMBERS_15_CALLBACK),
+                    types.InlineKeyboardButton(text="16", callback_data=NUMBERS_16_CALLBACK),
+                    types.InlineKeyboardButton(text="17", callback_data=NUMBERS_17_CALLBACK),
+                    types.InlineKeyboardButton(text="18", callback_data=NUMBERS_18_CALLBACK),
+                    types.InlineKeyboardButton(text="19", callback_data=NUMBERS_19_CALLBACK),
+                    types.InlineKeyboardButton(text="20", callback_data=NUMBERS_20_CALLBACK),
+                    types.InlineKeyboardButton(text="21", callback_data=NUMBERS_21_CALLBACK),
+                    types.InlineKeyboardButton(text="22", callback_data=NUMBERS_22_CALLBACK),
+                    types.InlineKeyboardButton(text="23", callback_data=NUMBERS_23_CALLBACK),
+                    types.InlineKeyboardButton(text="24", callback_data=NUMBERS_24_CALLBACK),
+                    types.InlineKeyboardButton(text="25", callback_data=NUMBERS_25_CALLBACK),
+                    types.InlineKeyboardButton(text="26", callback_data=NUMBERS_26_CALLBACK),
+                    types.InlineKeyboardButton(text="27", callback_data=NUMBERS_27_CALLBACK),
+                    types.InlineKeyboardButton(text="28", callback_data=NUMBERS_28_CALLBACK),
+                    types.InlineKeyboardButton(text="29", callback_data=NUMBERS_29_CALLBACK),
+                    types.InlineKeyboardButton(text="30", callback_data=NUMBERS_30_CALLBACK)
+                    ]
+
+def SetupNumbersKeyboard(count):
+    global KEYBOARD_NUMBERS
+    if count <= 8:
+        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=count)
+    else:
+        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=8)
+    if count > 0 and count <= 30:
+        buttons = []
+        for i in range(count):
+            buttons.append(buttonsNums[i])
+        KEYBOARD_NUMBERS.add(*buttons)
+    return KEYBOARD_NUMBERS
+
+NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]
+
 # battle control (from the bot chat)
 KEYBOARD_START      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
 KEYBOARD_STOP       = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
@@ -92,22 +125,15 @@ CHECK_CONTROL_OPTIONS_PRIVATE = [buttonStartPrivate.text, buttonStopPrivate.text
 
 # war pre-check
 KEYBOARD_PRECHECK = types.InlineKeyboardMarkup(row_width=6)
-buttonFr          = types.InlineKeyboardButton(text=ICON_FR, callback_data=PRECHECK_FR_CALLBACK)
-buttonSat         = types.InlineKeyboardButton(text=ICON_SAT, callback_data=PRECHECK_SAT_CALLBACK)
-buttonSun         = types.InlineKeyboardButton(text=ICON_SUN, callback_data=PRECHECK_SUN_CALLBACK)
-buttonFull        = types.InlineKeyboardButton(text=ICON_CHECK, callback_data=PRECHECK_FULL_CALLBACK)
-buttonThinking    = types.InlineKeyboardButton(text=ICON_THINK, callback_data=PRECHECK_THINK_CALLBACK)
-buttonCancel      = types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=PRECHECK_CANCEL_CALLBACK)
-buttonStop        = types.InlineKeyboardButton(text=ICON_STOP, callback_data=PRECHECK_STOP_CALLBACK)
-KEYBOARD_PRECHECK.add(buttonFr, buttonSat, buttonSun,
-                      buttonFull, buttonThinking, buttonCancel,
-                      buttonStop)
+buttonsPrecheck   = [types.InlineKeyboardButton(text=ICON_FR, callback_data=PRECHECK_FR_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_SAT, callback_data=PRECHECK_SAT_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_SUN, callback_data=PRECHECK_SUN_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_CHECK, callback_data=PRECHECK_FULL_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_THINK, callback_data=PRECHECK_THINK_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=PRECHECK_CANCEL_CALLBACK),
+                     types.InlineKeyboardButton(text=ICON_STOP, callback_data=PRECHECK_STOP_CALLBACK)
+                    ]
+KEYBOARD_PRECHECK.add(*buttonsPrecheck)
 
-PRECHECK_OPTIONS = [buttonFr.callback_data,
-                    buttonSat.callback_data,
-                    buttonSun.callback_data,
-                    buttonFull.callback_data,
-                    buttonThinking.callback_data,
-                    buttonCancel.callback_data,
-                   ]
+PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck]
 PRECHECK_CONTROL_OPTIONS = [buttonStop.callback_data]
