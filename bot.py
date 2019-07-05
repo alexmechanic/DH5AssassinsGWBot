@@ -187,7 +187,7 @@ def precheck_control(call):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком!")
         return
     userChoice = call.data
-    if userChoice == PRECHECK_CONTROL_OPTIONS[0]: # stop
+    if userChoice == kb.PRECHECK_CONTROL_OPTIONS[0]: # stop
         current_precheck.DoEndPrecheck()
         bot.edit_message_text(current_precheck.GetText(), inline_message_id=current_precheck.check_id, 
                               parse_mode="markdown")
@@ -248,13 +248,13 @@ def battle_control(call):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
         return
     userChoice = call.data
-    if userChoice == CHECK_CONTROL_OPTIONS[0]: # start
+    if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # start
         current_battle.DoStartBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
         bot.answer_callback_query(call.id, "⚔️ Бой запущен")
         return
-    elif userChoice == CHECK_CONTROL_OPTIONS[1]: # stop
+    elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # stop
         current_battle.DoEndBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown")
