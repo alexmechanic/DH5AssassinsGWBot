@@ -370,7 +370,7 @@ def numbers_query_inline(q):
                                              reply_markup=kb.KEYBOARD_NUMBERS)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=30)
     elif not CanStartNewNumbers():
-            bot.send_message(q.from_user.id, "Прогресс номеров уже создан!")
+        bot.send_message(q.from_user.id, "Прогресс номеров уже создан!")
 
 #
 # Urgent message from non-admin user
