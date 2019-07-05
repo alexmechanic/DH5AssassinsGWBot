@@ -141,5 +141,5 @@ buttonsPrecheck   = [types.InlineKeyboardButton(text=ICON_FR, callback_data=PREC
                     ]
 KEYBOARD_PRECHECK.add(*buttonsPrecheck)
 
-PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck]
-PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data]
+PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # do not include stop button
+PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
