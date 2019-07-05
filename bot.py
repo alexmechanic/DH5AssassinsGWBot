@@ -399,7 +399,7 @@ def urgent_query_inline(q):
 @bot.message_handler(commands=["help"])
 def show_help(m):
     userid = m.from_user.id
-    text =  "⚔️ Привет! Я военный бот гильдии *Assassins*\n"
+    text =  ICON_SWORDS+" Привет! Я военный бот гильдии *Assassins*\n"
     text += "🎮 Игра: *Dungeon Hunter V*"
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
@@ -528,9 +528,9 @@ def manage_admins(m):
         for admin in admins:
             if BOT_USERNAME not in admin or admin != ROOT_ADMIN[1]:
                 if str(userid) == ROOT_ADMIN[0]: # show admins IDs for root admin
-                    text += "👤 %s _(ID=%s)_\n" % (admins[admin], admin)
+                    text += ICON_MEMBER+" %s _(ID=%s)_\n" % (admins[admin], admin)
                 else:
-                    text += ("👤 %s\n" % admins[admin])
+                    text += (ICON_MEMBER+" %s\n" % admins[admin])
         bot.send_message(userid, text, parse_mode="markdown")
         return
     else:

@@ -38,25 +38,25 @@ class WarPreCheck():
         text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
         if len(self.friday) > 0:
-            text += "\n" + "🗓 *Пятница (%d):*\n" % len(self.friday)
+            text += "\n" + ICON_CALENDAR+" *Пятница (%d):*\n" % len(self.friday)
         for user in self.friday:
-            text += "👤 [%s" % self.friday[user][0]
+            text += ICON_MEMBER+" [%s" % self.friday[user][0]
             if self.friday[user][1] != None:
                 text += " (%s)" % self.friday[user][1]
             text += "](tg://user?id=%d)\n" % user
 
         if len(self.saturday) > 0:
-            text += "\n" + "🗓 *Суббота (%d):*\n" % len(self.saturday)
+            text += "\n" + ICON_CALENDAR+" *Суббота (%d):*\n" % len(self.saturday)
         for user in self.saturday:
-            text += "👤 [%s" % self.saturday[user][0]
+            text += ICON_MEMBER+" [%s" % self.saturday[user][0]
             if self.saturday[user][1] != None:
                 text += " (%s)" % self.saturday[user][1]
             text += "](tg://user?id=%d)\n" % user
 
         if len(self.sunday) > 0:
-            text += "\n" + "🗓 *Воскресенье (%d):*\n" % len(self.sunday)
+            text += "\n" + ICON_CALENDAR+" *Воскресенье (%d):*\n" % len(self.sunday)
         for user in self.sunday:
-            text += "👤 [%s" % self.sunday[user][0]
+            text += ICON_MEMBER+" [%s" % self.sunday[user][0]
             if self.sunday[user][1] != None:
                 text += " (%s)" % self.sunday[user][1]
             text += "](tg://user?id=%d)\n" % user

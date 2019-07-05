@@ -35,7 +35,7 @@ class Arsenal():
         percent = iteration if iteration <= 120 else 120
         filledLength = int(length * percent // total)
         bar = '█' * filledLength + '--' * (length - filledLength)
-        text =  "📦 Прогресс арсенала: *%s/120*\n" % percent
+        text =  ICON_ARS+" Прогресс арсенала: *%s/120*\n" % percent
         text += "|%s|\n" % bar
         return text
 
@@ -44,7 +44,7 @@ class Arsenal():
         # list done users
         if self.progress >= 120:
             now = datetime.datetime.now()
-            text += "🔥 %0.2d:%0.2d ГОРИТ! 🔥\n" % (now.hour, now.minute)
+            text += ICON_RAGE+" %0.2d:%0.2d ГОРИТ! "+ICON_RAGE+"\n" % (now.hour, now.minute)
         text += "\n"*(len(self.done_users) != 0)
         for user in self.done_users:
             name = self.done_users[user][0]
