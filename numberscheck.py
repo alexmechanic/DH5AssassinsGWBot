@@ -6,6 +6,7 @@
 
 import datetime
 from icons import *
+from callbacks import NUMBERS_CALLBACK_PREFIX
 
 class NumbersCheck():
     check_id = None

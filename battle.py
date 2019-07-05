@@ -6,6 +6,7 @@
 
 import datetime
 from icons import *
+from callbacks import *
 
 class Battle():
     check_id = None

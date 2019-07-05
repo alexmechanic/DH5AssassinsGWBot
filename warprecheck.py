@@ -5,6 +5,7 @@
 #
 
 from icons import *
+from callbacks import *
 
 class WarPreCheck():
     check_id = None

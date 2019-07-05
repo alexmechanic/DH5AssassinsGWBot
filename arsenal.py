@@ -6,6 +6,7 @@
 
 import datetime
 from icons import *
+from callbacks import ARS_CALLBACK_PREFIX
 
 class Arsenal():
     check_id = None

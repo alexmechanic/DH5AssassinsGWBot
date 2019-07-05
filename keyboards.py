@@ -6,6 +6,7 @@
 
 from telebot import types
 from icons import *
+from callbacks import *
 
 # keyboards
 # battle check (from the battle chat)
