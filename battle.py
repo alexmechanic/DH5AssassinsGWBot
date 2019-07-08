@@ -58,7 +58,7 @@ class Battle():
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def GetHeader(self):
-        text = "⚔️ *Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d\n" \
+        text = ICON_SWORDS+" *Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d\n" \
                 % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute)
         return text
 

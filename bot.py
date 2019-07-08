@@ -148,11 +148,15 @@ def chosen_inline_handler(r):
         times = re.findall(time_pattern, r.query)
         current_battle = Battle(times[0], times[1])
         current_battle.SetMessageID(r.inline_message_id)
+        bot.edit_message_text(current_battle.GetText(), inline_message_id=r.inline_message_id,
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK)
     elif r.result_id == '1': # pre-check
         global current_precheck
         log.debug("User %d (%s %s) created pre-check" % (*user,))
         current_precheck = WarPreCheck()
         current_precheck.SetMessageID(r.inline_message_id)
+        bot.edit_message_text(current_precheck.GetText(), inline_message_id=r.inline_message_id,
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
     elif r.result_id == '2': # send urgent message
         log.debug("User %d (%s %s) sent urgent message to war chat" % (*user,))
         bot.send_message(r.from_user.id, "Пожалуйста, не забывайте, что " +
@@ -162,6 +166,8 @@ def chosen_inline_handler(r):
         log.debug("User %d (%s %s) created arsenal check" % (*user,))
         current_arscheck = Arsenal()
         current_arscheck.SetMessageID(r.inline_message_id)
+        bot.edit_message_text(current_arscheck.GetText(), inline_message_id=r.inline_message_id,
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
     elif r.result_id == '4': # numbers check
         global current_numcheck
         count = IsNumber(r)
@@ -169,6 +175,8 @@ def chosen_inline_handler(r):
             log.debug("User %d (%s %s) created numbers check (%s)" % (*user, count[1]))
             current_numcheck = NumbersCheck(int(count[1]))
             current_numcheck.SetMessageID(r.inline_message_id)
+            bot.edit_message_text(current_numcheck.GetText(), inline_message_id=r.inline_message_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
 
 #
 # GW Pre-check
@@ -226,8 +234,7 @@ def precheck_query_inline(q):
     if CanStartNewPrecheck():
         res = types.InlineQueryResultArticle('1',
                                             'Создать чек перед ВГ ✅💤❌', 
-                                            types.InputTextMessageContent(WarPreCheck().GetHeader(),
-                                            parse_mode="markdown"),
+                                            types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
                                             reply_markup=kb.KEYBOARD_PRECHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True)
     else:
@@ -302,8 +309,7 @@ def battle_query_inline(q):
     if CanStartNewBattle():
         res = types.InlineQueryResultArticle('0',
                                             '[%s/%s] Создать чек на бой ✅💤❌' % (times[0], times[1]), 
-                                            types.InputTextMessageContent(Battle(times[0], times[1]).GetHeader(),
-                                            parse_mode="markdown"),
+                                            types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
                                             reply_markup=kb.KEYBOARD_CHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True)
     else:
@@ -376,7 +382,7 @@ def arsenal_query_inline(q):
     if CanStartNewArs():
         res = types.InlineQueryResultArticle('3',
                                              'Добавить прогресс арса 📦 |████--| Х/120',
-                                             types.InputTextMessageContent(Arsenal().GetHeader(), parse_mode="markdown"),
+                                             types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
                                              reply_markup=kb.KEYBOARD_ARS)
         bot.answer_inline_query(q.id, [res], is_personal=True)
     else:
@@ -450,7 +456,7 @@ def numbers_query_inline(q):
         kb.SetupNumbersKeyboard(int(count[1]))
         res = types.InlineQueryResultArticle('4',
                                              'Добавить прогресс номеров (%s)' % count[1],
-                                             types.InputTextMessageContent(NumbersCheck(int(count[1])).GetText(), parse_mode="markdown"),
+                                             types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
                                              reply_markup=kb.KEYBOARD_NUMBERS)
         bot.answer_inline_query(q.id, [res], is_personal=True)
     elif not CanStartNewNumbers():
