@@ -7,10 +7,10 @@
 #
 
 import telebot, datetime, re, json, sys
-from battle import *
-from warprecheck import *
-from arsenal import *
-from numberscheck import *
+from battle import Battle
+from warprecheck import WarPreCheck
+from arsenal import Arsenal
+from numberscheck import NumbersCheck
 from telebot import types
 import keyboards as kb
 import callbacks as cb
@@ -112,7 +112,8 @@ def IsCheckTime(query): # return if query contains check time and check time lis
 def IsNumber(query): # return if query contains numbers count
     count = re.findall(count_pattern, query.query)
     if count != [] and len(count) == 1:
-        return True, int(count[0])
+        if int(count[0]) <= 30:
+            return True, int(count[0])
     return False, None
 
 def SendHelpNonAdmin(message):

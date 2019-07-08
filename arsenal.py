@@ -48,7 +48,7 @@ class Arsenal():
         # list done users
         if self.progress >= 120:
             now = datetime.datetime.now()
-            text += ICON_RAGE+" %0.2d:%0.2d ГОРИТ! "+ICON_RAGE+"\n" % (now.hour, now.minute)
+            text += ICON_RAGE+" %0.2d:%0.2d ГОРИТ! " % (now.hour, now.minute) +ICON_RAGE+"\n"
         text += "\n"*(len(self.done_users) != 0)
         for user in self.done_users:
             name = self.done_users[user][0]
