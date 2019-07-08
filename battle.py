@@ -7,6 +7,9 @@
 import datetime
 from icons import *
 from callbacks import *
+from logger import get_logger
+
+log = get_logger("bot." + __name__)
 
 class Battle():
     check_id = None
@@ -33,20 +36,26 @@ class Battle():
         self.thinking = {}
         self.cancels = {}
         self.lates = {}
+        self.is_started = False
+        self.is_postponed = False
+        log.info("New battle created (%0.2d:%0.2d / %0.2d:%0.2d)" \
+                % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute))
 
     def SetMessageID(self, message_id):
-        # print("Set Check ID: " + str(message_id))
         self.check_id = message_id
+        log.debug("Set inline message_id: %s" % self.check_id)
 
     def DoStartBattle(self):
         now = datetime.datetime.now()
         self.time["start"] = datetime.datetime.now()
         self.is_started = True
+        log.warning("Battle started at %0.2d:%0.2d" % (self.time["start"].hour, self.time["start"].minute))
 
     def DoEndBattle(self):
         now = datetime.datetime.now()
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
+        log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def GetHeader(self):
         text = "⚔️ *Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d\n" \
@@ -133,6 +142,7 @@ class Battle():
 
     def CheckUser(self, user, action):
         ret = True
+        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(CHECK_CALLBACK_PREFIX, "")))
         if action == CHECK_CHECK_CALLBACK:
             ret = self.SetCheck(user)
         elif action == CHECK_RAGE_CALLBACK:
@@ -147,6 +157,8 @@ class Battle():
             ret = self.SetCancel(user)
         elif action == CHECK_LATE_CALLBACK:
             ret = self.SetLate(user)
+        if ret: log.info("Vote successful")
+        else: log.error("Vote failed")
         return ret
 
     def SetCheck(self, user):

@@ -6,6 +6,9 @@
 
 from icons import *
 from callbacks import *
+from logger import get_logger
+
+log = get_logger("bot." + __name__)
 
 class WarPreCheck():
     check_id = None
@@ -22,13 +25,15 @@ class WarPreCheck():
         self.sunday = {}
         self.thinking = {}
         self.cancels = {}
+        log.info("New pre-check created")
 
     def SetMessageID(self, message_id):
-        # print("Set ID: " + str(message_id))
         self.check_id = message_id
+        log.debug("Set inline message_id: %s" % self.check_id)
 
     def DoEndPrecheck(self):
         self.is_postponed = True
+        log.info("Pre-check ended")
 
     def GetHeader(self):
         return "📝 *Чек перед ВГ:*\n"
@@ -102,6 +107,7 @@ class WarPreCheck():
 
     def CheckUser(self, user, action):
         ret = True
+        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(PRECHECK_CALLBACK_PREFIX, "")))
         if action == PRECHECK_FR_CALLBACK:
             ret = self.SetFriday(user)
         if action == PRECHECK_SAT_CALLBACK:
@@ -114,6 +120,8 @@ class WarPreCheck():
             ret = self.SetThinking(user)
         elif action == PRECHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
+        if ret: log.info("Vote successful")
+        else: log.error("Vote failed - already voted the same")
         return ret
 
     def SetFriday(self, user):

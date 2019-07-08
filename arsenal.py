@@ -7,6 +7,9 @@
 import datetime
 from icons import *
 from callbacks import ARS_CALLBACK_PREFIX
+from logger import get_logger
+
+log = get_logger("bot." + __name__)
 
 class Arsenal():
     check_id = None
@@ -19,10 +22,11 @@ class Arsenal():
         self.progress = 0
         self.is_fired = False
         self.done_users = {}
+        log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
-        # print("Set Arsenal ID: " + str(message_id))
         self.check_id = message_id
+        log.debug("Set inline message_id: %s" % self.check_id)
 
     def GetProgress(self):
         return self.progress
@@ -68,10 +72,12 @@ class Arsenal():
         inc = 0
         user_fired = False # this variable is needed in order to count ars value for user even if ars is already fired now
         user_newcount = 1
+        log.info("User %d (%s %s) voted for %s" % (*user, arsValue))
         if arsValue == "Cancel":
             if userid in self.done_users:
                 self.UndoIncrement(user)
                 return True
+            log.error("Vote failed - user already reverted his votes")
             return False
         if arsValue == "Full":
             if not self.is_fired:
@@ -96,16 +102,21 @@ class Arsenal():
             user_oldvalue = self.done_users[userid][2]
             user_oldcount = self.done_users[userid][3]
         user_record = [name, nick, user_oldvalue+inc, user_oldcount+user_newcount, user_fired]
+        log.debug("User %d (%s %s) total impact: %s" % (*user, str(user_record[2:])))
         self.done_users[userid] = user_record
+        log.info("Vote successful")
         return True
 
     # undo arsenal result for user if user made mistake
     def UndoIncrement(self, user):
         userid = user[0]
         dec = self.done_users[userid][2]
+        log.debug("User %d (%s %s) reverting all his votes" % (user[0], user[1], user[2]))
         del self.done_users[userid]
         self.progress -= dec
         if self.progress < 120:
+            log.warning("Rage might've been reverted!")
             self.is_fired = False
             for user in self.done_users:
                 self.done_users[user][4] = False
+        log.info("Revert successful")

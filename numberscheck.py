@@ -7,6 +7,9 @@
 import datetime
 from icons import *
 from callbacks import NUMBERS_CALLBACK_PREFIX
+from logger import get_logger
+
+log = get_logger("bot." + __name__)
 
 class NumbersCheck():
     check_id = None
@@ -28,10 +31,11 @@ class NumbersCheck():
         self.is_1000 = False
         self.times = {"500": None, "1000": None}
         self.is_postponed = False
+        log.info("New numbers check created (%d)" % count)
 
     def SetMessageID(self, message_id):
-        # print("Set Numbers ID: " + str(message_id))
         self.check_id = message_id
+        log.debug("Set inline message_id: %s" % self.check_id)
 
     def GetHeader(self):
         return ICON_SWORDS+" *Прогресс номеров (по скринам):*\n"
@@ -79,11 +83,14 @@ class NumbersCheck():
             text += ("(%0.2d:%0.2d) 1️⃣0️⃣0️⃣0️⃣ ❗\n" % (self.times["1000"].hour, self.times["1000"].minute))*self.is_1000
         return text
 
-    def CheckUser(self, userid, value):
+    def CheckUser(self, user, value):
         ret = True
+        userid = user[0]
         number_to_check = int(value.replace(NUMBERS_CALLBACK_PREFIX, ""))
+        log.info("User %d (%s %s) voted for %d" % (*user, number_to_check))
         oldValue = self.numbers[number_to_check]
         if oldValue == 0: # can't set number below 0
+            log.error("Vote failed - number is already empty")
             return False
         # update number value
         self.numbers[number_to_check] = (oldValue - 1)
@@ -99,6 +106,7 @@ class NumbersCheck():
         if not done:
             self.users[userid] = [number_to_check]
         self.CheckAchievements()
+        log.info("Vote successful")
         return True
 
     def CheckAchievements(self):
@@ -115,8 +123,16 @@ class NumbersCheck():
         if is_500:
             self.times["500"] = now
             self.is_postponed = True
+            if not self.is_500:
+                log.debug("Reached 500")
+                log.debug("Users impact:")
+                log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
         if is_1000:
             self.times["1000"] = now
             self.is_postponed = True
+            if not self.is_1000:
+                log.debug("Reached 1000")
+                log.debug("Users impact:")
+                log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
         self.is_500 = is_500
         self.is_1000 = is_1000
