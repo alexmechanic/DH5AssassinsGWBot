@@ -37,6 +37,10 @@ class NumbersCheck():
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
 
+    def DoEndCheck(self):
+        self.is_postponed = True
+        log.info("Numbers check stopped")
+
     def GetHeader(self):
         return ICON_SWORDS+" *Прогресс номеров (по скринам):*\n"
 

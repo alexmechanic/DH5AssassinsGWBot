@@ -58,11 +58,13 @@ buttonsArs      = [types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CAL
                    types.InlineKeyboardButton(text="+42", callback_data=ARS_42_CALLBACK),
                    types.InlineKeyboardButton(text="+0", callback_data=ARS_0_CALLBACK),
                    types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=ARS_CANCEL_CALLBACK),
-                   types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK)
+                   types.InlineKeyboardButton(text=ICON_RAGE, callback_data=ARS_FULL_CALLBACK),
+                   types.InlineKeyboardButton(text=ICON_STOP, callback_data=ARS_STOP_CALLBACK)
                    ]
 KEYBOARD_ARS.add(*buttonsArs)
 
-ARS_OPTIONS = [ button.callback_data for button in buttonsArs ]
+ARS_OPTIONS = [ button.callback_data for button in buttonsArs[:-1]] # do not include stop button
+ARS_CONTROL_OPTIONS = [buttonsArs[-1].callback_data] # only stop button
 
 # battle numbers
 KEYBOARD_NUMBERS = types.InlineKeyboardMarkup()
@@ -97,6 +99,7 @@ buttonsNums      = [types.InlineKeyboardButton(text="1", callback_data=NUMBERS_1
                     types.InlineKeyboardButton(text="29", callback_data=NUMBERS_29_CALLBACK),
                     types.InlineKeyboardButton(text="30", callback_data=NUMBERS_30_CALLBACK)
                     ]
+buttonsNumsStop = types.InlineKeyboardButton(text=ICON_STOP, callback_data=NUMBERS_STOP_CALLBACK)
 
 def SetupNumbersKeyboard(count):
     global KEYBOARD_NUMBERS
@@ -114,9 +117,11 @@ def SetupNumbersKeyboard(count):
         for i in range(count):
             buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
+        KEYBOARD_NUMBERS.add(buttonsNumsStop)
     return KEYBOARD_NUMBERS
 
 NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]
+NUMBERS_CONTROL_OPTIONS = [buttonsNumsStop.callback_data] # only stop button
 
 # battle control (from the bot chat)
 KEYBOARD_START      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)

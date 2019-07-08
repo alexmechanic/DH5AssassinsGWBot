@@ -336,6 +336,26 @@ def arsenal_check_user(call):
         return
     log.error("Ars check not found!")
 
+@bot.callback_query_handler(func=lambda call: call.data in kb.ARS_CONTROL_OPTIONS)
+def arsenal_control(call):
+    # print("arsenal_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control arsenal check" % (*user,))
+    if not IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком арсенала!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if userChoice == kb.ARS_CONTROL_OPTIONS[0]: # stop
+        current_arscheck.DoEndArsenal()
+        bot.edit_message_text(current_arscheck.GetProgressText(),
+                              inline_message_id=current_arscheck.check_id,
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
+        return
+    log.error("Numbers check not found!")
+
 @bot.inline_handler(lambda query: query.query[:3] == "ars")
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
@@ -382,6 +402,26 @@ def numbers_check_user(call):
                 bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
         bot.answer_callback_query(call.id)
+        return
+    log.error("Numbers check not found!")
+
+@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
+def numbers_control(call):
+    # print("numbers_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
+    if not IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком номеров!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
+        current_numcheck.DoEndCheck()
+        bot.edit_message_text(current_numcheck.GetText(),
+                              inline_message_id=current_numcheck.check_id,
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
         return
     log.error("Numbers check not found!")
 

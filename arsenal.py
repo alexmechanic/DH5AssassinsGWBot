@@ -17,11 +17,13 @@ class Arsenal():
     is_fired = False
     # dict with lists formatted [name, nick, value, count, is_fired]
     done_users = {}
+    is_postponed = False
 
     def __init__(self):
         self.progress = 0
         self.is_fired = False
         self.done_users = {}
+        self.is_postponed = False
         log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
@@ -30,6 +32,9 @@ class Arsenal():
 
     def GetProgress(self):
         return self.progress
+
+    def DoEndArsenal(self):
+        self.is_postponed = True
 
     def GetHeader(self):
         iteration = self.progress
@@ -91,11 +96,13 @@ class Arsenal():
                 user_newcount = 3
         if user_fired:
             self.progress = 120
+            self.is_postponed = True
         else:
             self.progress += inc
         if self.progress >= 120:
             user_fired = True
             self.is_fired = True
+            self.is_postponed = True
         user_oldvalue = 0
         user_oldcount = 0
         if userid in self.done_users:
@@ -117,6 +124,7 @@ class Arsenal():
         if self.progress < 120:
             log.warning("Rage might've been reverted!")
             self.is_fired = False
+            self.is_postponed = False
             for user in self.done_users:
                 self.done_users[user][4] = False
         log.info("Revert successful")
