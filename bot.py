@@ -7,6 +7,7 @@
 #
 
 import telebot, datetime, re, json, sys
+from icons import *
 from battle import Battle
 from warprecheck import WarPreCheck
 from arsenal import Arsenal
@@ -490,15 +491,38 @@ def command_start(m):
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
-    if not CanStartNewBattle():
-        text =  "Текущий бой: %0.2d:%0.2d / %0.2d:%0.2d\n" \
-            % (current_battle.time["check"].hour, current_battle.time["check"].minute, 
-               current_battle.time["start"].hour, current_battle.time["start"].minute)
-        text += "/bstart - начать бой\n"
-        text += "/bstop  - остановить бой"
-        bot.send_message(m.chat.id, text)
-    else:
-        SendHelpNoBattle(m.chat.id)
+    inline_error = m.text.replace("/start ", "")
+    if inline_error != "":
+        if inline_error == "existing_precheck":
+            text =  "Уже имеетя активный чек перед ВГ.\n\n" + \
+                    ("Чтобы начать чек перед ВГ заново, необходимо остановить (%s) предыдущий.\n" % ICON_STOP) + \
+                    "Если чек был назначен ошибочно - завершите чек, " + \
+                    "затем создайте новый, а старое сообщение удалите."
+            bot.send_message(m.chat.id, text)
+        elif inline_error == "existing_battle":
+            if not CanStartNewBattle():
+                text =  "Текущий бой: %0.2d:%0.2d / %0.2d:%0.2d.\n\n" \
+                        % (current_battle.time["check"].hour, current_battle.time["check"].minute,
+                           current_battle.time["start"].hour, current_battle.time["start"].minute)
+                text += ("Чтобы начать новый бой, необходимо завершить (%s) предыдущий.\n" % ICON_STOP) + \
+                         "Если бой был назначен ошибочно - остановите бой, " + \
+                         "затем создайте новый, а старое сообщение удалите."
+                bot.send_message(m.chat.id, text)
+            else:
+                SendHelpNoBattle(m.chat.id)
+        elif inline_error == "existing_arsenal":
+            text =  "Уже имеетя активный чек арсенала\n\n" + \
+                    ("Чтобы начать чек арсенала заново, необходимо поджечь (%s) или остановить (%s) текущий.\n" % (ICON_RAGE, ICON_STOP)) + \
+                    "Если чек арса был добавлен ошибочно (или ярость не была задействована в предыдущем бое) - " + \
+                    "остановите чек, затем создайте новый, а старое сообщение удалите."
+            bot.send_message(m.chat.id, text)
+        elif inline_error == "existing_numbers":
+            text =  "Уже имеетя активный чек номеров\n\n" + \
+                    ("Чтобы начать чек номеров заново, необходимо достичь хотя бы '500' или остановить (%s) его.\n" % ICON_STOP) + \
+                    "Если чек номеров был добавлен ошибочно (или не было сделано хотя бы '500') - " + \
+                    "остановите чек, затем создайте новый, а старое сообщение удалите."
+            bot.send_message(m.chat.id, text)
+
 
 @bot.message_handler(commands=['bstart'])
 def command_battle_start(m):
