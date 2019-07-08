@@ -327,7 +327,7 @@ def arsenal_check_user(call):
     if message_id == current_arscheck.check_id:
         ret = current_arscheck.Increment(user, userChoice)
         if (ret):
-            bot.edit_message_text(current_arscheck.GetProgressText(), inline_message_id=message_id, 
+            bot.edit_message_text(current_arscheck.GetText(), inline_message_id=message_id,
                                 parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
             bot.answer_callback_query(call.id)
         else:
@@ -349,7 +349,7 @@ def arsenal_control(call):
     userChoice = call.data
     if userChoice == kb.ARS_CONTROL_OPTIONS[0]: # stop
         current_arscheck.DoEndArsenal()
-        bot.edit_message_text(current_arscheck.GetProgressText(),
+        bot.edit_message_text(current_arscheck.GetText(),
                               inline_message_id=current_arscheck.check_id,
                               parse_mode="markdown")
         bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")

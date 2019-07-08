@@ -48,7 +48,7 @@ class Arsenal():
         text += "|%s|\n" % bar
         return text
 
-    def GetProgressText(self):
+    def GetText(self):
         text = self.GetHeader()
         # list done users
         if self.progress >= 120:
