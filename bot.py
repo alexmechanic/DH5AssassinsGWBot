@@ -15,6 +15,7 @@ from numberscheck import NumbersCheck
 from telebot import types
 import keyboards as kb
 import callbacks as cb
+import helpers as hlp
 from logger import get_logger
 
 log = get_logger("bot")
@@ -42,43 +43,6 @@ current_battle   = None
 current_precheck = None
 current_arscheck = None
 current_numcheck = None
-time_pattern = r'(?:\d|[01]\d|2[0-3])\D[0-5]\d'
-count_pattern = r'[1-9]\d*'
-
-#
-# Manage admins list through file
-#
-# load initial list
-with open("ADMINS", "r") as f:
-    admins_list = json.load(f)
-    ROOT_ADMIN = admins_list[0]
-    admins = admins_list[1]
-    f.close()
-    print("Load root admin: ", ROOT_ADMIN)
-    print("Load admins list: ", admins)
-
-# save edited list
-def SaveAdminsList():
-    admins_list = [ROOT_ADMIN, admins]
-    with open("ADMINS", "w") as f:
-        json.dump(admins_list, f)
-        f.close()
-    print("Saved admins list: ", admins_list)
-
-#####################
-# Support functions #
-#####################
-def IsUserAdmin(message):
-    if str(message.from_user.id) in admins or \
-       str(message.from_user.id) == ROOT_ADMIN[0]:
-        return True
-    else:
-        return False
-
-def IsInPrivateChat(message):
-    if message.chat.id == message.from_user.id:
-        return True
-    return False
 
 def CanStartNewPrecheck():
     res = current_precheck == None
@@ -104,31 +68,37 @@ def CanStartNewNumbers():
         res = current_numcheck.is_postponed
     return res
 
-def IsCheckTime(query): # return if query contains check time and check time list
-    times = re.findall(time_pattern, query.query)
-    if times != [] and len(times) == 2:
-        return True, times
-    return False, None
+def IsUserAdmin(message):
+    if str(message.from_user.id) in admins or \
+       str(message.from_user.id) == ROOT_ADMIN[0]:
+        return True
+    else:
+        return False
 
-def IsNumber(query): # return if query contains numbers count
-    count = re.findall(count_pattern, query.query)
-    if count != [] and len(count) == 1:
-        if int(count[0]) <= 30:
-            return True, int(count[0])
-    return False, None
+def IsInPrivateChat(message):
+    if message.chat.id == message.from_user.id:
+        return True
+    return False
 
-def SendHelpNonAdmin(message):
-    text =  "Мной могут управлять только офицеры гильдии.\n"
-    text += "Обратитесь к одному из офицеров за подробностями:\n\n"
-    for admin in admins:
-        text += "[%s](tg://user?id=%s)\n" % (admins[admin], admin)
-    bot.send_message(message.from_user.id, text, parse_mode="markdown")
+#
+# Manage admins list through file
+#
+# load initial list
+with open("ADMINS", "r") as f:
+    admins_list = json.load(f)
+    ROOT_ADMIN = admins_list[0]
+    admins = admins_list[1]
+    f.close()
+    print("Load root admin: ", ROOT_ADMIN)
+    print("Load admins list: ", admins)
 
-def SendHelpNoBattle(chat_id):
-    error_text =  "Текущий активный бой отсутствует.\n"
-    error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
-    error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
-    bot.send_message(chat_id, error_text, parse_mode="markdown")
+# save edited list
+def SaveAdminsList():
+    admins_list = [ROOT_ADMIN, admins]
+    with open("ADMINS", "w") as f:
+        json.dump(admins_list, f)
+        f.close()
+    print("Saved admins list: ", admins_list)
 
 #####################
 # Callback handlers #
@@ -145,7 +115,7 @@ def chosen_inline_handler(r):
     if r.result_id == '0': # battle check
         global current_battle
         log.debug("User %d (%s %s) created battle check (%s)" % (*user, r.query))
-        times = re.findall(time_pattern, r.query)
+        times = hlp.IsCheckTimeQuery(r)[1]
         current_battle = Battle(times[0], times[1])
         current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(current_battle.GetText(), inline_message_id=r.inline_message_id,
@@ -170,13 +140,17 @@ def chosen_inline_handler(r):
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
     elif r.result_id == '4': # numbers check
         global current_numcheck
-        count = IsNumber(r)
-        if count[0]:
-            log.debug("User %d (%s %s) created numbers check (%s)" % (*user, count[1]))
-            current_numcheck = NumbersCheck(int(count[1]))
+        res, numbers = hlp.IsNumbersQuery(r)
+        if len(numbers) == 1:
+            log.debug("User %d (%s %s) created screens numbers check (%s)" % (*user, numbers[0]))
+            current_numcheck = NumbersCheck(int(numbers[0]))
             current_numcheck.SetMessageID(r.inline_message_id)
-            bot.edit_message_text(current_numcheck.GetText(), inline_message_id=r.inline_message_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+        else:
+            log.debug("User %d (%s %s) created in-game numbers check (%s)" % (*user, ' '.join(str(num) for num in numbers)))
+            current_numcheck = NumbersCheck(len(numbers), ingame=True, ingame_nums=numbers)
+            current_numcheck.SetMessageID(r.inline_message_id)
+        bot.edit_message_text(current_numcheck.GetText(), inline_message_id=r.inline_message_id,
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
 
 #
 # GW Pre-check
@@ -228,7 +202,7 @@ def precheck_query_inline(q):
     log.debug("User %d (%s %s) is trying to create pre-check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        SendHelpNonAdmin(q)
+        hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     if CanStartNewPrecheck():
@@ -242,6 +216,90 @@ def precheck_query_inline(q):
         error_text = "Уже имеется активный чек"
         bot.answer_inline_query(q.id, [], is_personal=True,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
+
+#
+# Numbers progress for battle
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_OPTIONS)
+def numbers_check_user(call):
+    # print("numbers_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
+    if message_id == current_numcheck.check_id:
+        if not current_numcheck.is_1000:
+            ret = current_numcheck.CheckUser(user, call.data)
+            if (ret):
+                bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
+                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+        bot.answer_callback_query(call.id)
+        return
+    log.error("Numbers check not found!")
+
+@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
+def numbers_control(call):
+    # print("numbers_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
+    if not IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком номеров!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
+        current_numcheck.DoEndCheck()
+        bot.edit_message_text(current_numcheck.GetText(),
+                              inline_message_id=current_numcheck.check_id,
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
+        return
+    log.error("Numbers check not found!")
+
+@bot.inline_handler(lambda query: query.query[:4] == "nums")
+def numbers_query_inline(q):
+    # print("numbers_query_inline")
+    # print(q)
+    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to create numbers check" % (*user,))
+    if not IsUserAdmin(q): # non-admins cannot post votes
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if CanStartNewBattle():
+        log.error("Trying to setup numbers check with no current battle")
+        error_text = "Отсутствует активный бой"
+        bot.answer_inline_query(q.id, [], is_personal=True,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
+        return
+    res, numbers = hlp.IsNumbersQuery(q)
+    if res:
+        if CanStartNewNumbers():
+            text = 'Добавить прогресс номеров '
+            if len(numbers) == 1:
+                text += 'по скринам (%s)' % numbers[0]
+                kb.SetupNumbersKeyboard(count=int(numbers[0]))
+            else:
+                text += 'по игре (%s)' % ' '.join(str(num) for num in numbers)
+                kb.SetupNumbersKeyboard(ingame_nums=numbers)
+            res = types.InlineQueryResultArticle('4',
+                                                 text,
+                                                 types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
+                                                 reply_markup=kb.KEYBOARD_NUMBERS
+                                                 )
+            bot.answer_inline_query(q.id, [res], is_personal=True)
+        elif not CanStartNewNumbers():
+            log.error("Trying to setup another numbers check while current has not reached 500/1000")
+            error_text = "Уже имеется активный чек номеров"
+            bot.answer_inline_query(q.id, [], is_personal=True,
+                                    switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
+    else:
+        log.error("Failed (invalid query)")
+        error_text = "Неверный формат запроса"
+        bot.answer_inline_query(q.id, [], is_personal=True,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
 
 #
 # Battle check
@@ -294,7 +352,7 @@ def battle_control(call):
         return
     log.error("Battle not found!")
 
-@bot.inline_handler(lambda query: IsCheckTime(query)[0])
+@bot.inline_handler(lambda query: hlp.IsCheckTimeQuery(query)[0])
 def battle_query_inline(q):
     # print("battle_query_inline")
     # print(q)
@@ -302,10 +360,10 @@ def battle_query_inline(q):
     log.debug("User %d (%s %s) is trying to create battle check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        SendHelpNonAdmin(q)
+        hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    times = IsCheckTime(q)[1]
+    times = hlp.IsCheckTimeQuery(q)[1]
     if CanStartNewBattle():
         res = types.InlineQueryResultArticle('0',
                                             '[%s/%s] Создать чек на бой ✅💤❌' % (times[0], times[1]), 
@@ -370,7 +428,7 @@ def arsenal_query_inline(q):
     log.debug("User %d (%s %s) is trying to create arsenal check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        SendHelpNonAdmin(q)
+        hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     if CanStartNewBattle():
@@ -390,85 +448,6 @@ def arsenal_query_inline(q):
         error_text = "Уже имеется активный чек арсенала"
         bot.answer_inline_query(q.id, [], is_personal=True,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
-
-#
-# Numbers progress for battle
-#
-@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_OPTIONS)
-def numbers_check_user(call):
-    # print("numbers_check_user")
-    # print(call)
-    message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
-    if message_id == current_numcheck.check_id:
-        if not current_numcheck.is_1000:
-            ret = current_numcheck.CheckUser(user, call.data)
-            if (ret):
-                bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
-                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
-        bot.answer_callback_query(call.id)
-        return
-    log.error("Numbers check not found!")
-
-@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
-def numbers_control(call):
-    # print("numbers_control")
-    # print(call)
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
-    if not IsUserAdmin(call):
-        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком номеров!")
-        log.error("Failed (not an admin)")
-        return
-    userChoice = call.data
-    if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
-        current_numcheck.DoEndCheck()
-        bot.edit_message_text(current_numcheck.GetText(),
-                              inline_message_id=current_numcheck.check_id,
-                              parse_mode="markdown")
-        bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
-        return
-    log.error("Numbers check not found!")
-
-@bot.inline_handler(lambda query: query.query[:4] == "nums")
-def numbers_query_inline(q):
-    # print("numbers_query_inline")
-    # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create numbers check" % (*user,))
-    if not IsUserAdmin(q): # non-admins cannot post votes
-        log.error("Failed (not an admin)")
-        SendHelpNonAdmin(q)
-        bot.answer_callback_query(q.id)
-        return
-    if CanStartNewBattle():
-        log.error("Trying to setup numbers check with no current battle")
-        error_text = "Отсутствует активный бой"
-        bot.answer_inline_query(q.id, [], is_personal=True,
-                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
-        return
-    count = IsNumber(q)
-    if CanStartNewNumbers() and count[0]:
-        # text = 'Добавить прогресс номеров по скринам (%s)' % count[1]
-        # if "game" in q.query:
-        #     text = 'Добавить прогресс номеров по игре (%s)' % count[1]
-        kb.SetupNumbersKeyboard(int(count[1]))
-        res = types.InlineQueryResultArticle('4',
-                                             'Добавить прогресс номеров (%s)' % count[1],
-                                             types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
-                                             reply_markup=kb.KEYBOARD_NUMBERS)
-        bot.answer_inline_query(q.id, [res], is_personal=True)
-    elif not CanStartNewNumbers():
-        log.error("Trying to setup another numbers check while current has not reached 500/1000")
-        error_text = "Уже имеется активный чек номеров"
-        bot.answer_inline_query(q.id, [], is_personal=True,
-                                switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
-    else:
-        log.error("Failed (invalid query)")
-        error_text = "Неверный формат запроса"
-        bot.answer_inline_query(q.id, [], is_personal=True,
-                                switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
 
 #
 # Urgent message from non-admin user
@@ -527,7 +506,7 @@ def show_help(m):
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
     bot.send_message(userid, text, parse_mode="markdown")
     if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
 
 @bot.message_handler(commands=['start'])
 def command_start(m):
@@ -535,7 +514,7 @@ def command_start(m):
     # print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     inline_error = m.text.replace("/start ", "")
     if inline_error != "":
@@ -555,7 +534,7 @@ def command_start(m):
                          "затем создайте новый, а старое сообщение удалите."
                 bot.send_message(m.chat.id, text)
             else:
-                SendHelpNoBattle(m.chat.id)
+                hlp.SendHelpNoBattle(m.chat.id)
         elif inline_error == "existing_arsenal":
             text =  "Уже имеетя активный чек арсенала\n\n" + \
                     ("Чтобы начать чек арсенала заново, необходимо поджечь (%s) или остановить (%s) текущий.\n" % (ICON_RAGE, ICON_STOP)) + \
@@ -574,27 +553,27 @@ def command_start(m):
 def command_battle_start(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
         text = "Запустить текущий бой [%0.2d:%0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_START)
     else:
-        SendHelpNoBattle(m.chat.id)
+        hlp.SendHelpNoBattle(m.chat.id)
 
 @bot.message_handler(commands=['bstop'])
 def command_battle_stop(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
         text = "Завершить текущий бой [%0.2d:%0.2d]?" \
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_STOP)
     else:
-        SendHelpNoBattle(m.chat.id)
+        hlp.SendHelpNoBattle(m.chat.id)
 
 @bot.message_handler(commands=["setadmins"])
 def setup_admins(m):
@@ -605,7 +584,7 @@ def setup_admins(m):
     log.debug("User %d (%s %s) is trying to update admins list" % (*user,))
     if not IsUserAdmin(m):
         log.error("Failed (not an admin)")
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     if IsInPrivateChat(m):
         log.error("Failed (in private chat)")
@@ -619,7 +598,7 @@ def setup_admins(m):
             break
     if not is_chat_admin:
         log.error("Failed (not a chat admin)")
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     admins = {}
     for admin in chat_admins:
@@ -650,11 +629,11 @@ def manage_admins(m):
                 break
         if not is_chat_admin:
             log.error("Failed (not a chat admin)")
-            SendHelpNonAdmin(m)
+            hlp.SendHelpNonAdmin(m)
             return
     if not IsUserAdmin(m):
         log.error("Failed (not an admin)")
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
     if command == "list": # list admins
@@ -676,7 +655,7 @@ def manage_admins(m):
 def battle_control(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
     if m.text == buttonStart.text:
@@ -699,7 +678,7 @@ def nonadmin_message(m):
     message_id = m.message_id
     chat_id = m.chat.id
     bot.delete_message(chat_id, message_id)
-    SendHelpNonAdmin(m)
+    hlp.SendHelpNonAdmin(m)
 
 @bot.message_handler(func=lambda message: True)
 def check_doubleshop(m):
@@ -718,6 +697,6 @@ def check_doubleshop(m):
         else:
             DOUBLESHOP_TIME_CALLED = False
     elif not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
+        hlp.SendHelpNonAdmin(m)
 
 bot.polling(none_stop=True, interval=0, timeout=20)

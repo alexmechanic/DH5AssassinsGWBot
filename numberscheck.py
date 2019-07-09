@@ -14,6 +14,7 @@ log = get_logger("bot." + __name__)
 class NumbersCheck():
     check_id = None
     count = 1
+    ingame = False
     numbers = {} # {number: value (0-3)}
     users = {}   # {userid: [numbers done]}
     is_500 = False
@@ -21,11 +22,17 @@ class NumbersCheck():
     times = {} # {"500": datetime, "1000": datetime}
     is_postponed = False # set when 500 or 1000 is gained
 
-    def __init__(self, count):
-        self.count = count
+    def __init__(self, count=30, ingame=False, ingame_nums=None):
         self.numbers = {}
-        for i in range(1, count+1):
-            self.numbers[i] = 3
+        self.ingame = ingame
+        if ingame:
+            self.count = len(ingame_nums)
+            for i in ingame_nums:
+                self.numbers[i] = 3
+        else:
+            self.count = count
+            for i in range(1, count+1):
+                self.numbers[i] = 3
         self.users = {}
         self.is_500 = False
         self.is_1000 = False
@@ -42,7 +49,8 @@ class NumbersCheck():
         log.info("Numbers check stopped")
 
     def GetHeader(self):
-        return ICON_SWORDS+" *Прогресс номеров (по скринам):*\n"
+        return ICON_SWORDS+" *Прогресс номеров " + \
+                "(по скринам)"*(not self.ingame) + "(по игре)"*(self.ingame) + ":*\n"
 
     def GetText(self):
         text = self.GetHeader()

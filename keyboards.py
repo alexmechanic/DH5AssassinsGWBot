@@ -101,21 +101,28 @@ buttonsNums      = [types.InlineKeyboardButton(text="1", callback_data=NUMBERS_1
                     ]
 buttonsNumsStop = types.InlineKeyboardButton(text=ICON_STOP, callback_data=NUMBERS_STOP_CALLBACK)
 
-def SetupNumbersKeyboard(count):
+def SetupNumbersKeyboard(count=30, ingame_nums=None):
     global KEYBOARD_NUMBERS
-    if count <= 8:
-        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=count)
+    nums_count = count
+    if ingame_nums != None: # if check is for in-game numbers - counter is list size (not 'count' anymore!)
+      nums_count = len(ingame_nums)
+    if nums_count <= 8:
+        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=nums_count)
     else:
         new_count = 8
         for i in range(2, 5):
-            if (count // i + count % i) <= 8:
-                new_count = count // i + count % i
+            if (nums_count // i + nums_count % i) <= 8:
+                new_count = nums_count // i + nums_count % i
                 break
         KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=new_count)
-    if count > 0 and count <= 30:
+    if nums_count > 0 and nums_count <= 30:
         buttons = []
-        for i in range(count):
-            buttons.append(buttonsNums[i])
+        if ingame_nums != None:
+          for num in ingame_nums: # if check is for in-game numbers - add only specified number buttons
+            buttons.append(buttonsNums[num-1])
+        else: # else - add all buttons from 1 to counter
+          for i in range(nums_count):
+              buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
         KEYBOARD_NUMBERS.add(buttonsNumsStop)
     return KEYBOARD_NUMBERS
