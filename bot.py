@@ -81,7 +81,7 @@ def IsInPrivateChat(message):
     return False
 
 #
-# Manage admins list through file
+# Manage admins list through file at start
 #
 # load initial list
 with open("ADMINS", "r") as f:
@@ -500,7 +500,8 @@ def show_help(m):
                 "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
                 "_@assassinsgwbot ars_ - создать чек арсенала (при наличии боя)\n" + \
-                "_@assassinsgwbot nums X_ - создать чек Х номеров (при наличии боя)"
+                "_@assassinsgwbot nums X_ - создать чек Х номеров по скринам (при наличии боя)"
+                "_@assassinsgwbot nums X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
@@ -575,6 +576,9 @@ def command_battle_stop(m):
     else:
         hlp.SendHelpNoBattle(m.chat.id)
 
+#
+# Update bot admins list (from war chat where admins reside)
+#
 @bot.message_handler(commands=["setadmins"])
 def setup_admins(m):
     global admins
@@ -611,7 +615,9 @@ def setup_admins(m):
     bot.send_message(m.chat.id, "👮🏻‍♂️ Список офицеров обновлен")
     log.info("Admins list updated")
 
-
+#
+# Manage admins in private bot chat
+#
 @bot.message_handler(commands=["admin"])
 def manage_admins(m):
     # print("manage_admins")

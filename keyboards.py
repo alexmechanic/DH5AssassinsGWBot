@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Keyboards used in inline check messages
+#
 
 from telebot import types
 from icons import *

@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Logging setup module
+# 
 
 import logging, logging.config
 CONFIG_FILE = "logConfig"

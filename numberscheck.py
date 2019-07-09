@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Class representing numbers check
+#
 
 import datetime
 from icons import *

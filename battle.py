@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Class representing battle check
+#
 
 import datetime
 from icons import *

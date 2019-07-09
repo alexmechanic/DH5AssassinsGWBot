@@ -3,10 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
-
-#####################
-# Support functions #
-#####################
+# Various support functions
+#
 
 import re
 from collections import Counter

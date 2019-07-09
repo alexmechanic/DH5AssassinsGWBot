@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Callbacks for inline buttons
+#
 
 from icons import *
 

@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Various icons used in bot
+#
 
 # action icons
 ICON_CHECK  = "✅"

@@ -3,6 +3,8 @@
 #
 # Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
+# Class representing pre-check for Guild war
+#
 
 from icons import *
 from callbacks import *
