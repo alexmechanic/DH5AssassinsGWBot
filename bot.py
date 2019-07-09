@@ -80,6 +80,13 @@ def IsInPrivateChat(message):
         return True
     return False
 
+def SendHelpNonAdmin(message):
+    text =  "Мной могут управлять только офицеры гильдии.\n"
+    text += "Обратитесь к одному из офицеров за подробностями:\n\n"
+    for admin in admins:
+        text += "[%s](tg://user?id=%s)\n" % (admins[admin], admin)
+    bot.send_message(message.from_user.id, text, parse_mode="markdown")
+
 #
 # Manage admins list through file at start
 #
@@ -202,7 +209,7 @@ def precheck_query_inline(q):
     log.debug("User %d (%s %s) is trying to create pre-check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(q)
+        SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     if CanStartNewPrecheck():
@@ -265,7 +272,7 @@ def numbers_query_inline(q):
     log.debug("User %d (%s %s) is trying to create numbers check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(q)
+        SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     if CanStartNewBattle():
@@ -360,7 +367,7 @@ def battle_query_inline(q):
     log.debug("User %d (%s %s) is trying to create battle check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(q)
+        SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     times = hlp.IsCheckTimeQuery(q)[1]
@@ -428,7 +435,7 @@ def arsenal_query_inline(q):
     log.debug("User %d (%s %s) is trying to create arsenal check" % (*user,))
     if not IsUserAdmin(q): # non-admins cannot post votes
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(q)
+        SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
     if CanStartNewBattle():
@@ -500,14 +507,14 @@ def show_help(m):
                 "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
                 "_@assassinsgwbot ars_ - создать чек арсенала (при наличии боя)\n" + \
-                "_@assassinsgwbot nums X_ - создать чек Х номеров по скринам (при наличии боя)"
+                "_@assassinsgwbot nums X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
                 "_@assassinsgwbot nums X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
     bot.send_message(userid, text, parse_mode="markdown")
     if not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
 
 @bot.message_handler(commands=['start'])
 def command_start(m):
@@ -515,7 +522,7 @@ def command_start(m):
     # print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     inline_error = m.text.replace("/start ", "")
     if inline_error != "":
@@ -554,7 +561,7 @@ def command_start(m):
 def command_battle_start(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
         text = "Запустить текущий бой [%0.2d:%0.2d]?" \
@@ -567,7 +574,7 @@ def command_battle_start(m):
 def command_battle_stop(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
         text = "Завершить текущий бой [%0.2d:%0.2d]?" \
@@ -588,7 +595,7 @@ def setup_admins(m):
     log.debug("User %d (%s %s) is trying to update admins list" % (*user,))
     if not IsUserAdmin(m):
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     if IsInPrivateChat(m):
         log.error("Failed (in private chat)")
@@ -602,7 +609,7 @@ def setup_admins(m):
             break
     if not is_chat_admin:
         log.error("Failed (not a chat admin)")
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     admins = {}
     for admin in chat_admins:
@@ -635,11 +642,11 @@ def manage_admins(m):
                 break
         if not is_chat_admin:
             log.error("Failed (not a chat admin)")
-            hlp.SendHelpNonAdmin(m)
+            SendHelpNonAdmin(m)
             return
     if not IsUserAdmin(m):
         log.error("Failed (not an admin)")
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
     if command == "list": # list admins
@@ -661,7 +668,7 @@ def manage_admins(m):
 def battle_control(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
     if m.text == buttonStart.text:
@@ -703,6 +710,6 @@ def check_doubleshop(m):
         else:
             DOUBLESHOP_TIME_CALLED = False
     elif not IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
+        SendHelpNonAdmin(m)
 
 bot.polling(none_stop=True, interval=0, timeout=20)

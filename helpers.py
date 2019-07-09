@@ -32,13 +32,6 @@ def IsNumbersQuery(query): # return if query contains numbers check and the list
     else:
         return False, None
 
-def SendHelpNonAdmin(message):
-    text =  "Мной могут управлять только офицеры гильдии.\n"
-    text += "Обратитесь к одному из офицеров за подробностями:\n\n"
-    for admin in admins:
-        text += "[%s](tg://user?id=%s)\n" % (admins[admin], admin)
-    bot.send_message(message.from_user.id, text, parse_mode="markdown")
-
 def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
     error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
