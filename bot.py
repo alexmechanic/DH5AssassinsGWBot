@@ -6,7 +6,7 @@
 # @assassinsgwbot
 #
 
-import telebot, datetime, re, json, sys
+import telebot, datetime, re, json, sys, os
 from icons import *
 from battle import Battle
 from warprecheck import WarPreCheck
@@ -17,6 +17,7 @@ import keyboards as kb
 import callbacks as cb
 import helpers as hlp
 from logger import get_logger
+from flask import Flask, request
 
 log = get_logger("bot")
 
@@ -28,10 +29,14 @@ if len(sys.argv) > 1:
     if sys.argv[1] == '1':
         telebot.apihelper.proxy = {'http':'http://73.55.76.54:8080'}
 
-with open("TOKEN", "r") as tfile:
-    TOKEN = tfile.readline().strip('\n')
-    print("read token: '%s'" % TOKEN)
-    tfile.close()
+if "HEROKU" in list(os.environ.keys()):
+    TOKEN = os.environ['TOKEN']
+    log.info("[HEROKU] read token: '%s'" % TOKEN)
+else:
+    with open("TOKEN", "r") as tfile: # local run
+        TOKEN = tfile.readline().strip('\n')
+        log.info("[LOCAL] read token: '%s'" % TOKEN)
+        tfile.close()
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -684,14 +689,14 @@ def battle_control(m):
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
 
-@bot.message_handler(func=lambda message: not IsUserAdmin(message))
-def nonadmin_message(m):
-    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
-    log.debug("User %d (%s %s) tried to send common message to war chat (%s)" % (*user, m.text))
-    message_id = m.message_id
-    chat_id = m.chat.id
-    bot.delete_message(chat_id, message_id)
-    hlp.SendHelpNonAdmin(m)
+# @bot.message_handler(func=lambda message: not IsUserAdmin(message))
+# def nonadmin_message(m):
+#     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+#     log.debug("User %d (%s %s) tried to send common message to war chat (%s)" % (*user, m.text))
+#     message_id = m.message_id
+#     chat_id = m.chat.id
+#     bot.delete_message(chat_id, message_id)
+#     SendHelpNonAdmin(m)
 
 @bot.message_handler(func=lambda message: True)
 def check_doubleshop(m):
@@ -712,4 +717,22 @@ def check_doubleshop(m):
     elif not IsUserAdmin(m):
         SendHelpNonAdmin(m)
 
-bot.polling(none_stop=True, interval=0, timeout=20)
+if "HEROKU" in list(os.environ.keys()):
+    log.warning("Running on Heroku, setup webhook")
+    server = Flask(__name__)
+
+    @server.route('/bot' + TOKEN, methods=['POST'])
+    def getMessage():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
+
+    @server.route("/")
+    def webhook():
+        bot.remove_webhook()
+        bot.set_webhook(url='https://' + BOT_USERNAME + '.herokuapp.com/bot' + TOKEN)
+        return "?", 200
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 80)))
+else:
+    log.warning("Running locally, start polling")
+    bot.remove_webhook()
+    bot.polling(none_stop=True, interval=0, timeout=20)
