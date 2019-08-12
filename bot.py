@@ -523,8 +523,8 @@ def show_help(m):
 
 @bot.message_handler(commands=['start'])
 def command_start(m):
-    # print("command_start")
-    # print(m)
+    print("command_start")
+    print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
