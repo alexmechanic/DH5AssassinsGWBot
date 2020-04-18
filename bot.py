@@ -547,7 +547,7 @@ def command_start(m):
                          "затем создайте новый, а старое сообщение удалите."
                 bot.send_message(m.chat.id, text)
             else:
-                hlp.SendHelpNoBattle(m.chat.id)
+                hlp.SendHelpNoBattle(m.chat.id, bot)
         elif inline_error == "existing_arsenal":
             text =  "Уже имеетя активный чек арсенала\n\n" + \
                     ("Чтобы начать чек арсенала заново, необходимо поджечь (%s) или остановить (%s) текущий.\n" % (ICON_RAGE, ICON_STOP)) + \
@@ -573,7 +573,7 @@ def command_battle_start(m):
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_START)
     else:
-        hlp.SendHelpNoBattle(m.chat.id)
+        hlp.SendHelpNoBattle(m.chat.id, bot)
 
 @bot.message_handler(commands=['bstop'])
 def command_battle_stop(m):
@@ -586,7 +586,7 @@ def command_battle_stop(m):
                 % (current_battle.time["start"].hour, current_battle.time["start"].minute)
         bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_STOP)
     else:
-        hlp.SendHelpNoBattle(m.chat.id)
+        hlp.SendHelpNoBattle(m.chat.id, bot)
 
 #
 # Update bot admins list (from war chat where admins reside)

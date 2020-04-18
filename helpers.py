@@ -32,7 +32,7 @@ def IsNumbersQuery(query): # return if query contains numbers check and the list
     else:
         return False, None
 
-def SendHelpNoBattle(chat_id):
+def SendHelpNoBattle(chat_id, bot):
     error_text =  "Текущий активный бой отсутствует.\n"
     error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
     error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
