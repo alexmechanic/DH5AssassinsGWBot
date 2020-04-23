@@ -38,6 +38,18 @@ class Arsenal():
     def DoEndArsenal(self):
         self.is_postponed = True
 
+    # Notify participated users if arsenal has been fired
+    def CheckNotifyIfFired(self, battle, bot):
+        if self.is_fired:
+            # get active users from battle check
+            activeUsers = battle.GetActiveUsersID()
+            for user in self.done_users:
+                activeUsers.add(user)
+            log.debug(activeUsers)
+            for user in activeUsers:
+                now = datetime.datetime.now()
+                bot.send_message(user, ICON_RAGE+" %0.2d:%0.2d ГОРИТ! " % (now.hour, now.minute))
+
     def GetHeader(self):
         iteration = self.progress
         total = 120

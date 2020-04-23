@@ -47,6 +47,29 @@ class Battle():
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
 
+    # Notify participated users if battle has been started
+    def BattleStartNotifyActiveUsers(self, bot):
+        activeUsers = self.GetActiveUsersID()
+        for user in activeUsers:
+            if user not in self.rages: # do not notify user if checked for rage
+                bot.send_message(user, "⚔️ Бой начинается!")
+
+    def GetActiveUsersID(self):
+        users = set()
+        for user in self.checks:
+            users.add(user)
+        for user in self.rages:
+            users.add(user)
+        for user in self.fasts:
+            users.add(user)
+        for user in self.arsenals:
+            users.add(user)
+        for user in self.thinking:
+            users.add(user)
+        for user in self.lates:
+            users.add(user)
+        return users
+
     def DoStartBattle(self):
         now = datetime.datetime.now()
         self.time["start"] = datetime.datetime.now()

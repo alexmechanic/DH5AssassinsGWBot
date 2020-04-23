@@ -423,6 +423,7 @@ def arsenal_check_user(call):
             if (ret):
                 bot.edit_message_text(current_arscheck.GetText(), inline_message_id=message_id,
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+                current_arscheck.CheckNotifyIfFired(current_battle, bot)
             else:
                 log.error("Failed")
             bot.answer_callback_query(call.id)
@@ -707,6 +708,7 @@ def battle_control(m):
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
         bot.send_message(m.chat.id, "✅ Бой успешно запущен", reply_markup=markup)
+        current_battle.BattleStartNotifyActiveUsers(bot)
     elif m.text == buttonStop.text:
         current_battle.DoEndBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
