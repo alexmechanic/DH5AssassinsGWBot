@@ -208,7 +208,7 @@ def precheck_control(call):
         return
     log.error("Pre-check not found!", "Неверный чек ВГ! Пожалуйста, создайте новый")
 
-@bot.inline_handler(lambda query: query.query == "precheck")
+@bot.inline_handler(lambda query: query.query == "чек")
 def precheck_query_inline(q):
     # print("precheck_query_inline")
     # print(q)
@@ -275,7 +275,7 @@ def numbers_control(call):
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
-@bot.inline_handler(lambda query: query.query[:4] == "nums")
+@bot.inline_handler(lambda query: query.query[:4] == "номера")
 def numbers_query_inline(q):
     # print("numbers_query_inline")
     # print(q)
@@ -456,7 +456,7 @@ def arsenal_control(call):
 #
 # Arsenal creation (war inline chat)
 #
-@bot.inline_handler(lambda query: query.query[:3] == "ars")
+@bot.inline_handler(lambda query: query.query[:3] == "арс")
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
     # print(q)
@@ -525,19 +525,19 @@ def show_help(m):
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
     if IsUserAdmin(m):
-        text += "/start - вывод информации о текущем бое (если есть).\n"
+        text += "/бой - вывод информации о текущем бое (если есть).\n"
         text += "/admin list - вывод текущего списка офицеров\n"
         text += "\n*При наличии текущего боя:*\n"
-        text += "/bstart - начать бой\n"
-        text += "/bstop  - завершить/отменить бой\n"
+        text += "/старт - начать бой\n"
+        text += "/стоп  - завершить/отменить бой\n"
         if str(userid) == ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "\n*В военном чате:*\n" + \
-                "_@assassinsgwbot precheck_ - создать чек перед ВГ\n" + \
+                "_@assassinsgwbot чек_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
-                "_@assassinsgwbot ars_ - создать чек арсенала (при наличии боя)\n" + \
-                "_@assassinsgwbot nums X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
-                "_@assassinsgwbot nums X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
+                "_@assassinsgwbot арс_ - создать чек арсенала (при наличии боя)\n" + \
+                "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
+                "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
@@ -546,7 +546,7 @@ def show_help(m):
         SendHelpNonAdmin(m)
     bot.delete_message(m.chat.id, m.message_id)
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['бой'])
 def command_start(m):
     print("command_start")
     print(m)
@@ -554,7 +554,7 @@ def command_start(m):
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
-    inline_error = m.text.replace("/start ", "")
+    inline_error = m.text.replace("/бой ", "")
     if inline_error != "":
         if inline_error == "existing_precheck":
             text =  "Уже имеетя активный чек перед ВГ.\n\n" + \
@@ -587,7 +587,7 @@ def command_start(m):
             bot.send_message(m.chat.id, text)
 
 
-@bot.message_handler(commands=['bstart'])
+@bot.message_handler(commands=['старт'])
 def command_battle_start(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
@@ -600,7 +600,7 @@ def command_battle_start(m):
     else:
         hlp.SendHelpNoBattle(m.chat.id, bot)
 
-@bot.message_handler(commands=['bstop'])
+@bot.message_handler(commands=['стоп'])
 def command_battle_stop(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
