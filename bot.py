@@ -165,7 +165,8 @@ def chosen_inline_handler(r):
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
 
 #
-# GW Pre-check
+# Pre-check actions
+# (war chat keyboard action)
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.PRECHECK_OPTIONS)
 def precheck_check_user(call):
@@ -189,6 +190,10 @@ def precheck_check_user(call):
     log.error("Pre-check not found!")
     bot.answer_callback_query(call.id)
 
+#
+# Pre-check control
+# (war chat keyboard action)
+#
 @bot.callback_query_handler(func=lambda call: call.data in kb.PRECHECK_CONTROL_OPTIONS)
 def precheck_control(call):
     # print("precheck_control")
@@ -208,6 +213,10 @@ def precheck_control(call):
         return
     log.error("Pre-check not found!", "Неверный чек ВГ! Пожалуйста, создайте новый")
 
+#
+# GW pre-check creation
+# (war chat inline query)
+#
 @bot.inline_handler(lambda query: query.query == "чек")
 def precheck_query_inline(q):
     # print("precheck_query_inline")
@@ -232,7 +241,8 @@ def precheck_query_inline(q):
                                 switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
 
 #
-# Numbers progress for battle
+# Numbers progress
+# (war chat keyboard action)
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_OPTIONS)
 def numbers_check_user(call):
@@ -253,6 +263,10 @@ def numbers_check_user(call):
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
+#
+# Numbers check control
+# (war chat keyboard action)
+#
 @bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
 def numbers_control(call):
     # print("numbers_control")
@@ -275,6 +289,10 @@ def numbers_control(call):
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
+#
+# Numbers check creation
+# (war chat inline query)
+#
 @bot.inline_handler(lambda query: query.query[:6] == "номера")
 def numbers_query_inline(q):
     # print("numbers_query_inline")
@@ -321,6 +339,7 @@ def numbers_query_inline(q):
 
 #
 # Battle check
+# (war chat keyboard action)
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.CHECK_OPTIONS)
 def battle_check_user(call):
@@ -348,7 +367,8 @@ def battle_check_user(call):
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
 #
-# Battle control (from war inline chat)
+# Battle control
+# (war chat keyboard action)
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.CHECK_CONTROL_OPTIONS)
 def battle_control(call):
@@ -379,7 +399,8 @@ def battle_control(call):
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
 #
-# Battle check creation (war inline chat query)
+# Battle check creation
+# (war chat inline query)
 #
 @bot.inline_handler(lambda query: hlp.IsCheckTimeQuery(query)[0])
 def battle_query_inline(q):
@@ -408,6 +429,7 @@ def battle_query_inline(q):
 
 #
 # Arsenal progress for battle
+# (war chat keyboard action)
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.ARS_OPTIONS)
 def arsenal_check_user(call):
@@ -431,6 +453,10 @@ def arsenal_check_user(call):
     log.error("Ars check not found!")
     bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
 
+#
+# Arsenal control
+# (war chat keyboard action)
+#
 @bot.callback_query_handler(func=lambda call: call.data in kb.ARS_CONTROL_OPTIONS)
 def arsenal_control(call):
     # print("arsenal_control")
@@ -454,7 +480,8 @@ def arsenal_control(call):
     bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
 
 #
-# Arsenal creation (war inline chat)
+# Arsenal creation
+# (war chat inline query)
 #
 @bot.inline_handler(lambda query: query.query[:3] == "арс")
 def arsenal_query_inline(q):
@@ -485,38 +512,14 @@ def arsenal_query_inline(q):
         bot.answer_inline_query(q.id, [], is_personal=True,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
 
-#
-# Urgent message from non-admin user
-#
-@bot.inline_handler(lambda query: query.query[:3] == "!!!")
-def urgent_query_inline(q):
-    # print("urgent_query_inline")
-    # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create send urgent message (%s)" % (*user, q.query))
-    if IsUserAdmin(q): # non-admins cannot post votes
-        log.error("Failed (is admin)")
-        bot.send_message(q.from_user.id, "Офицеры могут писать сообщения в чат напрямую")
-        bot.answer_callback_query(q.id)
-        return
-    text =  "[%s (%s)](tg://user?id=%d):" % (q.from_user.first_name, q.from_user.username, q.from_user.id)
-    message = q.query.replace("!!!", "")
-    if message != "" or message != " ":
-        text += message
-        urgent_message = types.InputTextMessageContent(text, parse_mode="markdown")
-        res = types.InlineQueryResultArticle('2',
-                                             '‼️ Отправить срочное сообщение', 
-                                             urgent_message)
-        bot.answer_inline_query(q.id, [res], is_personal=True)
-    else:
-        log.error("Failed (invalid query)")
-        error_text = "Неверный формат запроса"
-        bot.answer_inline_query(q.id, [], is_personal=True,
-                                switch_pm_text=error_text, switch_pm_parameter="urgent_message")
-
 ####################
 # Command handlers #
 ####################
+
+#
+# Help command
+# (private bot chat)
+#
 @bot.message_handler(commands=["help"])
 def show_help(m):
     userid = m.from_user.id
@@ -525,11 +528,10 @@ def show_help(m):
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
     if IsUserAdmin(m):
-        text += "/бой - вывод информации о текущем бое (если есть).\n"
-        text += "/admin list - вывод текущего списка офицеров\n"
         text += "\n*При наличии текущего боя:*\n"
-        text += "/старт - начать бой\n"
-        text += "/стоп  - завершить/отменить бой\n"
+        text += "/bstart - начать бой\n"
+        text += "/bstop  - завершить/отменить бой\n"
+        text += "/checklist  - получить список всех участвующих в текущем бою\n"
         if str(userid) == ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "\n*В военном чате:*\n" + \
@@ -539,22 +541,25 @@ def show_help(m):
                 "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
                 "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:
-        text += "\n*В военном чате:*\n" + \
-                "_@assassinsgwbot !!! <текст>_ - отправить срочное сообщение"
+        text += "/adminlist - вывод текущего списка офицеров\n"
     bot.send_message(userid, text, parse_mode="markdown")
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
     bot.delete_message(m.chat.id, m.message_id)
 
-@bot.message_handler(commands=['бой'])
+#
+# Start utility command
+# (private bot chat)
+#
+@bot.message_handler(commands=['start'])
 def command_start(m):
-    print("command_start")
-    print(m)
+    # print("command_start")
+    # print(m)
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
-    inline_error = m.text.replace("/бой ", "")
+    inline_error = m.text.replace("/start ", "")
     if inline_error != "":
         if inline_error == "existing_precheck":
             text =  "Уже имеетя активный чек перед ВГ.\n\n" + \
@@ -587,7 +592,11 @@ def command_start(m):
             bot.send_message(m.chat.id, text)
 
 
-@bot.message_handler(commands=['старт'])
+#
+# Start pending battle
+# (private bot chat)
+#
+@bot.message_handler(commands=['bstart'])
 def command_battle_start(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
@@ -600,7 +609,11 @@ def command_battle_start(m):
     else:
         hlp.SendHelpNoBattle(m.chat.id, bot)
 
-@bot.message_handler(commands=['стоп'])
+#
+# Stop current battle
+# (private bot chat)
+#
+@bot.message_handler(commands=['bstop'])
 def command_battle_stop(m):
     if not IsInPrivateChat(m): return
     if not IsUserAdmin(m):
@@ -672,7 +685,8 @@ def setup_admins(m):
     log.info("Admins list updated")
 
 #
-# Manage admins in private bot chat
+# Manage admins
+# (private bot chat)
 #
 @bot.message_handler(commands=["admin"])
 def manage_admins(m):
@@ -697,7 +711,7 @@ def manage_admins(m):
         log.error("Failed (not an admin)")
         SendHelpNonAdmin(m)
         return
-    command = m.text.replace("/admin ", "") if m.text != "/admin" else ""
+    command = m.text.replace("/admin", "") if m.text != "/admin" else ""
     if command == "list": # list admins
         text =  "Список офицеров:\n\n"
         text += "👁 %s _[администратор бота]_\n" % ROOT_ADMIN[1]
@@ -723,13 +737,13 @@ def battle_control(m):
         SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
-    if m.text == buttonStart.text:
+    if m.text == kb.buttonStartPrivate.text:
         current_battle.DoStartBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
         bot.send_message(m.chat.id, "✅ Бой успешно запущен", reply_markup=markup)
         current_battle.BattleStartNotifyActiveUsers(bot)
-    elif m.text == buttonStop.text:
+    elif m.text == kb.buttonStopPrivate.text:
         current_battle.DoEndBattle()
         bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
                               parse_mode="markdown")
@@ -737,33 +751,6 @@ def battle_control(m):
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
 
-# @bot.message_handler(func=lambda message: not IsUserAdmin(message))
-# def nonadmin_message(m):
-#     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
-#     log.debug("User %d (%s %s) tried to send common message to war chat (%s)" % (*user, m.text))
-#     message_id = m.message_id
-#     chat_id = m.chat.id
-#     bot.delete_message(chat_id, message_id)
-#     SendHelpNonAdmin(m)
-
-@bot.message_handler(func=lambda message: True)
-def check_doubleshop(m):
-    # print("check_doubleshop")
-    # print(m)
-    if not IsInPrivateChat(m):
-        global DOUBLESHOP_TIME_CALLED
-        now = datetime.datetime.now()
-        time_to_check = [now.weekday(), now.hour, now.minute]
-        if now.weekday() == DOUBLESHOP_TIME[0]:
-            if now.hour >= DOUBLESHOP_TIME[1][0] and now.hour <= DOUBLESHOP_TIME[2][0]:
-                if now.minute >= DOUBLESHOP_TIME[1][1] and now.minute <= DOUBLESHOP_TIME[2][1]:
-                    if not DOUBLESHOP_TIME_CALLED:
-                        bot.send_message(m.chat.id, "💰 *Двойная закупка в лавке гильдии!*", parse_mode="markdown")
-                        DOUBLESHOP_TIME_CALLED = True
-        else:
-            DOUBLESHOP_TIME_CALLED = False
-    elif not IsUserAdmin(m):
-        SendHelpNonAdmin(m)
 
 if "HEROKU" in list(os.environ.keys()):
     log.warning("Running on Heroku, setup webhook")
