@@ -16,9 +16,9 @@ def IsCheckTimeQuery(query): # return if query contains check time and check tim
     return False, None
 
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
-    res = re.findall(r'nums ', query.query)
+    res = re.findall(r'номера ', query.query)
     if res != [] and len(res) == 1:
-        numbers_list = query.query.replace("nums ", "")
+        numbers_list = query.query.replace("номера ", "")
         numbers_all = re.findall(r'\b(\d?\d)\b', numbers_list)
         numbers_correct = re.findall(r'\b([1-9]|[1-2]\d|[3][0])\b', numbers_list)
         if len(numbers_all) != len(numbers_correct):
