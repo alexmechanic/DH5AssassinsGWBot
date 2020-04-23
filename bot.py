@@ -544,6 +544,7 @@ def show_help(m):
     bot.send_message(userid, text, parse_mode="markdown")
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
+    bot.delete_message(m.chat.id, m.message_id)
 
 @bot.message_handler(commands=['start'])
 def command_start(m):
