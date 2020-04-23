@@ -70,6 +70,35 @@ class Battle():
             users.add(user)
         return users
 
+    def GetActiveUsersNames(self):
+        users = set()
+        for user in self.checks:
+            username = self.checks[user][0]
+            if self.checks[user][1] != None:
+                username += " (%s)" % self.checks[user][1]
+            users.add(username)
+        for user in self.rages:
+            username = self.rages[user][0]
+            if self.rages[user][1] != None:
+                username += " (%s)" % self.rages[user][1]
+            users.add(username)
+        for user in self.fasts:
+            username = self.fasts[user][0]
+            if self.fasts[user][1] != None:
+                username += " (%s)" % self.fasts[user][1]
+            users.add(username)
+        for user in self.arsenals:
+            username = self.arsenals[user][0]
+            if self.arsenals[user][1] != None:
+                username += " (%s)" % self.arsenals[user][1]
+            users.add(username)
+        for user in self.lates:
+            username = self.lates[user][0]
+            if self.lates[user][1] != None:
+                username += " (%s)" % self.lates[user][1]
+            users.add(username)
+        return users
+
     def DoStartBattle(self):
         now = datetime.datetime.now()
         self.time["start"] = datetime.datetime.now()

@@ -614,7 +614,26 @@ def command_battle_stop(m):
         hlp.SendHelpNoBattle(m.chat.id, bot)
 
 #
-# Update bot admins list (from war chat where admins reside)
+# Get check list for current battle
+# (private bot chat)
+#
+@bot.message_handler(commands=['checklist'])
+def command_battle_checklist(m):
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    if not CanStartNewBattle():
+        checklist = ""
+        for user in current_battle.GetActiveUsersNames():
+            checklist += user + "\n"
+        bot.send_message(m.chat.id, checklist)
+    else:
+        hlp.SendHelpNoBattle(m.chat.id, bot)
+
+#
+# Update bot admins list
+# (war chat where admins reside)
 #
 @bot.message_handler(commands=["setadmins"])
 def setup_admins(m):
