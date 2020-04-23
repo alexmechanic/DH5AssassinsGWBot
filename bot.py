@@ -175,17 +175,19 @@ def precheck_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for pre-check (%s)" % (*user, userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
-    if message_id == current_precheck.check_id:
-        ret = current_precheck.CheckUser(user, userChoice)
-        if (ret):
-            bot.edit_message_text(current_precheck.GetText(), inline_message_id=message_id, 
-                                parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
-            bot.answer_callback_query(call.id, current_precheck.GetVotedText(user, userChoice))
-        else:
-            log.error("Failed")
-            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, ""))
-        return
+    if current_precheck:
+        if message_id == current_precheck.check_id:
+            ret = current_precheck.CheckUser(user, userChoice)
+            if (ret):
+                bot.edit_message_text(current_precheck.GetText(), inline_message_id=message_id, 
+                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
+                bot.answer_callback_query(call.id, current_precheck.GetVotedText(user, userChoice))
+            else:
+                log.error("Failed")
+                bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, ""))
+            return
     log.error("Pre-check not found!")
+    bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func=lambda call: call.data in kb.PRECHECK_CONTROL_OPTIONS)
 def precheck_control(call):
@@ -204,7 +206,7 @@ def precheck_control(call):
                               parse_mode="markdown")
         bot.answer_callback_query(call.id, "🏁 Чек завершен")
         return
-    log.error("Pre-check not found!")
+    log.error("Pre-check not found!", "Неверный чек ВГ! Пожалуйста, создайте новый")
 
 @bot.inline_handler(lambda query: query.query == "precheck")
 def precheck_query_inline(q):
@@ -239,15 +241,17 @@ def numbers_check_user(call):
     message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
-    if message_id == current_numcheck.check_id:
-        if not current_numcheck.is_1000:
-            ret = current_numcheck.CheckUser(user, call.data)
-            if (ret):
-                bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
-                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
-        bot.answer_callback_query(call.id)
-        return
+    if current_numcheck:
+        if message_id == current_numcheck.check_id:
+            if not current_numcheck.is_1000:
+                ret = current_numcheck.CheckUser(user, call.data)
+                if (ret):
+                    bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
+                                        parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+            bot.answer_callback_query(call.id)
+            return
     log.error("Numbers check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
 @bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
 def numbers_control(call):
@@ -260,14 +264,16 @@ def numbers_control(call):
         log.error("Failed (not an admin)")
         return
     userChoice = call.data
-    if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
-        current_numcheck.DoEndCheck()
-        bot.edit_message_text(current_numcheck.GetText(),
-                              inline_message_id=current_numcheck.check_id,
-                              parse_mode="markdown")
-        bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
-        return
+    if current_numcheck:
+        if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
+            current_numcheck.DoEndCheck()
+            bot.edit_message_text(current_numcheck.GetText(),
+                                  inline_message_id=current_numcheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
+            return
     log.error("Numbers check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
 @bot.inline_handler(lambda query: query.query[:4] == "nums")
 def numbers_query_inline(q):
@@ -324,21 +330,26 @@ def battle_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for battle (%s)" % (*user, userChoice.replace(cb.CHECK_CALLBACK_PREFIX, "")))
-    if message_id == current_battle.check_id:
-        ret = current_battle.CheckUser(user, userChoice)
-        if (ret):
-            markup = kb.KEYBOARD_CHECK
-            if current_battle.is_started:
-                markup = kb.KEYBOARD_LATE
-            bot.edit_message_text(current_battle.GetText(), inline_message_id=message_id, 
-                                parse_mode="markdown", reply_markup=markup)
-            bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
-        else:
-            log.error("Failed")
-            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
-        return
+    if current_battle:
+        if message_id == current_battle.check_id:
+            ret = current_battle.CheckUser(user, userChoice)
+            if (ret):
+                markup = kb.KEYBOARD_CHECK
+                if current_battle.is_started:
+                    markup = kb.KEYBOARD_LATE
+                bot.edit_message_text(current_battle.GetText(), inline_message_id=message_id, 
+                                    parse_mode="markdown", reply_markup=markup)
+                bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
+            else:
+                log.error("Failed")
+                bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
+            return
     log.error("Battle not found!")
+    bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
+#
+# Battle control (from war inline chat)
+#
 @bot.callback_query_handler(func=lambda call: call.data in kb.CHECK_CONTROL_OPTIONS)
 def battle_control(call):
     # print("battle_control")
@@ -350,20 +361,26 @@ def battle_control(call):
         log.error("Failed (not an admin)")
         return
     userChoice = call.data
-    if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # start
-        current_battle.DoStartBattle()
-        bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
-                              parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
-        bot.answer_callback_query(call.id, "⚔️ Бой запущен")
-        return
-    elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # stop
-        current_battle.DoEndBattle()
-        bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
-                              parse_mode="markdown")
-        bot.answer_callback_query(call.id, "🏁 Бой завершен")
-        return
+    if current_battle:
+        if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # start
+            current_battle.DoStartBattle()
+            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
+            bot.answer_callback_query(call.id, "⚔️ Бой запущен")
+            current_battle.BattleStartNotifyActiveUsers(bot)
+            return
+        elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # stop
+            current_battle.DoEndBattle()
+            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "🏁 Бой завершен")
+            return
     log.error("Battle not found!")
+    bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
+#
+# Battle check creation (war inline chat query)
+#
 @bot.inline_handler(lambda query: hlp.IsCheckTimeQuery(query)[0])
 def battle_query_inline(q):
     # print("battle_query_inline")
@@ -400,17 +417,18 @@ def arsenal_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for arsenal (%s)" % (*user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
-    if message_id == current_arscheck.check_id:
-        ret = current_arscheck.Increment(user, userChoice)
-        if (ret):
-            bot.edit_message_text(current_arscheck.GetText(), inline_message_id=message_id,
-                                parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+    if current_arscheck:
+        if message_id == current_arscheck.check_id:
+            ret = current_arscheck.Increment(user, userChoice)
+            if (ret):
+                bot.edit_message_text(current_arscheck.GetText(), inline_message_id=message_id,
+                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+            else:
+                log.error("Failed")
             bot.answer_callback_query(call.id)
-        else:
-            log.error("Failed")
-            bot.answer_callback_query(call.id)
-        return
+            return
     log.error("Ars check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
 
 @bot.callback_query_handler(func=lambda call: call.data in kb.ARS_CONTROL_OPTIONS)
 def arsenal_control(call):
@@ -424,14 +442,19 @@ def arsenal_control(call):
         return
     userChoice = call.data
     if userChoice == kb.ARS_CONTROL_OPTIONS[0]: # stop
-        current_arscheck.DoEndArsenal()
-        bot.edit_message_text(current_arscheck.GetText(),
-                              inline_message_id=current_arscheck.check_id,
-                              parse_mode="markdown")
-        bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
-        return
-    log.error("Numbers check not found!")
+        if (current_arscheck):
+            current_arscheck.DoEndArsenal()
+            bot.edit_message_text(current_arscheck.GetText(),
+                                  inline_message_id=current_arscheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
+            return
+    log.error("Ars check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
 
+#
+# Arsenal creation (war inline chat)
+#
 @bot.inline_handler(lambda query: query.query[:3] == "ars")
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
@@ -669,6 +692,9 @@ def manage_admins(m):
         log.error("Failed (invalid command): %s" % command)
         bot.send_message(user[0], "Неизвестная команда. Для справки используйте /help.")
 
+#
+# Battle control (from bot private chat)
+#
 @bot.message_handler(func=lambda message: message.text in kb.CHECK_CONTROL_OPTIONS_PRIVATE)
 def battle_control(m):
     if not IsInPrivateChat(m): return

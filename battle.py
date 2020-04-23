@@ -268,8 +268,8 @@ class Battle():
             if userid == user: # cannot check late more than once
                 return False
         if  userid in self.checks or \
-            userid in self.rages or \
-            userid in self.fasts or \
+            userid in self.rages or  \
+            userid in self.fasts or  \
             userid in self.arsenals:
             return False
         if userid in self.cancels: del self.cancels[userid]
