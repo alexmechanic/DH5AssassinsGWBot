@@ -8,6 +8,7 @@
 
 import re
 from collections import Counter
+from commands import COMMANDS
 
 def IsCheckTimeQuery(query): # return if query contains check time and check time list
     times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
@@ -18,7 +19,7 @@ def IsCheckTimeQuery(query): # return if query contains check time and check tim
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
     res = re.findall(r'номера ', query.query)
     if res != [] and len(res) == 1:
-        numbers_list = query.query.replace("номера ", "")
+        numbers_list = query.query.replace(COMMANDS["numbers"] + " ", "")
         numbers_all = re.findall(r'\b(\d?\d)\b', numbers_list)
         numbers_correct = re.findall(r'\b([1-9]|[1-2]\d|[3][0])\b', numbers_list)
         if len(numbers_all) != len(numbers_correct):

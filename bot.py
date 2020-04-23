@@ -12,6 +12,7 @@ from battle import Battle
 from warprecheck import WarPreCheck
 from arsenal import Arsenal
 from numberscheck import NumbersCheck
+from commands import COMMANDS
 from telebot import types
 import keyboards as kb
 import callbacks as cb
@@ -217,7 +218,7 @@ def precheck_control(call):
 # GW pre-check creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query == "чек")
+@bot.inline_handler(lambda query: query.query == COMMANDS["precheck"])
 def precheck_query_inline(q):
     # print("precheck_query_inline")
     # print(q)
@@ -293,7 +294,7 @@ def numbers_control(call):
 # Numbers check creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query[:6] == "номера")
+@bot.inline_handler(lambda query: query.query[:6] == COMMANDS["numbers"])
 def numbers_query_inline(q):
     # print("numbers_query_inline")
     # print(q)
@@ -483,7 +484,7 @@ def arsenal_control(call):
 # Arsenal creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query[:3] == "арс")
+@bot.inline_handler(lambda query: query.query[:3] == COMMANDS["arsenal"])
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
     # print(q)
