@@ -275,7 +275,7 @@ def numbers_control(call):
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
-@bot.inline_handler(lambda query: query.query[:4] == "номера")
+@bot.inline_handler(lambda query: query.query[:6] == "номера")
 def numbers_query_inline(q):
     # print("numbers_query_inline")
     # print(q)
