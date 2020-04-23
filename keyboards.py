@@ -144,7 +144,7 @@ KEYBOARD_STOP.add(buttonStopPrivate, buttonCancelPrivate)
 CHECK_CONTROL_OPTIONS_PRIVATE = [buttonStartPrivate.text, buttonStopPrivate.text, buttonCancelPrivate]
 
 # war pre-check
-KEYBOARD_PRECHECK = types.InlineKeyboardMarkup(row_width=6)
+KEYBOARD_PRECHECK = types.InlineKeyboardMarkup(row_width=3)
 buttonsPrecheck   = [types.InlineKeyboardButton(text=ICON_FR, callback_data=PRECHECK_FR_CALLBACK),
                      types.InlineKeyboardButton(text=ICON_SAT, callback_data=PRECHECK_SAT_CALLBACK),
                      types.InlineKeyboardButton(text=ICON_SUN, callback_data=PRECHECK_SUN_CALLBACK),
