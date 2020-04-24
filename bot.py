@@ -234,11 +234,11 @@ def precheck_query_inline(q):
                                             'Создать чек перед ВГ ✅💤❌', 
                                             types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
                                             reply_markup=kb.KEYBOARD_PRECHECK)
-        bot.answer_inline_query(q.id, [res], is_personal=True)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
         log.error("Trying to setup another pre-check while current is not finished")
         error_text = "Уже имеется активный чек"
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
 
 #
@@ -308,7 +308,7 @@ def numbers_query_inline(q):
     if CanStartNewBattle():
         log.error("Trying to setup numbers check with no current battle")
         error_text = "Отсутствует активный бой"
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
         return
     res, numbers = hlp.IsNumbersQuery(q)
@@ -326,16 +326,16 @@ def numbers_query_inline(q):
                                                  types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
                                                  reply_markup=kb.KEYBOARD_NUMBERS
                                                  )
-            bot.answer_inline_query(q.id, [res], is_personal=True)
+            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
         elif not CanStartNewNumbers():
             log.error("Trying to setup another numbers check while current has not reached 500/1000")
             error_text = "Уже имеется активный чек номеров"
-            bot.answer_inline_query(q.id, [], is_personal=True,
+            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                     switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
     else:
         log.error("Failed (invalid query)")
         error_text = "Неверный формат запроса"
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
 
 #
@@ -420,12 +420,12 @@ def battle_query_inline(q):
                                             '[%s/%s] Создать чек на бой ✅💤❌' % (times[0], times[1]), 
                                             types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
                                             reply_markup=kb.KEYBOARD_CHECK)
-        bot.answer_inline_query(q.id, [res], is_personal=True)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
         log.error("Trying to setup another battle while current is not finished")
         error_text = "Уже имеется активный бой в %0.2d:%0.2d" \
                      % (current_battle.time["start"].hour, current_battle.time["start"].minute)
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
 #
@@ -498,7 +498,7 @@ def arsenal_query_inline(q):
     if CanStartNewBattle():
         log.error("Trying to setup arsenal check with no current battle")
         error_text = "Отсутствует активный бой"
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
         return
     if CanStartNewArs():
@@ -506,11 +506,11 @@ def arsenal_query_inline(q):
                                              'Добавить прогресс арса 📦 |████--| Х/120',
                                              types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
                                              reply_markup=kb.KEYBOARD_ARS)
-        bot.answer_inline_query(q.id, [res], is_personal=True)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
         log.error("Trying to setup another arsenal check while current has not been fired")
         error_text = "Уже имеется активный чек арсенала"
-        bot.answer_inline_query(q.id, [], is_personal=True,
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
 
 ####################
