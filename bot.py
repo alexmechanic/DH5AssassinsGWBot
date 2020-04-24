@@ -231,8 +231,10 @@ def precheck_query_inline(q):
         return
     if CanStartNewPrecheck():
         res = types.InlineQueryResultArticle('1',
-                                            'Создать чек перед ВГ ✅💤❌', 
-                                            types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
+                                            title='Создать чек перед ВГ',
+                                            description='🗓✅💤❌',
+                                            input_message_content=types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
+                                            thumb_url="https://i.ibb.co/G79HtRG/precheck.png",
                                             reply_markup=kb.KEYBOARD_PRECHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
@@ -314,16 +316,18 @@ def numbers_query_inline(q):
     res, numbers = hlp.IsNumbersQuery(q)
     if res:
         if CanStartNewNumbers():
-            text = 'Добавить прогресс номеров '
+            text = 'Добавить прогресс номеров'
             if len(numbers) == 1:
-                text += 'по скринам (%s)' % numbers[0]
+                text2 = 'по скринам (%s)' % numbers[0]
                 kb.SetupNumbersKeyboard(count=int(numbers[0]))
             else:
-                text += 'по игре (%s)' % ' '.join(str(num) for num in numbers)
+                text2 = 'по игре (%s)' % ' '.join(str(num) for num in numbers)
                 kb.SetupNumbersKeyboard(ingame_nums=numbers)
             res = types.InlineQueryResultArticle('4',
-                                                 text,
-                                                 types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
+                                                 title=text,
+                                                 description=text2,
+                                                 input_message_content=types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
+                                                 thumb_url="https://i.ibb.co/JRRMLjv/numbers.png",
                                                  reply_markup=kb.KEYBOARD_NUMBERS
                                                  )
             bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
@@ -417,8 +421,10 @@ def battle_query_inline(q):
     times = hlp.IsCheckTimeQuery(q)[1]
     if CanStartNewBattle():
         res = types.InlineQueryResultArticle('0',
-                                            '[%s/%s] Создать чек на бой ✅💤❌' % (times[0], times[1]), 
-                                            types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
+                                            title='[%s/%s] Создать чек на бой' % (times[0], times[1]),
+                                            description='✅🔥🚽📦💤❌',
+                                            input_message_content=types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
+                                            thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
                                             reply_markup=kb.KEYBOARD_CHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
@@ -503,8 +509,10 @@ def arsenal_query_inline(q):
         return
     if CanStartNewArs():
         res = types.InlineQueryResultArticle('3',
-                                             'Добавить прогресс арса 📦 |████--| Х/120',
-                                             types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
+                                             title='Добавить прогресс арса',
+                                             description='📦 |████--| Х/120',
+                                             input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
+                                             thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
                                              reply_markup=kb.KEYBOARD_ARS)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
