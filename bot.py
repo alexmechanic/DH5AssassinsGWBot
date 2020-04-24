@@ -801,31 +801,48 @@ def command_reset(m):
 #
 @bot.message_handler(func=lambda message: message.text in kb.RESET_CONTROL_OPTIONS)
 def reset_control(m):
-    if not IsInPrivateChat(m): return
+    try:
+        if not IsInPrivateChat(m): return
+    except: # issue when resetting checks via battle stop. could be ignored
+        pass
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
-    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
-    if m.text == kb.buttonReset.text:
+    try:
+        if m.text == kb.RESET_CONTROL_OPTIONS[1]: # cancel
+            bot.send_message(m.from_user.id, "⛔️ Действие отменено", reply_markup=markup)
+            log.debug("Reset calcelled")
+            return
+        else:
+            raise Exception()
+    except:
         global current_precheck, current_battle, current_arscheck, current_numcheck
         if current_precheck:
             current_precheck.DoEndPrecheck()
+            bot.edit_message_text(current_precheck.GetText(), inline_message_id=current_precheck.check_id,
+                                  parse_mode="markdown")
             current_precheck = None
         if current_battle:
             current_battle.DoEndBattle()
+            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
+                                  parse_mode="markdown")
             current_battle = None
         if current_arscheck:
             current_arscheck.DoEndArsenal()
+            bot.edit_message_text(current_arscheck.GetText(), inline_message_id=current_arscheck.check_id,
+                                  parse_mode="markdown")
             current_arscheck = None
         if current_numcheck:
             current_numcheck.DoEndCheck()
+            bot.edit_message_text(current_numcheck.GetText(), inline_message_id=current_numcheck.check_id,
+                                  parse_mode="markdown")
             current_numcheck = None
+    try:
         bot.send_message(m.chat.id, "✅ Бот успешно сброшен", reply_markup=markup)
-        log.debug("Reset successful")
-    else: # Отмена
-        bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
-        log.debug("Reset calcelled")
+    except: # no need to send private message if checks have been reset via battle control
+        pass
+    log.debug("Reset successful")
 
 #
 # Battle control (from bot private chat)
