@@ -651,9 +651,12 @@ def command_battle_start(m):
         SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
-        text = "Запустить текущий бой [%0.2d:%0.2d]?" \
-                % (current_battle.time["start"].hour, current_battle.time["start"].minute)
-        bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_START)
+        if not current_battle.is_started:
+            text = "Запустить текущий бой [%0.2d:%0.2d]?" \
+                    % (current_battle.time["start"].hour, current_battle.time["start"].minute)
+            bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_START)
+        else:
+            bot.send_message(m.chat.id, "Бой уже запущен")
     else:
         hlp.SendHelpNoBattle(m.chat.id, bot)
 
@@ -668,9 +671,12 @@ def command_battle_stop(m):
         SendHelpNonAdmin(m)
         return
     if not CanStartNewBattle():
-        text = "Завершить текущий бой [%0.2d:%0.2d]?" \
-                % (current_battle.time["start"].hour, current_battle.time["start"].minute)
-        bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_STOP)
+        if not current_battle.is_postponed:
+            text = "Завершить текущий бой [%0.2d:%0.2d]?" \
+                    % (current_battle.time["start"].hour, current_battle.time["start"].minute)
+            bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_STOP)
+        else:
+            bot.send_message(m.chat.id, "Бой уже завершен")
     else:
         hlp.SendHelpNoBattle(m.chat.id, bot)
 
