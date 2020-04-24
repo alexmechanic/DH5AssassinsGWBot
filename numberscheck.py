@@ -60,9 +60,13 @@ class NumbersCheck():
         # output numbers in 2 columns
         numbers_table = ""
         nonempty_nums = {}
+        stars_left = [0, 0]
         for number, value in self.numbers.items():
             if value > 0:
                 nonempty_nums[number] = value
+                stars_left[1] += value
+                if value == 3:
+                    stars_left[0] += 1
             else:
                 empty_nums.append(number)
         
@@ -88,6 +92,11 @@ class NumbersCheck():
             for number in empty_nums[:-1]:
                 text += str(number) + ", "
             text += str(empty_nums[-1]) + "\n"
+
+        if not self.is_500:
+            text += ("\nДо 5️⃣0️⃣0️⃣: %d " % stars_left[0]) + ICON_STAR + "\n"
+        if not self.is_1000:
+            text += "\n"*self.is_500 + ("До 1️⃣0️⃣0️⃣0️⃣: %d " % stars_left[1]) + ICON_STAR + "\n"
 
         if self.is_500 or self.is_1000:
             text += "\n*Достигнутые цели:*\n"
