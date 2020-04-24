@@ -33,6 +33,18 @@ def IsNumbersQuery(query): # return if query contains numbers check and the list
     else:
         return False, None
 
+def IsArsQuery(query): # return if query contains ars check and the time of rage
+    res = re.findall(r'арс ', query.query)
+    if res != [] and len(res) == 1:
+        rage_time_query = query.query.replace(COMMANDS["arsenal"] + " ", "")
+        rage_time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', rage_time_query)
+        if rage_time == [] or len(rage_time) != 1:
+            return False, None
+        else:
+            return True, rage_time
+    else:
+        return False, None
+
 def SendHelpNoBattle(chat_id, bot):
     error_text =  "Текущий активный бой отсутствует.\n"
     error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"

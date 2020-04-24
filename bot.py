@@ -49,6 +49,7 @@ current_battle   = None
 current_precheck = None
 current_arscheck = None
 current_numcheck = None
+rage_time_workaround = []
 
 def CanStartNewPrecheck():
     res = current_precheck == None
@@ -149,6 +150,7 @@ def chosen_inline_handler(r):
         log.debug("User %d (%s %s) created arsenal check" % (*user,))
         current_arscheck = Arsenal()
         current_arscheck.SetMessageID(r.inline_message_id)
+        current_arscheck.SetRage(rage_time_workaround)
         bot.edit_message_text(current_arscheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
     elif r.result_id == '4': # numbers check
@@ -296,7 +298,7 @@ def numbers_control(call):
 # Numbers check creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query[:6] == COMMANDS["numbers"])
+@bot.inline_handler(lambda query: query.query[:len(COMMANDS["numbers"])] == COMMANDS["numbers"])
 def numbers_query_inline(q):
     # print("numbers_query_inline")
     # print(q)
@@ -490,7 +492,7 @@ def arsenal_control(call):
 # Arsenal creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query[:3] == COMMANDS["arsenal"])
+@bot.inline_handler(lambda query: query.query[:len(COMMANDS["arsenal"])] == COMMANDS["arsenal"])
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
     # print(q)
@@ -507,19 +509,27 @@ def arsenal_query_inline(q):
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
         return
-    if CanStartNewArs():
-        res = types.InlineQueryResultArticle('3',
-                                             title='Добавить прогресс арса',
-                                             description='📦 |████--| Х/120',
-                                             input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
-                                             thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
-                                             reply_markup=kb.KEYBOARD_ARS)
-        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+    rage = hlp.IsArsQuery(q)
+    print("!!!", rage)
+    if rage[0]:
+        if CanStartNewArs():
+            global rage_time_workaround
+            rage_time_workaround = rage[1][0]
+            res = types.InlineQueryResultArticle('3',
+                                                 title='Добавить прогресс арса',
+                                                 description='📦 |████--| Х/120\nЯрость в %s' % rage_time_workaround,
+                                                 input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
+                                                 thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
+                                                 reply_markup=kb.KEYBOARD_ARS)
+            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+        else:
+            log.error("Trying to setup another arsenal check while current has not been fired")
+            error_text = "Уже имеется активный чек арсенала"
+            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                    switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
     else:
-        log.error("Trying to setup another arsenal check while current has not been fired")
-        error_text = "Уже имеется активный чек арсенала"
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
-                                switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
+                                switch_pm_text="Неверный формат запроса", switch_pm_parameter="existing_arsenal")
 
 ####################
 # Command handlers #
@@ -547,7 +557,7 @@ def show_help(m):
         text += "\n*В военном чате:*\n" + \
                 "_@assassinsgwbot чек_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой (разделительные символы могут быть любыми, даже пробелом)\n" + \
-                "_@assassinsgwbot арс_ - создать чек арсенала (при наличии боя)\n" + \
+                "_@assassinsgwbot арс XX:XX_ - создать чек арсенала (при наличии боя)\n" + \
                 "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
                 "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:

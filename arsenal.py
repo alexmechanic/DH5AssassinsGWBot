@@ -17,6 +17,7 @@ class Arsenal():
     check_id = None
     progress = 0
     is_fired = False
+    rage_time = None
     # dict with lists formatted [name, nick, value, count, is_fired]
     done_users = {}
     is_postponed = False
@@ -25,12 +26,16 @@ class Arsenal():
         self.progress = 0
         self.is_fired = False
         self.done_users = {}
+        self.rage_time = None
         self.is_postponed = False
         log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
+
+    def SetRage(self, time):
+        self.rage_time = time
 
     def GetProgress(self):
         return self.progress
@@ -59,6 +64,8 @@ class Arsenal():
         filledLength = int(length * percent // total)
         bar = '█' * filledLength + '--' * (length - filledLength)
         text =  ICON_ARS+" Прогресс арсенала: *%s/120*\n" % percent
+        if self.rage_time:
+            text += "*Ярость в %s*\n" % self.rage_time
         text += "|%s|\n" % bar
         return text
 
