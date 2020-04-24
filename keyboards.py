@@ -141,7 +141,7 @@ buttonCancelPrivate = types.KeyboardButton(text=ICON_EXIT+" Отмена")
 KEYBOARD_START.add(buttonStartPrivate, buttonCancelPrivate)
 KEYBOARD_STOP.add(buttonStopPrivate, buttonCancelPrivate)
 
-CHECK_CONTROL_OPTIONS_PRIVATE = [buttonStartPrivate.text, buttonStopPrivate.text, buttonCancelPrivate]
+CHECK_CONTROL_OPTIONS_PRIVATE = [buttonStartPrivate.text, buttonStopPrivate.text, buttonCancelPrivate.text]
 
 # war pre-check
 KEYBOARD_PRECHECK = types.InlineKeyboardMarkup(row_width=3)
@@ -157,3 +157,10 @@ KEYBOARD_PRECHECK.add(*buttonsPrecheck)
 
 PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # do not include stop button
 PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
+
+# reset bot keyboard
+KEYBOARD_RESET      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
+buttonReset         = types.KeyboardButton(text=ICON_START+" Сброс")
+KEYBOARD_RESET.add(buttonReset, buttonCancelPrivate)
+
+RESET_CONTROL_OPTIONS = [buttonReset.text, buttonCancelPrivate.text]

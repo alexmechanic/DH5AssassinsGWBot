@@ -529,6 +529,7 @@ def show_help(m):
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
     if IsUserAdmin(m):
+        text += "/reset - аварийный сброс бота\n"
         text += "\n*При наличии текущего боя:*\n"
         text += "/bstart - начать бой\n"
         text += "/bstop  - завершить/отменить бой\n"
@@ -727,6 +728,52 @@ def manage_admins(m):
     else:
         log.error("Failed (invalid command): %s" % command)
         bot.send_message(user[0], "Неизвестная команда. Для справки используйте /help.")
+
+#
+# Emergency reset all checks
+# (private bot chat)
+#
+@bot.message_handler(commands=['reset'])
+def command_reset(m):
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to reset bot" % (*user,))
+    bot.send_message(m.chat.id, "Выполнить полный сброс?", reply_markup=kb.KEYBOARD_RESET)
+
+#
+# Emergency reset control
+# (private bot chat)
+#
+@bot.message_handler(func=lambda message: message.text in kb.RESET_CONTROL_OPTIONS)
+def reset_control(m):
+    if not IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    markup = types.ReplyKeyboardRemove(selective=False)
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    if m.text == kb.buttonReset.text:
+        global current_precheck, current_battle, current_arscheck, current_numcheck
+        if current_precheck:
+            current_precheck.DoEndPrecheck()
+            current_precheck = None
+        if current_battle:
+            current_battle.DoEndBattle()
+            current_battle = None
+        if current_arscheck:
+            current_arscheck.DoEndArsenal()
+            current_arscheck = None
+        if current_numcheck:
+            current_numcheck.DoEndCheck()
+            current_numcheck = None
+        bot.send_message(m.chat.id, "✅ Бот успешно сброшен", reply_markup=markup)
+        log.debug("Reset successful")
+    else: # Отмена
+        bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
+        log.debug("Reset calcelled")
 
 #
 # Battle control (from bot private chat)
