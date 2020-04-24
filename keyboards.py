@@ -133,8 +133,8 @@ NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]
 NUMBERS_CONTROL_OPTIONS = [buttonsNumsStop.callback_data] # only stop button
 
 # battle control (from the bot chat)
-KEYBOARD_START      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
-KEYBOARD_STOP       = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
+KEYBOARD_START      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
+KEYBOARD_STOP       = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
 buttonStartPrivate  = types.KeyboardButton(text=ICON_START+" Запустить")
 buttonStopPrivate   = types.KeyboardButton(text=ICON_STOP+" Завершить")
 buttonCancelPrivate = types.KeyboardButton(text=ICON_EXIT+" Отмена")
@@ -159,7 +159,7 @@ PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # d
 PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
 
 # reset bot keyboard
-KEYBOARD_RESET      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2)
+KEYBOARD_RESET      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
 buttonReset         = types.KeyboardButton(text=ICON_START+" Сброс")
 KEYBOARD_RESET.add(buttonReset, buttonCancelPrivate)
 
