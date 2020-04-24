@@ -29,3 +29,6 @@ ICON_CALENDAR = "🗓"
 ICON_LIST     = "📝"
 ICON_MEMBER   = "👤"
 ICON_FINISH   = "🏁"
+
+ICON_500      = "5️⃣0️⃣0️⃣"
+ICON_1000     = "1️⃣0️⃣0️⃣0️⃣"

@@ -288,13 +288,30 @@ def numbers_control(call):
         return
     userChoice = call.data
     if current_numcheck:
-        if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # stop
+        if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # make 500
+            current_numcheck.Do500()
+            bot.edit_message_text(current_numcheck.GetText(),
+                                  inline_message_id=current_numcheck.check_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+            bot.answer_callback_query(call.id, "Отмечено "+ICON_500)
+            return
+        elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[1]: # make 1000
+            current_numcheck.Do1000()
+            bot.edit_message_text(current_numcheck.GetText(),
+                                  inline_message_id=current_numcheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "Отмечено "+ICON_1000)
+            return
+        elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[2]: # stop
             current_numcheck.DoEndCheck()
             bot.edit_message_text(current_numcheck.GetText(),
                                   inline_message_id=current_numcheck.check_id,
                                   parse_mode="markdown")
             bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
             return
+        else:
+            log.error("invalid action!")
+            bot.answer_callback_query(call.id, "Неверныая команда! Пожалуйста, обратитесь к администратору бота")
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 

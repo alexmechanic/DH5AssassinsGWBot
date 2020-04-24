@@ -50,6 +50,27 @@ class NumbersCheck():
         self.is_postponed = True
         log.info("Numbers check stopped")
 
+    def Do500(self):
+        if self.is_500:
+            return
+        for number, value in self.numbers.items():
+            if value == 3:
+                self.numbers[number] = value - 1
+        self.times["500"] = datetime.datetime.now()
+        self.is_500 = True
+
+    def Do1000(self):
+        if self.is_1000:
+            return
+        now = datetime.datetime.now()
+        for number in self.numbers:
+            self.numbers[number] = 0
+        self.times["500"] = now
+        self.times["1000"] = now
+        self.is_500 = True
+        self.is_1000 = True
+        self.DoEndCheck()
+
     def GetHeader(self):
         return ICON_SWORDS+" *Прогресс номеров " + \
                 "(по скринам)"*(not self.ingame) + "(по игре)"*(self.ingame) + ":*\n"
@@ -94,16 +115,16 @@ class NumbersCheck():
             text += str(empty_nums[-1]) + "\n"
 
         if not self.is_500:
-            text += ("\nДо 5️⃣0️⃣0️⃣: %d " % stars_left[0]) + ICON_STAR + "\n"
+            text += ("\nДо %s: %d " % (ICON_500, stars_left[0])) + ICON_STAR + "\n"
         if not self.is_1000:
-            text += "\n"*self.is_500 + ("До 1️⃣0️⃣0️⃣0️⃣: %d " % stars_left[1]) + ICON_STAR + "\n"
+            text += "\n"*self.is_500 + ("До %s: %d " % (ICON_1000, stars_left[1])) + ICON_STAR + "\n"
 
         if self.is_500 or self.is_1000:
             text += "\n*Достигнутые цели:*\n"
         if self.is_500:
-            text += ("(%0.2d:%0.2d) 5️⃣0️⃣0️⃣ ❗\n" % (self.times["500"].hour, self.times["500"].minute))*self.is_500 
+            text += ("(%0.2d:%0.2d) %s ❗\n" % (self.times["500"].hour, self.times["500"].minute, ICON_500))*self.is_500 
         if self.is_1000:
-            text += ("(%0.2d:%0.2d) 1️⃣0️⃣0️⃣0️⃣ ❗\n" % (self.times["1000"].hour, self.times["1000"].minute))*self.is_1000
+            text += ("(%0.2d:%0.2d) %s ❗\n" % (self.times["1000"].hour, self.times["1000"].minute, ICON_1000))*self.is_1000
         return text
 
     def CheckUser(self, user, value):

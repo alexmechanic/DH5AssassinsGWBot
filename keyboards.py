@@ -43,7 +43,8 @@ CHECK_OPTIONS = [buttonPlus.callback_data,
                  buttonCancel.callback_data,
                  buttonLate.callback_data,
                 ]
-CHECK_CONTROL_OPTIONS = [buttonStart.callback_data,
+CHECK_CONTROL_OPTIONS = [buttonRoll.callback_data,
+                         buttonStart.callback_data,
                          buttonStop.callback_data,
                         ]
 
@@ -106,6 +107,8 @@ buttonsNums      = [types.InlineKeyboardButton(text="1", callback_data=NUMBERS_1
                     types.InlineKeyboardButton(text="29", callback_data=NUMBERS_29_CALLBACK),
                     types.InlineKeyboardButton(text="30", callback_data=NUMBERS_30_CALLBACK)
                     ]
+buttonsNums500  = types.InlineKeyboardButton(text=ICON_500,  callback_data=NUMBERS_500_CALLBACK)
+buttonsNums1000 = types.InlineKeyboardButton(text=ICON_1000, callback_data=NUMBERS_1000_CALLBACK)
 buttonsNumsStop = types.InlineKeyboardButton(text=ICON_STOP, callback_data=NUMBERS_STOP_CALLBACK)
 
 def SetupNumbersKeyboard(count=30, ingame_nums=None):
@@ -131,11 +134,13 @@ def SetupNumbersKeyboard(count=30, ingame_nums=None):
           for i in range(nums_count):
               buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
-        KEYBOARD_NUMBERS.add(buttonsNumsStop)
+        KEYBOARD_NUMBERS.add(buttonsNums500, buttonsNums1000, buttonsNumsStop)
     return KEYBOARD_NUMBERS
 
 NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]
-NUMBERS_CONTROL_OPTIONS = [buttonsNumsStop.callback_data] # only stop button
+NUMBERS_CONTROL_OPTIONS = [buttonsNums500.callback_data,
+                           buttonsNums1000.callback_data,
+                           buttonsNumsStop.callback_data]
 
 # battle control (from the bot chat)
 KEYBOARD_START      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
