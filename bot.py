@@ -258,11 +258,15 @@ def numbers_check_user(call):
     log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
     if current_numcheck:
         if message_id == current_numcheck.check_id:
-            if not current_numcheck.is_1000:
-                ret = current_numcheck.CheckUser(user, call.data)
-                if (ret):
+            ret = current_numcheck.CheckUser(user, call.data)
+            if (ret):
+                if not current_numcheck.is_1000: # if reached 1000 - no need to continue numbers check
                     bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
                                         parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+                else:
+                    current_numcheck.DoEndCheck()
+                    bot.edit_message_text(current_numcheck.GetText(), inline_message_id=message_id, 
+                                        parse_mode="markdown")
             bot.answer_callback_query(call.id)
             return
     log.error("Numbers check not found!")
