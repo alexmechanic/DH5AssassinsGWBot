@@ -13,17 +13,22 @@ from callbacks import *
 # keyboards
 # battle check (from the battle chat)
 KEYBOARD_CHECK = types.InlineKeyboardMarkup(row_width=6)
-buttonPlus     = types.InlineKeyboardButton(text=ICON_CHECK, callback_data=CHECK_CHECK_CALLBACK)
-buttonRage     = types.InlineKeyboardButton(text=ICON_RAGE, callback_data=CHECK_RAGE_CALLBACK)
-buttonFast     = types.InlineKeyboardButton(text=ICON_FAST, callback_data=CHECK_FAST_CALLBACK)
-buttonArsenal  = types.InlineKeyboardButton(text=ICON_ARS, callback_data=CHECK_ARS_CALLBACK)
-buttonThinking = types.InlineKeyboardButton(text=ICON_THINK, callback_data=CHECK_THINK_CALLBACK)
+KEYBOARD_CHECK_ROLLED = types.InlineKeyboardMarkup(row_width=6)
+buttonPlus     = types.InlineKeyboardButton(text=ICON_CHECK,  callback_data=CHECK_CHECK_CALLBACK)
+buttonRage     = types.InlineKeyboardButton(text=ICON_RAGE,   callback_data=CHECK_RAGE_CALLBACK)
+buttonFast     = types.InlineKeyboardButton(text=ICON_FAST,   callback_data=CHECK_FAST_CALLBACK)
+buttonArsenal  = types.InlineKeyboardButton(text=ICON_ARS,    callback_data=CHECK_ARS_CALLBACK)
+buttonThinking = types.InlineKeyboardButton(text=ICON_THINK,  callback_data=CHECK_THINK_CALLBACK)
 buttonCancel   = types.InlineKeyboardButton(text=ICON_CANCEL, callback_data=CHECK_CANCEL_CALLBACK)
-buttonStart    = types.InlineKeyboardButton(text=ICON_START, callback_data=CHECK_START_CALLBACK)
-buttonStop     = types.InlineKeyboardButton(text=ICON_STOP, callback_data=CHECK_STOP_CALLBACK)
+buttonRoll     = types.InlineKeyboardButton(text=ICON_ROLL,   callback_data=CHECK_ROLL_CALLBACK)
+buttonStart    = types.InlineKeyboardButton(text=ICON_START,  callback_data=CHECK_START_CALLBACK)
+buttonStop     = types.InlineKeyboardButton(text=ICON_STOP,   callback_data=CHECK_STOP_CALLBACK)
 KEYBOARD_CHECK.add(buttonPlus, buttonRage, buttonFast,
                    buttonArsenal, buttonThinking, buttonCancel,
-                   buttonStart, buttonStop)
+                   buttonRoll, buttonStart, buttonStop)
+KEYBOARD_CHECK_ROLLED.add(buttonPlus, buttonRage, buttonFast,
+                          buttonArsenal, buttonThinking, buttonCancel,
+                          buttonStart, buttonStop)
 
 # check for started battle
 KEYBOARD_LATE = types.InlineKeyboardMarkup(row_width=2)

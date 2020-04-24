@@ -389,18 +389,25 @@ def battle_control(call):
         return
     userChoice = call.data
     if current_battle:
-        if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # start
+        if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
+            current_battle.DoRollBattle()
+            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
+            bot.answer_callback_query(call.id, ICON_ROLL+" Крутит")
+            current_battle.BattleRollNotifyActiveUsers(bot)
+        elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             current_battle.DoStartBattle()
-            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
+            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
-            bot.answer_callback_query(call.id, "⚔️ Бой запущен")
+            bot.answer_callback_query(call.id, ICON_SWORDS+" Бой запущен")
             current_battle.BattleStartNotifyActiveUsers(bot)
             return
-        elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # stop
-            current_battle.DoEndBattle()
-            bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
-                                  parse_mode="markdown")
-            bot.answer_callback_query(call.id, "🏁 Бой завершен")
+        elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
+            # current_battle.DoEndBattle()
+            # bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
+            #                       parse_mode="markdown")
+            reset_control(call)
+            bot.answer_callback_query(call.id, ICON_FINISH+" Бой завершен")
             return
     log.error("Battle not found!")
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")

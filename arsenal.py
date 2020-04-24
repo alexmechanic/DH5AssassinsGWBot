@@ -42,6 +42,7 @@ class Arsenal():
 
     def DoEndArsenal(self):
         self.is_postponed = True
+        log.info("Arsenal check stopped")
 
     # Notify participated users if arsenal has been fired
     def CheckNotifyIfFired(self, battle, bot):

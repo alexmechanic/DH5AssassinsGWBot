@@ -16,6 +16,7 @@ log = get_logger("bot." + __name__)
 class Battle():
     check_id = None
     time = {"check": None, "start": None, "end": None}
+    is_rolling = False
     is_started = False
     is_postponed = False
     # dicts with lists formatted [name, nick]
@@ -38,6 +39,7 @@ class Battle():
         self.thinking = {}
         self.cancels = {}
         self.lates = {}
+        self.is_rolling = False
         self.is_started = False
         self.is_postponed = False
         log.info("New battle created (%0.2d:%0.2d / %0.2d:%0.2d)" \
@@ -47,12 +49,19 @@ class Battle():
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
 
+    # Notify participated users if battle has been rolled
+    def BattleRollNotifyActiveUsers(self, bot):
+        activeUsers = self.GetActiveUsersID()
+        for user in activeUsers:
+            if user not in self.rages: # do not notify user if checked for rage
+                bot.send_message(user, ICON_ROLL+" Крутит!")
+
     # Notify participated users if battle has been started
     def BattleStartNotifyActiveUsers(self, bot):
         activeUsers = self.GetActiveUsersID()
         for user in activeUsers:
             if user not in self.rages: # do not notify user if checked for rage
-                bot.send_message(user, "⚔️ Бой начинается!")
+                bot.send_message(user, ICON_SWORDS+" Бой начинается!")
 
     def GetActiveUsersID(self):
         users = set()
@@ -99,16 +108,21 @@ class Battle():
             users.add(username)
         return users
 
+    def DoRollBattle(self):
+        self.time["roll"] = datetime.datetime.now()
+        self.is_rolling = True
+        log.warning("Battle rolled at %0.2d:%0.2d" % (self.time["roll"].hour, self.time["roll"].minute))
+
     def DoStartBattle(self):
-        now = datetime.datetime.now()
         self.time["start"] = datetime.datetime.now()
         self.is_started = True
+        self.is_rolling = False
         log.warning("Battle started at %0.2d:%0.2d" % (self.time["start"].hour, self.time["start"].minute))
 
     def DoEndBattle(self):
-        now = datetime.datetime.now()
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
+        self.is_rolling = False
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def GetHeader(self):
@@ -118,6 +132,8 @@ class Battle():
 
     def GetText(self):
         text = self.GetHeader()
+        if self.is_rolling:
+            text += "Поиск запущен в %0.2d:%0.2d\n" % (self.time["roll"].hour, self.time["roll"].minute)
         text += "❗ Бой начался ❗\n" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
             text += "🛑 Бой"
