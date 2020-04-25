@@ -839,7 +839,7 @@ def reset_control(m):
                                   parse_mode="markdown")
             current_numcheck = None
     try:
-        bot.send_message(m.chat.id, "✅ Бот успешно сброшен", reply_markup=markup)
+        bot.send_message(m.from_user.id, "✅ Бот успешно сброшен", reply_markup=markup)
     except: # no need to send private message if checks have been reset via battle control
         pass
     log.debug("Reset successful")
