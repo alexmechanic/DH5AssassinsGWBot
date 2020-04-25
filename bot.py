@@ -141,10 +141,6 @@ def chosen_inline_handler(r):
         current_precheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(current_precheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
-    elif r.result_id == '2': # send urgent message
-        log.debug("User %d (%s %s) sent urgent message to war chat" % (*user,))
-        bot.send_message(r.from_user.id, "Пожалуйста, не забывайте, что " +
-                         "отправлять в военный чат следует только особо важные сведения!")
     elif r.result_id == '3': # ars check
         global current_arscheck
         log.debug("User %d (%s %s) created arsenal check" % (*user,))
@@ -541,7 +537,6 @@ def arsenal_query_inline(q):
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
         return
     rage = hlp.IsArsQuery(q)
-    print("!!!", rage)
     if rage[0]:
         if CanStartNewArs():
             global rage_time_workaround
