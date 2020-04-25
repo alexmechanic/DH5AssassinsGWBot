@@ -378,7 +378,9 @@ def battle_check_user(call):
             ret = current_battle.CheckUser(user, userChoice)
             if (ret):
                 markup = kb.KEYBOARD_CHECK
-                if current_battle.is_started:
+                if current_battle.is_rolling:
+                    markup = kb.KEYBOARD_CHECK_ROLLED
+                elif current_battle.is_started:
                     markup = kb.KEYBOARD_LATE
                 bot.edit_message_text(current_battle.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=markup)
@@ -406,19 +408,18 @@ def battle_control(call):
         return
     userChoice = call.data
     if current_battle:
-        global KEYBOARD_CHECK_CURRENT
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             current_battle.DoRollBattle()
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=KEYBOARD_CHECK_CURRENT)
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
             bot.answer_callback_query(call.id, ICON_ROLL+" Крутит")
             current_battle.BattleRollNotifyActiveUsers(bot)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             current_battle.DoStartBattle()
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=KEYBOARD_CHECK_CURRENT)
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
             bot.answer_callback_query(call.id, ICON_SWORDS+" Бой запущен")
             current_battle.BattleStartNotifyActiveUsers(bot)
             return
