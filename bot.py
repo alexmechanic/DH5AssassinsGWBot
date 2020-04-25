@@ -859,9 +859,7 @@ def battle_control(m):
         bot.send_message(m.chat.id, "✅ Бой успешно запущен", reply_markup=markup)
         current_battle.BattleStartNotifyActiveUsers(bot)
     elif m.text == kb.buttonStopPrivate.text:
-        current_battle.DoEndBattle()
-        bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id, 
-                              parse_mode="markdown")
+        reset_control(m)
         bot.send_message(m.chat.id, "❎ Бой успешно завершен", reply_markup=markup)
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
