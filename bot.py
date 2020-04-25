@@ -410,16 +410,19 @@ def battle_control(call):
         return
     userChoice = call.data
     if current_battle:
+        global KEYBOARD_CHECK_CURRENT
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             current_battle.DoRollBattle()
+            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
+                                  parse_mode="markdown", reply_markup=KEYBOARD_CHECK_CURRENT)
             bot.answer_callback_query(call.id, ICON_ROLL+" Крутит")
             current_battle.BattleRollNotifyActiveUsers(bot)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             current_battle.DoStartBattle()
+            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
+                                  parse_mode="markdown", reply_markup=KEYBOARD_CHECK_CURRENT)
             bot.answer_callback_query(call.id, ICON_SWORDS+" Бой запущен")
             current_battle.BattleStartNotifyActiveUsers(bot)
             return
