@@ -424,9 +424,6 @@ def battle_control(call):
             current_battle.BattleStartNotifyActiveUsers(bot)
             return
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
-            # current_battle.DoEndBattle()
-            # bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
-            #                       parse_mode="markdown")
             reset_control(call)
             bot.answer_callback_query(call.id, ICON_FINISH+" Бой завершен")
             return
