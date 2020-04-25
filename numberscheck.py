@@ -115,7 +115,7 @@ class NumbersCheck():
             text += str(empty_nums[-1]) + "\n"
 
         if not self.is_500:
-            text += ("\nДо %s: %d " % (ICON_500, stars_left[0])) + ICON_STAR + "\n"
+            text += ("\nДо %s:       %d " % (ICON_500, stars_left[0])) + ICON_STAR + "\n"
         if not self.is_1000:
             text += "\n"*self.is_500 + ("До %s: %d " % (ICON_1000, stars_left[1])) + ICON_STAR + "\n"
 
