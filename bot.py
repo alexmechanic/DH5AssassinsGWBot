@@ -593,7 +593,6 @@ def show_help(m):
     text += "/help - вывод этой справки\n"
     text += "/admins - вывод списка офицеров\n"
     if IsUserAdmin(m):
-        text += "/warchat - запомнить военный чат (для отправки сообщений боя)\n"
         text += "/reset - аварийный сброс бота\n"
         text += "\n*При наличии текущего боя:*\n"
         text += "/bstart - начать бой\n"
@@ -602,11 +601,13 @@ def show_help(m):
         if str(userid) == ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "\n*В военном чате:*\n" + \
+                "/warchat - запомнить военный чат (для отправки сообщений боя)\n" + \
                 "_@assassinsgwbot чек_ - создать чек перед ВГ\n" + \
-                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой (разделительные символы могут быть любыми, даже пробелом)\n" + \
+                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
                 "_@assassinsgwbot арс XX:XX_ - создать чек арсенала (при наличии боя)\n" + \
                 "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
-                "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
+                "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)\n" + \
+                "Разделительные символы времени могут быть любыми (даже пробелом)"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
@@ -620,7 +621,10 @@ def show_help(m):
 #
 @bot.message_handler(commands=['warchat'])
 def command_set_warchat(m):
-    if IsInPrivateChat(m): return
+    if IsInPrivateChat(m):
+        bot.send_message(user[0], "Используйте команду /warchat в военном чате, чтобы запомнить военный чат!")
+        return
+    bot.delete_message(m.chat.id, m.message_id)
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
         return
