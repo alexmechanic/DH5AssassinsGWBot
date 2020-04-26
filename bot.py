@@ -493,11 +493,12 @@ def arsenal_check_user(call):
     log.debug("User %d (%s %s) is trying to vote for arsenal (%s)" % (*user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
     if current_arscheck:
         if message_id == current_arscheck.check_id:
+            global warchat_id
             ret = current_arscheck.Increment(user, userChoice)
             if (ret):
                 bot.edit_message_text(current_arscheck.GetText(), inline_message_id=message_id,
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
-                current_arscheck.CheckNotifyIfFired(current_battle, bot)
+                current_arscheck.CheckNotifyIfFired(current_battle, bot, warchat_id)
             else:
                 log.error("Failed")
             bot.answer_callback_query(call.id)

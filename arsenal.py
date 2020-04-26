@@ -45,16 +45,25 @@ class Arsenal():
         log.info("Arsenal check stopped")
 
     # Notify participated users if arsenal has been fired
-    def CheckNotifyIfFired(self, battle, bot):
+    def CheckNotifyIfFired(self, battle, bot, warchat_id):
         if self.is_fired:
             # get active users from battle check
             activeUsers = battle.GetActiveUsersID()
             for user in self.done_users:
                 activeUsers.add(user)
             log.debug(activeUsers)
+            now = datetime.datetime.now()
+            text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
             for user in activeUsers:
                 now = datetime.datetime.now()
-                bot.send_message(user, ICON_RAGE+" %0.2d:%0.2d ГОРИТ! " % (now.hour, now.minute))
+                bot.send_message(user, text)
+            if warchat_id:
+                notification = bot.send_message(warchat_id, text)
+                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+                log.debug("Arsenal status notification posted")
+            else:
+                log.error("War chat_id is not set, cannot post arsenal status notification!")
+
 
     def GetHeader(self):
         iteration = self.progress
