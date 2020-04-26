@@ -65,10 +65,16 @@ def CanStartNewBattle():
     return res
 
 def CanStartNewArs():
-    return current_arscheck == None
+    res = current_arscheck == None
+    if not res:
+        res = current_arscheck.is_fired or current_arscheck.is_postponed
+    return res
 
 def CanStartNewNumbers():
-    return current_numcheck == None
+    res = current_numcheck == None
+    if not res:
+        res = current_numcheck.is_postponed
+    return res
 
 def IsUserAdmin(message):
     if str(message.from_user.id) in admins or \
@@ -170,7 +176,7 @@ def precheck_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for pre-check (%s)" % (*user, userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
-    if current_precheck:
+    if not CanStartNewPrecheck():
         if message_id == current_precheck.check_id:
             ret = current_precheck.CheckUser(user, userChoice)
             if (ret):
@@ -620,7 +626,7 @@ def show_help(m):
 @bot.message_handler(commands=['warchat'])
 def command_set_warchat(m):
     if IsInPrivateChat(m):
-        bot.send_message(user[0], "Используйте команду /warchat в военном чате, чтобы запомнить военный чат!")
+        bot.send_message(m.chat.id, "Используйте команду /warchat в военном чате, чтобы запомнить военный чат!")
         return
     bot.delete_message(m.chat.id, m.message_id)
     if not IsUserAdmin(m):
@@ -866,7 +872,8 @@ def reset_control(m):
     log.debug("Reset successful")
 
 #
-# Battle control (from bot private chat)
+# Battle control
+# (private bot chat)
 #
 @bot.message_handler(func=lambda message: message.text in kb.CHECK_CONTROL_OPTIONS_PRIVATE)
 def battle_control(m):
