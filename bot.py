@@ -386,6 +386,13 @@ def battle_check_user(call):
                 bot.edit_message_text(current_battle.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=markup)
                 bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
+                if warchat_id:
+                    if userChoice == cb.CHECK_LATE_CALLBACK:
+                        text = ICON_LATE + " [%s (%s)](tg://user?id=%d) Пришел на бой!\n" % (user[1], user[2], user[0])
+                        bot.send_message(warchat_id, text, parse_mode="markdown", disable_notification=True)
+                        log.debug("Battle user late notification posted")
+                else:
+                    log.error("War chat_id is not set, cannot post late notification!")
             else:
                 log.error("Failed")
                 bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
@@ -437,9 +444,9 @@ def battle_control(call):
                 bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
             else:
                 bot.unpin_chat_message(warchat_id)
-            log.debug("Notification posted")
+            log.debug("Battle status notification posted")
         else:
-            log.error("War chat_id is not set, cannot post notification!")
+            log.error("War chat_id is not set, cannot post battle status notification!")
         return
     log.error("Battle not found!")
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
