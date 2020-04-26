@@ -945,9 +945,10 @@ def snow_control(call):
             bot.send_message(call.message.chat.id, hlp.SnowGeneratePraise(user),
                              parse_mode="markdown", disable_notification=True)
             current_snowwhite["praised"].append(user[0])
+            bot.answer_callback_query(call.id)
         else:
             log.error("Failed: already praised")
-        bot.answer_callback_query(call.id)
+            bot.answer_callback_query(call.id, "Поприветствовать Снегурочку можно только один раз!")
         if not hlp.IsSnowAvailable():
             log.info("Snow White overtime, ending")
             bot.delete_message(current_snowwhite["message"].chat.id, current_snowwhite["message"].message_id)
