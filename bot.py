@@ -584,6 +584,7 @@ def show_help(m):
     text += "🎮 Игра: *Dungeon Hunter V*"
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
+    text += "/admins - вывод списка офицеров\n"
     if IsUserAdmin(m):
         text += "/warchat - запомнить военный чат (для отправки сообщений боя)\n"
         text += "/reset - аварийный сброс бота\n"
@@ -600,7 +601,7 @@ def show_help(m):
                 "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
                 "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)"
     else:
-        text += "/adminlist - вывод текущего списка офицеров\n"
+        pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
@@ -771,44 +772,26 @@ def setup_admins(m):
 # Manage admins
 # (private bot chat)
 #
-@bot.message_handler(commands=["admin"])
+@bot.message_handler(commands=["admins"])
 def manage_admins(m):
     # print("manage_admins")
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to manage admins" % (*user,))
-    userid = m.from_user.id
-    nick   = user[1] if user[1] != None else ""
-    name_record = user[2] + " " + nick
-    is_chat_admin = False
+    log.debug("User %d (%s %s) is trying to check admins list" % (*user,))
     if not IsInPrivateChat(m):
-        for admin in bot.get_chat_administrators(m.chat.id):
-            if admin.user.id == user[0]:
-                is_chat_admin = True
-                break
-        if not is_chat_admin:
-            log.error("Failed (not a chat admin)")
-            SendHelpNonAdmin(m)
-            return
-    if not IsUserAdmin(m):
-        log.error("Failed (not an admin)")
-        SendHelpNonAdmin(m)
+        bot.delete_message(m.chat.id, m.message_id)
+        bot.send_message(user[0], "Используйте команду /admins в личном чате, чтобы посмотреть список офицеров!")
         return
-    command = m.text.replace("/admin", "") if m.text != "/admin" else ""
-    if command == "list": # list admins
-        text =  "Список офицеров:\n\n"
-        text += "👁 %s _[администратор бота]_\n" % ROOT_ADMIN[1]
-        for admin in admins:
-            if BOT_USERNAME not in admin or admin != ROOT_ADMIN[1]:
-                if str(user[0]) == ROOT_ADMIN[0]: # show admins IDs for root admin
-                    text += ICON_MEMBER+" %s _(ID=%s)_\n" % (admins[admin], admin)
-                else:
-                    text += (ICON_MEMBER+" %s\n" % admins[admin])
-        bot.send_message(user[0], text, parse_mode="markdown")
-        return
-    else:
-        log.error("Failed (invalid command): %s" % command)
-        bot.send_message(user[0], "Неизвестная команда. Для справки используйте /help.")
+    text =  "Список офицеров:\n\n"
+    text += "👁 %s _[администратор бота]_\n" % ROOT_ADMIN[1]
+    for admin in admins:
+        if BOT_USERNAME not in admin or admin != ROOT_ADMIN[1]:
+            if str(user[0]) == ROOT_ADMIN[0]: # show admins IDs for root admin
+                text += ICON_MEMBER+" %s _(ID=%s)_\n" % (admins[admin], admin)
+            else:
+                text += (ICON_MEMBER+" %s\n" % admins[admin])
+    bot.send_message(user[0], text, parse_mode="markdown")
+    return
 
 #
 # Emergency reset all checks
