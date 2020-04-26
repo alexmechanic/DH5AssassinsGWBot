@@ -427,7 +427,6 @@ def battle_control(call):
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
-            bot.answer_callback_query(call.id, notification_text)
             current_battle.BattleRollNotifyActiveUsers(bot)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             current_battle.DoStartBattle()
@@ -435,12 +434,10 @@ def battle_control(call):
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
-            bot.answer_callback_query(call.id, notification_text)
             current_battle.BattleStartNotifyActiveUsers(bot)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             reset_control(call)
             notification_text = ICON_FINISH+" Бой завершен"
-            bot.answer_callback_query(call.id, notification_text)
         global warchat_id
         if warchat_id:
             notification = bot.send_message(warchat_id, notification_text, disable_notification=False)
@@ -449,6 +446,7 @@ def battle_control(call):
             else:
                 bot.unpin_chat_message(warchat_id)
             log.debug("Battle status notification posted: %s" % notification_text)
+        bot.answer_callback_query(call.id, notification_text)
         else:
             log.error("War chat_id is not set, cannot post battle status notification!")
         return
