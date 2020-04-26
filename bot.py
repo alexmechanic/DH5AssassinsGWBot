@@ -45,6 +45,7 @@ BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
 admins = {}
 
+warchat_id       = None
 current_battle   = None
 current_precheck = None
 current_arscheck = None
@@ -408,25 +409,38 @@ def battle_control(call):
         return
     userChoice = call.data
     if current_battle:
+        notification_text = ""
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             current_battle.DoRollBattle()
+            notification_text = ICON_ROLL+" Крутит"
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
-            bot.answer_callback_query(call.id, ICON_ROLL+" Крутит")
+            bot.answer_callback_query(call.id, notification_text)
             current_battle.BattleRollNotifyActiveUsers(bot)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             current_battle.DoStartBattle()
+            notification_text = ICON_SWORDS+" Бой запущен"
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
-            bot.answer_callback_query(call.id, ICON_SWORDS+" Бой запущен")
+            bot.answer_callback_query(call.id, notification_text)
             current_battle.BattleStartNotifyActiveUsers(bot)
-            return
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             reset_control(call)
-            bot.answer_callback_query(call.id, ICON_FINISH+" Бой завершен")
-            return
+            notification_text = ICON_FINISH+" Бой завершен"
+            bot.answer_callback_query(call.id, notification_text)
+        global warchat_id
+        if warchat_id:
+            notification = bot.send_message(warchat_id, notification_text, disable_notification=False)
+            if userChoice != kb.CHECK_CONTROL_OPTIONS[2]: # stop
+                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+            else:
+                bot.unpin_chat_message(warchat_id)
+            log.debug("Notification posted")
+        else:
+            log.error("War chat_id is not set, cannot post notification!")
+        return
     log.error("Battle not found!")
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
@@ -571,6 +585,7 @@ def show_help(m):
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
     if IsUserAdmin(m):
+        text += "/warchat - запомнить военный чат (для отправки сообщений боя)\n"
         text += "/reset - аварийный сброс бота\n"
         text += "\n*При наличии текущего боя:*\n"
         text += "/bstart - начать бой\n"
@@ -590,6 +605,24 @@ def show_help(m):
     if not IsUserAdmin(m):
         SendHelpNonAdmin(m)
     bot.delete_message(m.chat.id, m.message_id)
+
+#
+# Start pending battle
+# (private bot chat)
+#
+@bot.message_handler(commands=['warchat'])
+def command_set_warchat(m):
+    if IsInPrivateChat(m): return
+    if not IsUserAdmin(m):
+        SendHelpNonAdmin(m)
+        return
+    global warchat_id
+    if warchat_id != None:
+        bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
+    else:
+        warchat_id = m.chat.id
+        bot.send_message(m.from_user.id, ICON_CHECK+" Военный чат успешно задан!")
+
 
 #
 # Start utility command

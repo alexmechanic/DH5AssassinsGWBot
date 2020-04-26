@@ -34,8 +34,6 @@ KEYBOARD_LATE = types.InlineKeyboardMarkup(row_width=2)
 buttonLate    = types.InlineKeyboardButton(text=ICON_CHECK, callback_data=CHECK_LATE_CALLBACK)
 KEYBOARD_LATE.add(buttonLate, buttonCancel, buttonStop)
 
-KEYBOARD_CHECK_CURRENT = KEYBOARD_CHECK
-
 CHECK_OPTIONS = [buttonPlus.callback_data,
                  buttonRage.callback_data,
                  buttonFast.callback_data,
