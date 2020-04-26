@@ -2,3 +2,4 @@ TOKEN
 ADMINS
 __pycache__
 *.pyc
+*.log
