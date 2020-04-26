@@ -50,6 +50,7 @@ current_battle   = None
 current_precheck = None
 current_arscheck = None
 current_numcheck = None
+current_snowwhite = {}
 rage_time_workaround = []
 
 def CanStartNewPrecheck():
@@ -605,7 +606,8 @@ def show_help(m):
         if str(userid) == ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "\n*В военном чате:*\n" + \
-                "/warchat - запомнить военный чат (для отправки сообщений боя)\n" + \
+                "/warchat - запомнить военный чат _(для отправки сообщений боя)_\n" + \
+                "/snow - вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n" + \
                 "_@assassinsgwbot чек_ - создать чек перед ВГ\n" + \
                 "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
                 "_@assassinsgwbot арс XX:XX_ - создать чек арсенала (при наличии боя)\n" + \
@@ -894,6 +896,68 @@ def battle_control(m):
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
 
+#
+# Call for fun mode 'Snow White'
+# (war chat command)
+#
+@bot.message_handler(commands=['snow'])
+def command_snow(m):
+    # print(m)
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to call Snow!" % (*user,))
+    if IsInPrivateChat(m):
+        log.error("Failed: not in war chat")
+        bot.send_message(m.from_user.id, "Используйте команду /snow в военном чате, чтобы вызвать Снегурочку!")
+        return
+    bot.delete_message(m.chat.id, m.message_id)
+    if not IsUserAdmin(m):
+        log.error("Failed: not an admin")
+        SendHelpNonAdmin(m)
+        return
+    if not hlp.IsSnowAvailable():
+        bot.send_message(user[0], "Ой! Вызвать Снегурочку можно только в воскресенье после окончания ВГ!")
+        log.error("Failed: wrong time")
+        return
+    global current_snowwhite
+    if current_snowwhite == {}:
+        current_snowwhite["message"] = bot.send_message(m.chat.id,
+                                             ICON_SNOW+" Всем привет!",
+                                             reply_markup=kb.KEYBOARD_SNOWWHITE)
+        current_snowwhite["praised"] = []
+        log.info("Snow White called!")
+    else:
+        log.error("Snow White is already here!")
+
+#
+# Snow White control
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data == cb.SNOW_PRAISE_CALLBACK)
+def snow_control(call):
+    # print("snow_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is cheering Snow White" % (*user,))
+    global current_snowwhite
+    if current_snowwhite != {}:
+        if not user[0] in current_snowwhite["praised"]:
+            log.debug("Praised")
+            bot.send_message(call.message.chat.id, hlp.SnowGeneratePraise(user),
+                             parse_mode="markdown", disable_notification=True)
+            current_snowwhite["praised"].append(user[0])
+        else:
+            log.error("Failed: already praised")
+        bot.answer_callback_query(call.id)
+        if not hlp.IsSnowAvailable():
+            log.info("Snow White overtime, ending")
+            bot.delete_message(current_snowwhite["message"].chat.id, current_snowwhite["message"].message_id)
+            bot.send_message(call.message.chat.id,
+                             ICON_SNOW+" До встречи в следюущее воскресенье!",
+                             disable_notification=True)
+            current_snowwhite = {}
+        return
+    log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
+    bot.answer_callback_query(call.id)
 
 if "HEROKU" in list(os.environ.keys()):
     log.warning("Running on Heroku, setup webhook")

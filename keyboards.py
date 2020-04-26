@@ -167,9 +167,13 @@ KEYBOARD_PRECHECK.add(*buttonsPrecheck)
 PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # do not include stop button
 PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
 
-# reset bot keyboard
+# reset bot keyboard (from the bot chat)
 KEYBOARD_RESET      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
 buttonReset         = types.KeyboardButton(text=ICON_START+" Сброс")
 KEYBOARD_RESET.add(buttonReset, buttonCancelPrivate)
 
 RESET_CONTROL_OPTIONS = [buttonReset.text, buttonCancelPrivate.text]
+
+KEYBOARD_SNOWWHITE = types.InlineKeyboardMarkup(row_width=1)
+buttonPraise       = types.InlineKeyboardButton(text=ICON_PRAISE+" Привет!", callback_data=SNOW_PRAISE_CALLBACK)
+KEYBOARD_SNOWWHITE.add(buttonPraise)
