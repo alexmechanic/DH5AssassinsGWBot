@@ -6,7 +6,7 @@
 # @assassinsgwbot
 #
 
-import telebot, datetime, re, json, sys, os
+import telebot, datetime, re, json, sys, os, time
 from icons import *
 from battle import Battle
 from warprecheck import WarPreCheck
