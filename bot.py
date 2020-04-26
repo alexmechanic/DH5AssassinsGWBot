@@ -65,16 +65,10 @@ def CanStartNewBattle():
     return res
 
 def CanStartNewArs():
-    res = current_arscheck == None
-    if not res:
-        res = current_arscheck.is_fired
-    return res
+    return current_arscheck == None
 
 def CanStartNewNumbers():
-    res = current_numcheck == None
-    if not res:
-        res = current_numcheck.is_postponed
-    return res
+    return current_numcheck == None
 
 def IsUserAdmin(message):
     if str(message.from_user.id) in admins or \
@@ -388,7 +382,10 @@ def battle_check_user(call):
                 bot.answer_callback_query(call.id, current_battle.GetVotedText(userChoice))
                 if warchat_id:
                     if userChoice == cb.CHECK_LATE_CALLBACK:
-                        text = ICON_LATE + " [%s (%s)](tg://user?id=%d) Пришел на бой!\n" % (user[1], user[2], user[0])
+                        text = ICON_LATE + " [%s" % user[2]
+                        if user[1] != None:
+                            text += " (%s)" % user[1]
+                        text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
                         bot.send_message(warchat_id, text, parse_mode="markdown", disable_notification=True)
                         log.debug("Battle user late notification posted")
                 else:
@@ -444,7 +441,7 @@ def battle_control(call):
                 bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
             else:
                 bot.unpin_chat_message(warchat_id)
-            log.debug("Battle status notification posted")
+            log.debug("Battle status notification posted: %s" % notification_text)
         else:
             log.error("War chat_id is not set, cannot post battle status notification!")
         return
@@ -841,22 +838,22 @@ def reset_control(m):
             raise Exception()
     except:
         global current_precheck, current_battle, current_arscheck, current_numcheck
-        if current_precheck:
+        if not CanStartNewPrecheck():
             current_precheck.DoEndPrecheck()
             bot.edit_message_text(current_precheck.GetText(), inline_message_id=current_precheck.check_id,
                                   parse_mode="markdown")
             current_precheck = None
-        if current_battle:
+        if not CanStartNewBattle():
             current_battle.DoEndBattle()
             bot.edit_message_text(current_battle.GetText(), inline_message_id=current_battle.check_id,
                                   parse_mode="markdown")
             current_battle = None
-        if current_arscheck:
+        if not CanStartNewArs():
             current_arscheck.DoEndArsenal()
             bot.edit_message_text(current_arscheck.GetText(), inline_message_id=current_arscheck.check_id,
                                   parse_mode="markdown")
             current_arscheck = None
-        if current_numcheck:
+        if not CanStartNewNumbers():
             current_numcheck.DoEndCheck()
             bot.edit_message_text(current_numcheck.GetText(), inline_message_id=current_numcheck.check_id,
                                   parse_mode="markdown")
