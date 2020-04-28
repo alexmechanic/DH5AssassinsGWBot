@@ -129,7 +129,7 @@ def command_set_warchat(m):
         hlp.SendHelpNonAdmin(m)
         return
     
-    if common.warchat_id:
+    if common.warchat_id != None and common.warchat_id == m.chat.id:
         bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
     else:
         common.warchat_id = m.chat.id
