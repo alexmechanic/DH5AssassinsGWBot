@@ -268,7 +268,10 @@ class NumbersCheck():
     def CheckUser(self, user, value):
         ret = True
         userid = user[0]
-        number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
+        try:
+            number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
+        except: # user hit Cancel
+            return self.UncheckUser(user) 
         log.info("User %d (%s %s) voted for %d" % (*user, number_to_check))
         oldValue = self.numbers[number_to_check]
         if oldValue == 0: # can't set number below 0
@@ -290,6 +293,25 @@ class NumbersCheck():
         self.CheckAchievements()
         log.info("Vote successful")
         return True
+
+    # undo numbers result for user if user made mistake
+    def UncheckUser(self, user):
+        log.debug("User %d (%s %s) reverting all his votes" % (user[0], user[1], user[2]))
+        userNumbers = []
+        userid = user[0]
+        modified = False
+        # obtain user impact
+        for user in self.users:
+            if user == userid: # record exist
+                userNumbers = self.users[user]
+                modified = True
+                del self.users[user]
+                break
+        # revoke numbers hit
+        for number in userNumbers:
+            self.numbers[number] = self.numbers[number] + 1
+        log.info("Revert successful")
+        return modified
 
     def CheckAchievements(self):
         is_500 = True
