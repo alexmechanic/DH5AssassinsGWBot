@@ -98,7 +98,7 @@ def arsenal_query_inline(q):
         if hlp.CanStartNewArs():
             common.rage_time_workaround = rage[1][0]
             res = types.InlineQueryResultArticle('arsenal',
-                                                 title='Добавить прогресс арса',
+                                                 title='Добавить прогресс арсенала',
                                                  description='📦 |████--| Х/120\nЯрость в %s' % common.rage_time_workaround,
                                                  input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
                                                  thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
@@ -137,7 +137,8 @@ class Arsenal():
         log.debug("Set inline message_id: %s" % self.check_id)
 
     def SetRage(self, time):
-        self.rage_time = time
+        now = datetime.datetime.now()
+        self.rage_time = now.replace(hour=int(time[:2]), minute=int(time[3:]))
 
     def GetProgress(self):
         return self.progress
@@ -171,15 +172,15 @@ class Arsenal():
     def GetHeader(self):
         iteration = self.progress
         total = 120
-        length = 17
+        length = 29
         # form progress bar
         percent = iteration if iteration <= 120 else 120
         filledLength = int(length * percent // total)
-        bar = '█' * filledLength + '--' * (length - filledLength)
-        text =  ICON_ARS+" Прогресс арсенала: *%s/120*\n" % percent
+        bar = '█' * filledLength + '-' * (length - filledLength)
+        text =  ICON_ARS+" *Прогресс арсенала:* %s/120\n" % percent
         if self.rage_time:
-            text += "*Ярость в %s*\n" % self.rage_time
-        text += "|%s|\n" % bar
+            text += ICON_RAGE+" *Ярость в %0.2d:%0.2d*\n" % (self.rage_time.hour, self.rage_time.minute)
+        text += "\n`|%s|`\n" % bar
         return text
 
     def GetText(self):
