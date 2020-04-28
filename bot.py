@@ -6,7 +6,7 @@
 # @assassinsgwbot
 #
 
-import telebot, datetime, re, json, sys, os, time
+import telebot, os, time
 from telebot import types
 from logger import get_logger
 from flask import Flask, request
@@ -18,12 +18,10 @@ from battle import *
 from warprecheck import *
 from arsenal import *
 from numberscheck import *
-from screens import *
 from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb
 import helpers as hlp
-from screen_parser import ocr_core
 
 log = get_logger("bot")
 
