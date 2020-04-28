@@ -38,10 +38,12 @@ def numbers_check_user(call):
                 if not common.current_numcheck.is_1000: # if reached 1000 - no need to continue numbers check
                     bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
                                         parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+                    common.current_numcheck.CheckNotifyIfAchieved()
                 else:
                     common.current_numcheck.DoEndCheck()
                     bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
                                         parse_mode="markdown")
+                    common.current_numcheck.CheckNotifyIfAchieved()
             bot.answer_callback_query(call.id)
             return
     log.error("Numbers check not found!")
@@ -68,6 +70,7 @@ def numbers_control(call):
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+            common.current_numcheck.CheckNotifyIfAchieved()
             bot.answer_callback_query(call.id, "Отмечено "+ICON_500)
             return
         elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[1]: # make 1000
@@ -75,6 +78,7 @@ def numbers_control(call):
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
+            common.current_numcheck.CheckNotifyIfAchieved()
             bot.answer_callback_query(call.id, "Отмечено "+ICON_1000)
             return
         elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[2]: # stop
@@ -198,6 +202,12 @@ class NumbersCheck():
         self.is_500 = True
         self.is_1000 = True
         self.DoEndCheck()
+
+    def CheckNotifyIfAchieved(self):
+        if self.is_1000:
+            common.bot.send_message(common.warchat_id, "%s ❗" % ICON_1000)
+        elif self.is_500:
+            common.bot.send_message(common.warchat_id, "%s ❗" % ICON_500)
 
     def GetHeader(self):
         return ICON_SWORDS+" *Прогресс номеров " + \
