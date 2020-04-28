@@ -353,7 +353,7 @@ def battle_control(m):
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id, 
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
         bot.send_message(m.chat.id, "✅ Бой успешно запущен", reply_markup=markup)
-        common.current_battle.BattleStartNotifyActiveUsers(bot)
+        common.current_battle.BattleStartNotifyActiveUsers()
     elif m.text == kb.buttonStopPrivate.text:
         reset_control(m)
         bot.send_message(m.chat.id, "❎ Бой успешно завершен", reply_markup=markup)

@@ -118,6 +118,7 @@ class Arsenal():
     check_id = None
     progress = 0
     is_fired = False
+    is_fire_notified = False
     rage_time = None
     # dict with lists formatted [name, nick, value, count, is_fired]
     done_users = {}
@@ -147,7 +148,7 @@ class Arsenal():
 
     # Notify participated users if arsenal has been fired
     def CheckNotifyIfFired(self):
-        if self.is_fired:
+        if self.is_fired and not self.is_fire_notified:
             # get active users from battle check
             activeUsers = common.current_battle.GetActiveUsersID()
             for user in self.done_users:
@@ -158,6 +159,7 @@ class Arsenal():
             for user in activeUsers:
                 now = datetime.datetime.now()
                 common.bot.send_message(user, text)
+            self.is_fire_notified = True
             if common.warchat_id:
                 notification = common.bot.send_message(common.warchat_id, text)
                 common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
@@ -256,6 +258,7 @@ class Arsenal():
         if self.progress < 120:
             log.warning("Rage might've been reverted!")
             self.is_fired = False
+            self.is_fire_notified = False
             self.is_postponed = False
             for user in self.done_users:
                 self.done_users[user][4] = False
