@@ -7,11 +7,139 @@
 #
 
 import datetime
-from icons import *
-from callbacks import NUMBERS_CALLBACK_PREFIX
 from logger import get_logger
+from telebot import types
+
+import common
+from common import bot
+from icons import *
+from commands import COMMANDS
+import keyboards as kb
+import callbacks as cb
+import helpers as hlp
 
 log = get_logger("bot." + __name__)
+
+#
+# Numbers progress
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_OPTIONS)
+def numbers_check_user(call):
+    # print("numbers_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
+    if common.current_numcheck:
+        if message_id == common.current_numcheck.check_id:
+            ret = common.current_numcheck.CheckUser(user, call.data)
+            if (ret):
+                if not common.current_numcheck.is_1000: # if reached 1000 - no need to continue numbers check
+                    bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
+                                        parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+                else:
+                    common.current_numcheck.DoEndCheck()
+                    bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
+                                        parse_mode="markdown")
+            bot.answer_callback_query(call.id)
+            return
+    log.error("Numbers check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
+
+#
+# Numbers check control
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.NUMBERS_CONTROL_OPTIONS)
+def numbers_control(call):
+    # print("numbers_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
+    if not hlp.IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком номеров!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if common.current_numcheck:
+        if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # make 500
+            common.current_numcheck.Do500()
+            bot.edit_message_text(common.current_numcheck.GetText(),
+                                  inline_message_id=common.current_numcheck.check_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+            bot.answer_callback_query(call.id, "Отмечено "+ICON_500)
+            return
+        elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[1]: # make 1000
+            common.current_numcheck.Do1000()
+            bot.edit_message_text(common.current_numcheck.GetText(),
+                                  inline_message_id=common.current_numcheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "Отмечено "+ICON_1000)
+            return
+        elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[2]: # stop
+            common.current_numcheck.DoEndCheck()
+            bot.edit_message_text(common.current_numcheck.GetText(),
+                                  inline_message_id=common.current_numcheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
+            return
+        else:
+            log.error("invalid action!")
+            bot.answer_callback_query(call.id, "Неверныая команда! Пожалуйста, обратитесь к администратору бота")
+    log.error("Numbers check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
+
+#
+# Numbers check creation
+# (war chat inline query)
+#
+@bot.inline_handler(lambda query: query.query[:len(COMMANDS["numbers"])] == COMMANDS["numbers"])
+def numbers_query_inline(q):
+    # print("numbers_query_inline")
+    # print(q)
+    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to create numbers check" % (*user,))
+    if not hlp.IsUserAdmin(q): # non-admins cannot post votes
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if hlp.CanStartNewBattle():
+        log.error("Trying to setup numbers check with no current battle")
+        error_text = "Отсутствует активный бой"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
+        return
+    res, numbers = hlp.IsNumbersQuery(q)
+    if res:
+        if hlp.CanStartNewNumbers():
+            text = 'Добавить прогресс номеров'
+            if len(numbers) == 1:
+                text2 = 'по скринам (%s)' % numbers[0]
+                kb.SetupNumbersKeyboard(count=int(numbers[0]))
+            else:
+                text2 = 'по игре (%s)' % ' '.join(str(num) for num in numbers)
+                kb.SetupNumbersKeyboard(ingame_nums=numbers)
+            res = types.InlineQueryResultArticle('numbers',
+                                                 title=text,
+                                                 description=text2,
+                                                 input_message_content=types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
+                                                 thumb_url="https://i.ibb.co/JRRMLjv/numbers.png",
+                                                 reply_markup=kb.KEYBOARD_NUMBERS
+                                                 )
+            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+        elif not hlp.CanStartNewNumbers():
+            log.error("Trying to setup another numbers check while current has not reached 500/1000")
+            error_text = "Уже имеется активный чек номеров"
+            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                    switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
+    else:
+        log.error("Failed (invalid query)")
+        error_text = "Неверный формат запроса"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_numbers")
+
 
 class NumbersCheck():
     check_id = None
@@ -130,7 +258,7 @@ class NumbersCheck():
     def CheckUser(self, user, value):
         ret = True
         userid = user[0]
-        number_to_check = int(value.replace(NUMBERS_CALLBACK_PREFIX, ""))
+        number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
         log.info("User %d (%s %s) voted for %d" % (*user, number_to_check))
         oldValue = self.numbers[number_to_check]
         if oldValue == 0: # can't set number below 0

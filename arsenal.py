@@ -7,11 +7,112 @@
 #
 
 import datetime
-from icons import *
-from callbacks import ARS_CALLBACK_PREFIX
 from logger import get_logger
+from telebot import types
+
+import common
+from common import bot
+from icons import *
+from commands import COMMANDS
+import keyboards as kb
+import callbacks as cb
+import helpers as hlp
 
 log = get_logger("bot." + __name__)
+
+#
+# Arsenal progress for battle
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.ARS_OPTIONS)
+def arsenal_check_user(call):
+    # print("arsenal_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    userChoice = call.data
+    log.debug("User %d (%s %s) is trying to vote for arsenal (%s)" % (*user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
+    if common.current_arscheck:
+        if message_id == common.current_arscheck.check_id:
+            ret = common.current_arscheck.Increment(user, userChoice)
+            if (ret):
+                bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=message_id,
+                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+                common.current_arscheck.CheckNotifyIfFired(common.current_battle, bot, common.warchat_id)
+            else:
+                log.error("Failed")
+            bot.answer_callback_query(call.id)
+            return
+    log.error("Ars check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
+
+#
+# Arsenal control
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.ARS_CONTROL_OPTIONS)
+def arsenal_control(call):
+    # print("arsenal_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control arsenal check" % (*user,))
+    if not hlp.IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком арсенала!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if userChoice == kb.ARS_CONTROL_OPTIONS[0]: # stop
+        if (common.current_arscheck):
+            common.current_arscheck.DoEndArsenal()
+            bot.edit_message_text(common.current_arscheck.GetText(),
+                                  inline_message_id=common.current_arscheck.check_id,
+                                  parse_mode="markdown")
+            bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
+            return
+    log.error("Ars check not found!")
+    bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
+
+#
+# Arsenal creation
+# (war chat inline query)
+#
+@bot.inline_handler(lambda query: query.query[:len(COMMANDS["arsenal"])] == COMMANDS["arsenal"])
+def arsenal_query_inline(q):
+    # print("arsenal_query_inline")
+    # print(q)
+    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to create arsenal check" % (*user,))
+    if not hlp.IsUserAdmin(q): # non-admins cannot post votes
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if hlp.CanStartNewBattle():
+        log.error("Trying to setup arsenal check with no current battle")
+        error_text = "Отсутствует активный бой"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
+        return
+    rage = hlp.IsArsQuery(q)
+    if rage[0]:
+        if hlp.CanStartNewArs():
+            common.rage_time_workaround = rage[1][0]
+            res = types.InlineQueryResultArticle('arsenal',
+                                                 title='Добавить прогресс арса',
+                                                 description='📦 |████--| Х/120\nЯрость в %s' % common.rage_time_workaround,
+                                                 input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
+                                                 thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
+                                                 reply_markup=kb.KEYBOARD_ARS)
+            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+        else:
+            log.error("Trying to setup another arsenal check while current has not been fired")
+            error_text = "Уже имеется активный чек арсенала"
+            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                    switch_pm_text=error_text, switch_pm_parameter="existing_arsenal")
+    else:
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text="Неверный формат запроса", switch_pm_parameter="existing_arsenal")
+
 
 class Arsenal():
     check_id = None
@@ -104,7 +205,7 @@ class Arsenal():
         userid = user[0]
         nick = user[1]
         name = user[2]
-        arsValue = value.replace(ARS_CALLBACK_PREFIX, "")
+        arsValue = value.replace(cb.ARS_CALLBACK_PREFIX, "")
         inc = 0
         user_fired = False # this variable is needed in order to count ars value for user even if ars is already fired now
         user_newcount = 1

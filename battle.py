@@ -7,11 +7,186 @@
 #
 
 import datetime
-from icons import *
-from callbacks import *
 from logger import get_logger
+from telebot import types
+
+import common
+from common import bot
+from icons import *
+import keyboards as kb
+import callbacks as cb
+import helpers as hlp
 
 log = get_logger("bot." + __name__)
+
+#
+# Battle check
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.CHECK_OPTIONS)
+def battle_check_user(call):
+    # print("battle_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    userChoice = call.data
+    log.debug("User %d (%s %s) is trying to vote for battle (%s)" % (*user, userChoice.replace(cb.CHECK_CALLBACK_PREFIX, "")))
+    if common.current_battle:
+        if message_id == common.current_battle.check_id:
+            ret = common.current_battle.CheckUser(user, userChoice)
+            if (ret):
+                markup = kb.KEYBOARD_CHECK
+                if common.current_battle.is_rolling:
+                    markup = kb.KEYBOARD_CHECK_ROLLED
+                elif common.current_battle.is_started:
+                    markup = kb.KEYBOARD_LATE
+                bot.edit_message_text(common.current_battle.GetText(), inline_message_id=message_id, 
+                                    parse_mode="markdown", reply_markup=markup)
+                bot.answer_callback_query(call.id, common.current_battle.GetVotedText(userChoice))
+                if common.warchat_id:
+                    if userChoice == cb.CHECK_LATE_CALLBACK:
+                        text = ICON_LATE + " [%s" % user[2]
+                        if user[1] != None:
+                            text += " (%s)" % user[1]
+                        text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
+                        bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
+                        log.debug("Battle user late notification posted")
+                else:
+                    log.error("War chat_id is not set, cannot post late notification!")
+            else:
+                log.error("Failed")
+                bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
+            return
+    log.error("Battle not found!")
+    bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
+
+#
+# Battle control
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.CHECK_CONTROL_OPTIONS)
+def battle_control(call):
+    # print("battle_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control battle" % (*user,))
+    if not hlp.IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if common.current_battle:
+        notification_text = ""
+        if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
+            common.current_battle.DoRollBattle()
+            notification_text = ICON_ROLL+" Крутит"
+            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
+            bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
+            common.current_battle.BattleRollNotifyActiveUsers(bot)
+        elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
+            common.current_battle.DoStartBattle()
+            notification_text = ICON_SWORDS+" Бой начался"
+            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
+            bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
+                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
+            common.current_battle.BattleStartNotifyActiveUsers(bot)
+        elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
+            reset_control(call)
+            notification_text = ICON_FINISH+" Бой завершен"
+        if common.warchat_id:
+            notification = bot.send_message(common.warchat_id, notification_text, disable_notification=False)
+            if userChoice != kb.CHECK_CONTROL_OPTIONS[2]: # stop
+                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+            else:
+                bot.unpin_chat_message(common.warchat_id)
+            log.debug("Battle status notification posted: %s" % notification_text)
+        else:
+            log.error("War chat_id is not set, cannot post battle status notification!")
+        bot.answer_callback_query(call.id, notification_text)
+        return
+    log.error("Battle not found!")
+    bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
+
+#
+# Battle check creation
+# (war chat inline query)
+#
+@bot.inline_handler(lambda query: hlp.IsCheckTimeQuery(query)[0])
+def battle_query_inline(q):
+    # print("battle_query_inline")
+    # print(q)
+    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to create battle check" % (*user,))
+    if not hlp.IsUserAdmin(q): # non-admins cannot post votes
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    times = hlp.IsCheckTimeQuery(q)[1]
+    if hlp.CanStartNewBattle():
+        res = types.InlineQueryResultArticle('battle',
+                                            title='[%s/%s] Создать чек на бой' % (times[0], times[1]),
+                                            description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
+                                            input_message_content=types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
+                                            thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
+                                            reply_markup=kb.KEYBOARD_CHECK)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+    else:
+        log.error("Trying to setup another battle while current is not finished")
+        error_text = "Уже имеется активный бой в %0.2d:%0.2d" \
+                     % (common.current_battle.time["start"].hour, common.current_battle.time["start"].minute)
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_battle")
+
+#
+# Emergency reset control
+# (private bot chat)
+#
+@bot.message_handler(func=lambda message: message.text in kb.RESET_CONTROL_OPTIONS)
+def reset_control(m):
+    try:
+        if not hlp.IsInPrivateChat(m): return
+    except: # issue when resetting checks via battle stop. could be ignored
+        pass
+    if not hlp.IsUserAdmin(m):
+        hlp.SendHelpNonAdmin(m)
+        return
+    markup = types.ReplyKeyboardRemove(selective=False)
+    try:
+        if m.text == kb.RESET_CONTROL_OPTIONS[1]: # cancel
+            bot.send_message(m.from_user.id, "⛔️ Действие отменено", reply_markup=markup)
+            log.debug("Reset calcelled")
+            return
+        else:
+            raise Exception()
+    except:
+        
+        if not hlp.CanStartNewPrecheck():
+            common.current_precheck.DoEndPrecheck()
+            bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
+                                  parse_mode="markdown")
+            common.current_precheck = None
+        if not hlp.CanStartNewBattle():
+            common.current_battle.DoEndBattle()
+            bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
+                                  parse_mode="markdown")
+            common.current_battle = None
+        if common.current_arscheck:
+            common.current_arscheck.DoEndArsenal()
+            bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
+                                  parse_mode="markdown")
+            common.current_arscheck = None
+        if not hlp.CanStartNewNumbers():
+            common.current_numcheck.DoEndCheck()
+            bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
+                                  parse_mode="markdown")
+            common.current_numcheck = None
+    try:
+        bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
+    except: # no need to send private message if checks have been reset via battle control
+        pass
+    log.debug("Reset successful")
 
 class Battle():
     check_id = None
@@ -195,37 +370,37 @@ class Battle():
         return text
 
     def GetVotedText(self, action):
-        if action == CHECK_CHECK_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы идете. Ожидайте росписи!"
-        elif action == CHECK_RAGE_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы придете к ярости"
-        elif action == CHECK_FAST_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы сливаете энку"
-        elif action == CHECK_ARS_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы идете только в арсенал. Не атакуйте без росписи!"
-        elif action == CHECK_THINK_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы еще не решили. Постарайтесь определиться к началу боя!"
-        elif action == CHECK_CANCEL_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы не придете на бой. Жаль"
-        elif action == CHECK_LATE_CALLBACK:
-            return action.replace(CHECK_CALLBACK_PREFIX, "") + " Вы опоздали к началу. Дождитесь росписи от офицера!"
+        if action == cb.CHECK_CHECK_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы идете. Ожидайте росписи!"
+        elif action == cb.CHECK_RAGE_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы придете к ярости"
+        elif action == cb.CHECK_FAST_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы сливаете энку"
+        elif action == cb.CHECK_ARS_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы идете только в арсенал. Не атакуйте без росписи!"
+        elif action == cb.CHECK_THINK_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы еще не решили. Постарайтесь определиться к началу боя!"
+        elif action == cb.CHECK_CANCEL_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы не придете на бой. Жаль"
+        elif action == cb.CHECK_LATE_CALLBACK:
+            return action.replace(cb.CHECK_CALLBACK_PREFIX, "") + " Вы опоздали к началу. Дождитесь росписи от офицера!"
 
     def CheckUser(self, user, action):
         ret = True
-        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(CHECK_CALLBACK_PREFIX, "")))
-        if action == CHECK_CHECK_CALLBACK:
+        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(cb.CHECK_CALLBACK_PREFIX, "")))
+        if action == cb.CHECK_CHECK_CALLBACK:
             ret = self.SetCheck(user)
-        elif action == CHECK_RAGE_CALLBACK:
+        elif action == cb.CHECK_RAGE_CALLBACK:
             ret = self.SetRageOnly(user)
-        elif action == CHECK_FAST_CALLBACK:
+        elif action == cb.CHECK_FAST_CALLBACK:
             ret = self.SetFast(user)
-        elif action == CHECK_ARS_CALLBACK:
+        elif action == cb.CHECK_ARS_CALLBACK:
             ret = self.SetArsenalOnly(user)
-        elif action == CHECK_THINK_CALLBACK:
+        elif action == cb.CHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
-        elif action == CHECK_CANCEL_CALLBACK:
+        elif action == cb.CHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
-        elif action == CHECK_LATE_CALLBACK:
+        elif action == cb.CHECK_LATE_CALLBACK:
             ret = self.SetLate(user)
         if ret: log.info("Vote successful")
         else: log.error("Vote failed")

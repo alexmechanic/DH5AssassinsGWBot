@@ -7,10 +7,13 @@
 #
 
 import re, datetime
+from logger import get_logger
+import common
 from collections import Counter
 from commands import COMMANDS
 from icons import *
-from random import *
+
+log = get_logger("bot")
 
 def IsCheckTimeQuery(query): # return if query contains check time and check time list
     times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
@@ -47,11 +50,72 @@ def IsArsQuery(query): # return if query contains ars check and the time of rage
     else:
         return False, None
 
-def SendHelpNoBattle(chat_id, bot):
+def SendHelpNonAdmin(message):
+    text =  "Мной могут управлять только офицеры гильдии.\n"
+    text += "Обратитесь к одному из офицеров за подробностями:\n\n"
+    for admin in common.admins:
+        text += "[%s](tg://user?id=%s)\n" % (common.admins[admin], admin)
+    common.bot.send_message(message.from_user.id, text, parse_mode="markdown")
+
+def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
     error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
     error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
-    bot.send_message(chat_id, error_text, parse_mode="markdown")
+    common.bot.send_message(chat_id, error_text, parse_mode="markdown")
+
+def SendHelpWrongChat(toUser, command, description, needPrivate):
+    if needPrivate:
+        target_chat = "в личном чате"
+    else:
+        target_chat = "в военном чате"
+    log.error("Failed: wrong chat command, need to use %s" % target_chat)
+    text = "Используйте команду %s %s, чтобы %s!" % (command, target_chat, description)
+    common.bot.send_message(toUser, text)
+
+
+def CanStartNewPrecheck():
+    res = common.current_precheck == None
+    if not res:
+        res = common.current_precheck.is_postponed
+    return res
+
+def CanStartNewBattle():
+    res = common.current_battle == None
+    if not res:
+        res = common.current_battle.is_postponed
+    return res
+
+def CanStartNewArs():
+    res = common.current_arscheck == None
+    if not res:
+        res = common.current_arscheck.is_fired or common.current_arscheck.is_postponed
+    return res
+
+def CanStartNewNumbers():
+    res = common.current_numcheck == None
+    if not res:
+        res = common.current_numcheck.is_postponed
+    return res
+
+def GetScreenMessageByMediaID(_id):
+    global screen_message_list
+    if common.screen_message_list:
+        for screen in common.screen_message_list:
+            if screen.media_group_id == _id:
+                return screen
+    return None
+
+def IsUserAdmin(message):
+    if str(message.from_user.id) in common.admins or \
+       str(message.from_user.id) == common.ROOT_ADMIN[0]:
+        return True
+    else:
+        return False
+
+def IsInPrivateChat(message):
+    if message.chat.id == message.from_user.id:
+        return True
+    return False
 
 def IsSnowAvailable():
     now = datetime.datetime.now()

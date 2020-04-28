@@ -6,11 +6,97 @@
 # Class representing pre-check for Guild war
 #
 
-from icons import *
-from callbacks import *
 from logger import get_logger
+from telebot import types
+
+import common
+from common import bot
+from icons import *
+from commands import COMMANDS
+import keyboards as kb
+import callbacks as cb
+import helpers as hlp
 
 log = get_logger("bot." + __name__)
+
+#
+# Pre-check actions
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.PRECHECK_OPTIONS)
+def precheck_check_user(call):
+    # print("precheck_check_user")
+    # print(call)
+    message_id = call.inline_message_id
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    userChoice = call.data
+    log.debug("User %d (%s %s) is trying to vote for pre-check (%s)" % (*user, userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
+    if not hlp.CanStartNewPrecheck():
+        if message_id == common.current_precheck.check_id:
+            ret = common.current_precheck.CheckUser(user, userChoice)
+            if (ret):
+                bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=message_id, 
+                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
+                bot.answer_callback_query(call.id, common.current_precheck.GetVotedText(user, userChoice))
+            else:
+                log.error("Failed")
+                bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, ""))
+            return
+    log.error("Pre-check not found!")
+    bot.answer_callback_query(call.id)
+
+#
+# Pre-check control
+# (war chat keyboard action)
+#
+@bot.callback_query_handler(func=lambda call: call.data in kb.PRECHECK_CONTROL_OPTIONS)
+def precheck_control(call):
+    # print("precheck_control")
+    # print(call)
+    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to control pre-check" % (*user,))
+    if not hlp.IsUserAdmin(call):
+        bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком!")
+        log.error("Failed (not an admin)")
+        return
+    userChoice = call.data
+    if userChoice == kb.PRECHECK_CONTROL_OPTIONS[0]: # stop
+        common.current_precheck.DoEndPrecheck()
+        bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id, 
+                              parse_mode="markdown")
+        bot.answer_callback_query(call.id, "🏁 Чек завершен")
+        return
+    log.error("Pre-check not found!", "Неверный чек ВГ! Пожалуйста, создайте новый")
+
+#
+# GW pre-check creation
+# (war chat inline query)
+#
+@bot.inline_handler(lambda query: query.query == COMMANDS["precheck"])
+def precheck_query_inline(q):
+    # print("precheck_query_inline")
+    # print(q)
+    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to create pre-check" % (*user,))
+    if not hlp.IsUserAdmin(q): # non-admins cannot post votes
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(q)
+        bot.answer_callback_query(q.id)
+        return
+    if hlp.CanStartNewPrecheck():
+        res = types.InlineQueryResultArticle('precheck',
+                                            title='Создать чек перед ВГ',
+                                            description='🗓✅💤❌',
+                                            input_message_content=types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
+                                            thumb_url="https://i.ibb.co/G79HtRG/precheck.png",
+                                            reply_markup=kb.KEYBOARD_PRECHECK)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+    else:
+        log.error("Trying to setup another pre-check while current is not finished")
+        error_text = "Уже имеется активный чек"
+        bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
+
 
 class WarPreCheck():
     check_id = None
@@ -88,39 +174,39 @@ class WarPreCheck():
 
     def GetVotedText(self, user, action):
         text = "Вы "
-        if action == PRECHECK_FR_CALLBACK:
+        if action == cb.PRECHECK_FR_CALLBACK:
             if user[0] not in self.friday:
                 text += "не "
             return text + "участвуете в пятницу"
-        if action == PRECHECK_SAT_CALLBACK:
+        if action == cb.PRECHECK_SAT_CALLBACK:
             if user[0] not in self.saturday:
                 text += "не "
             return text + "участвуете в субботу"
-        if action == PRECHECK_SUN_CALLBACK:
+        if action == cb.PRECHECK_SUN_CALLBACK:
             if user[0] not in self.sunday:
                 text += "не "
             return text + "участвуете в воскресенье"
-        elif action == PRECHECK_FULL_CALLBACK:
+        elif action == cb.PRECHECK_FULL_CALLBACK:
             return text + "участвуете все дни"
-        elif action == PRECHECK_THINK_CALLBACK:
+        elif action == cb.PRECHECK_THINK_CALLBACK:
             return text + "еще не решили. Постарайтесь определиться к началу ВГ!"
-        elif action == PRECHECK_CANCEL_CALLBACK:
+        elif action == cb.PRECHECK_CANCEL_CALLBACK:
             return text + "не будете участвовать в этой ВГ. Жаль"
 
     def CheckUser(self, user, action):
         ret = True
-        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(PRECHECK_CALLBACK_PREFIX, "")))
-        if action == PRECHECK_FR_CALLBACK:
+        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
+        if action == cb.PRECHECK_FR_CALLBACK:
             ret = self.SetFriday(user)
-        if action == PRECHECK_SAT_CALLBACK:
+        if action == cb.PRECHECK_SAT_CALLBACK:
             ret = self.SetSaturday(user)
-        if action == PRECHECK_SUN_CALLBACK:
+        if action == cb.PRECHECK_SUN_CALLBACK:
             ret = self.SetSunday(user)
-        elif action == PRECHECK_FULL_CALLBACK:
+        elif action == cb.PRECHECK_FULL_CALLBACK:
             ret = self.SetFull(user)
-        elif action == PRECHECK_THINK_CALLBACK:
+        elif action == cb.PRECHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
-        elif action == PRECHECK_CANCEL_CALLBACK:
+        elif action == cb.PRECHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
         if ret: log.info("Vote successful")
         else: log.error("Vote failed - already voted the same")
