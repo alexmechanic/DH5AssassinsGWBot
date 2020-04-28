@@ -135,6 +135,7 @@ def command_set_warchat(m):
         bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
     else:
         common.warchat_id = m.chat.id
+        log.info("war chat set: ", common.warchat_id)
         bot.send_message(m.from_user.id, ICON_CHECK+" Военный чат успешно задан!")
 
 

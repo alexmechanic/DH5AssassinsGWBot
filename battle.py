@@ -96,7 +96,7 @@ def battle_control(call):
             notification_text = ICON_FINISH+" Бой завершен"
         if common.warchat_id:
             notification = bot.send_message(common.warchat_id, notification_text, disable_notification=False)
-            if userChoice != kb.CHECK_CONTROL_OPTIONS[2]: # stop
+            if userChoice not in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]: # roll / stop
                 bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
             else:
                 bot.unpin_chat_message(common.warchat_id)

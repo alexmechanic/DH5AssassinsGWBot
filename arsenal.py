@@ -38,7 +38,7 @@ def arsenal_check_user(call):
             if (ret):
                 bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=message_id,
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
-                common.current_arscheck.CheckNotifyIfFired(common.current_battle, bot, common.warchat_id)
+                common.current_arscheck.CheckNotifyIfFired()
             else:
                 log.error("Failed")
             bot.answer_callback_query(call.id)
@@ -146,10 +146,10 @@ class Arsenal():
         log.info("Arsenal check stopped")
 
     # Notify participated users if arsenal has been fired
-    def CheckNotifyIfFired(self, battle, bot, warchat_id):
+    def CheckNotifyIfFired(self):
         if self.is_fired:
             # get active users from battle check
-            activeUsers = battle.GetActiveUsersID()
+            activeUsers = common.current_battle.GetActiveUsersID()
             for user in self.done_users:
                 activeUsers.add(user)
             log.debug(activeUsers)
@@ -157,10 +157,10 @@ class Arsenal():
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
             for user in activeUsers:
                 now = datetime.datetime.now()
-                bot.send_message(user, text)
-            if warchat_id:
-                notification = bot.send_message(warchat_id, text)
-                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+                common.bot.send_message(user, text)
+            if common.warchat_id:
+                notification = common.bot.send_message(common.warchat_id, text)
+                common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
                 log.debug("Arsenal status notification posted")
             else:
                 log.error("War chat_id is not set, cannot post arsenal status notification!")
