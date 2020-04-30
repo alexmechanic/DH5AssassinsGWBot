@@ -273,7 +273,7 @@ def setup_admins(m):
         hlp.SendHelpWrongChat(user[0], "/setadmins", "обновить список офицеров", False)
         return
     is_chat_admin = False
-    chat_admins = bot.get_chat_administrators(m.chat.id)
+    chat_admins = bot.get_chat_administrators(m.chat.id).wait()
     for admin in chat_admins:
         if admin.user.id == user[0]:
             is_chat_admin = True
@@ -386,7 +386,7 @@ def command_snow(m):
     if common.current_snowwhite == {}:
         common.current_snowwhite["message"] = bot.send_message(m.chat.id,
                                              ICON_SNOW+" Всем привет!",
-                                             reply_markup=kb.KEYBOARD_SNOWWHITE)
+                                             reply_markup=kb.KEYBOARD_SNOWWHITE).wait()
         common.current_snowwhite["praised"] = []
         log.info("Snow White called!")
     else:

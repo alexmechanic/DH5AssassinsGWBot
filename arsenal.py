@@ -162,7 +162,7 @@ class Arsenal():
                 common.bot.send_message(user, text)
             self.is_fire_notified = True
             if common.warchat_id:
-                notification = common.bot.send_message(common.warchat_id, text)
+                notification = common.bot.send_message(common.warchat_id, text).wait()
                 common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
                 log.debug("Arsenal status notification posted")
             else:

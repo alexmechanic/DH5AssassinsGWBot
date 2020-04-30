@@ -25,7 +25,7 @@ else:
         log.info("[LOCAL] read token: '%s'" % TOKEN)
         tfile.close()
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.AsyncTeleBot(TOKEN)
 
 BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
