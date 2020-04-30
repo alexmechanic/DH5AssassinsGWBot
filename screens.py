@@ -66,6 +66,7 @@ def command_screens_ocr(m):
     with open(screen_params["id"], 'wb') as screen_file:
         screen_file.write(downloaded)
         screen_file.close()
+
     # process image
     bot.edit_message_text(screen_list[screen_params["user"]].GetText() + "\n_(обработка...)_",
                           chat_id=screen_params["user"],
