@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
+# Copyright (c) 2020 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
 # Callbacks for inline buttons
 #

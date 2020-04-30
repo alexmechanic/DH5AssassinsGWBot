@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2019 Gerasimov Alexander <samik.mechanic@gmail.com>
+# Copyright (c) 2020 Gerasimov Alexander <samik.mechanic@gmail.com>
 #
-# Class representing pre-check for Guild war
+# Class and methods representing pre-check for Guild war
 #
 
 from logger import get_logger
