@@ -48,7 +48,7 @@ CHECK_CONTROL_OPTIONS = [buttonRoll.callback_data,
                         ]
 
 # battle arsenal
-KEYBOARD_ARS    = types.InlineKeyboardMarkup(row_width=7)
+KEYBOARD_ARS    = types.InlineKeyboardMarkup(row_width=5)
 buttonsArs      = [types.InlineKeyboardButton(text="+8", callback_data=ARS_8_CALLBACK),
                    types.InlineKeyboardButton(text="+9", callback_data=ARS_9_CALLBACK),
                    types.InlineKeyboardButton(text="+10", callback_data=ARS_10_CALLBACK),
@@ -113,16 +113,18 @@ buttonsNumsStop   = types.InlineKeyboardButton(text=ICON_STOP,   callback_data=N
 
 def SetupNumbersKeyboard(count=30, ingame_nums=None):
     global KEYBOARD_NUMBERS
+    MAX_ROW_WIDTH = 5 # lowered for 8 to support some devices with small screens
     nums_count = count
     if ingame_nums != None: # if check is for in-game numbers - counter is list size (not 'count' anymore!)
       nums_count = len(ingame_nums)
-    if nums_count <= 8:
+    if nums_count <= MAX_ROW_WIDTH:
         KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=nums_count)
     else:
-        new_count = 8
-        for i in range(2, 5):
-            if (nums_count // i + nums_count % i) <= 8:
-                new_count = nums_count // i + nums_count % i
+        new_count = MAX_ROW_WIDTH
+        for i in range(2, MAX_ROW_WIDTH):
+            count_try = nums_count // i + nums_count % i
+            if (count_try) <= MAX_ROW_WIDTH:
+                new_count = count_try
                 break
         KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=new_count)
     if nums_count > 0 and nums_count <= 30:
@@ -134,7 +136,9 @@ def SetupNumbersKeyboard(count=30, ingame_nums=None):
           for i in range(nums_count):
               buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
-        KEYBOARD_NUMBERS.add(buttonsNumsCancel, buttonsNums500, buttonsNums1000, buttonsNumsStop)
+        KEYBOARD_NUMBERS.add(buttonsNumsCancel)
+        KEYBOARD_NUMBERS.add(buttonsNums500, buttonsNums1000)
+        KEYBOARD_NUMBERS.add(buttonsNumsStop)
     return KEYBOARD_NUMBERS
 
 NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]
