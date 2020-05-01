@@ -35,7 +35,7 @@ def numbers_check_user(call):
         if message_id == common.current_numcheck.check_id:
             ret = common.current_numcheck.CheckUser(user, call.data)
             if (ret):
-                if not common.current_numcheck.is_1000: # if reached 1000 - no need to continue numbers check
+                if not common.current_numcheck.Is1000(): # if reached 1000 - no need to continue numbers check
                     bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
                                         parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
                     common.current_numcheck.CheckNotifyIfAchieved()
@@ -151,9 +151,16 @@ class NumbersCheck():
     ingame = False
     numbers = {} # {number: value (0-3)}
     users = {}   # {userid: [numbers done]}
-    is_500 = False
-    is_1000 = False
-    times = {} # {"500": datetime, "1000": datetime}
+    _500 = {
+        "done": False,
+        "notified": False,
+        "time": None
+        }
+    _1000 = {
+        "done": False,
+        "notified": False,
+        "time": None
+        }
     is_postponed = False # set when 500 or 1000 is gained
 
     def __init__(self, count=30, ingame=False, ingame_nums=None):
@@ -168,9 +175,16 @@ class NumbersCheck():
             for i in range(1, count+1):
                 self.numbers[i] = 3
         self.users = {}
-        self.is_500 = False
-        self.is_1000 = False
-        self.times = {"500": None, "1000": None}
+        self._500 = {
+            "done": False,
+            "notified": False,
+            "time": None
+            }
+        self._1000 = {
+            "done": False,
+            "notified": False,
+            "time": None
+            }
         self.is_postponed = False
         log.info("New numbers check created (%d)" % count)
 
@@ -182,32 +196,40 @@ class NumbersCheck():
         self.is_postponed = True
         log.info("Numbers check stopped")
 
+    def Is500(self):
+        return self._500["done"]
+
     def Do500(self):
-        if self.is_500:
+        if self._500["done"]:
             return
         for number, value in self.numbers.items():
             if value == 3:
                 self.numbers[number] = value - 1
-        self.times["500"] = datetime.datetime.now()
-        self.is_500 = True
+        self._500["time"] = datetime.datetime.now()
+        self._500["done"] = True
+
+    def Is1000(self):
+        return self._1000["done"]
 
     def Do1000(self):
-        if self.is_1000:
+        if self._1000["done"]:
             return
         now = datetime.datetime.now()
         for number in self.numbers:
             self.numbers[number] = 0
-        self.times["500"] = now
-        self.times["1000"] = now
-        self.is_500 = True
-        self.is_1000 = True
+        self._500["done"] = True
+        self._500["time"] = now
+        self._1000["done"] = True
+        self._1000["time"] = now
         self.DoEndCheck()
 
     def CheckNotifyIfAchieved(self):
-        if self.is_1000:
+        if self._1000["done"] and not self._1000["notified"]:
             common.bot.send_message(common.warchat_id, "%s ❗" % ICON_1000)
-        elif self.is_500:
+            self._1000["notified"] = True
+        elif self._500["done"] and not self._500["notified"]:
             common.bot.send_message(common.warchat_id, "%s ❗" % ICON_500)
+            self._500["notified"] = True
 
     def GetHeader(self):
         return ICON_SWORDS+" *Прогресс номеров " + \
@@ -252,17 +274,17 @@ class NumbersCheck():
                 text += str(number) + ", "
             text += str(empty_nums[-1]) + "\n"
 
-        if not self.is_500:
+        if not self._500["done"]:
             text += ("\nДо %s:       %d " % (ICON_500, stars_left[0])) + ICON_STAR + "\n"
-        if not self.is_1000:
-            text += "\n"*self.is_500 + ("До %s: %d " % (ICON_1000, stars_left[1])) + ICON_STAR + "\n"
+        if not self._1000["done"]:
+            text += "\n"*self._500["done"] + ("До %s: %d " % (ICON_1000, stars_left[1])) + ICON_STAR + "\n"
 
-        if self.is_500 or self.is_1000:
+        if self._500["done"] or self._1000["done"]:
             text += "\n*Достигнутые цели:*\n"
-        if self.is_500:
-            text += ("(%0.2d:%0.2d) %s ❗\n" % (self.times["500"].hour, self.times["500"].minute, ICON_500))*self.is_500 
-        if self.is_1000:
-            text += ("(%0.2d:%0.2d) %s ❗\n" % (self.times["1000"].hour, self.times["1000"].minute, ICON_1000))*self.is_1000
+        if self._500["done"]:
+            text += "(%0.2d:%0.2d) %s ❗\n" % (self._500["time"].hour, self._500["time"].minute, ICON_500)
+        if self._1000["done"]:
+            text += "(%0.2d:%0.2d) %s ❗\n" % (self._1000["time"].hour, self._1000["time"].minute, ICON_1000)
         return text
 
     def CheckUser(self, user, value):
@@ -321,22 +343,22 @@ class NumbersCheck():
                 is_1000 = False
             if value == 3:
                 is_500 = False
-            if is_500 == False and is_1000 == False:
+            if not is_500 and not is_1000:
                 break # save time consume for iterating list if no condition is already met
         now = datetime.datetime.now()
         if is_500:
-            self.times["500"] = now
+            self._500["time"] = now
             self.is_postponed = True
-            if not self.is_500:
+            if not self._500["done"]:
                 log.debug("Reached 500")
                 log.debug("Users impact:")
                 log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
         if is_1000:
-            self.times["1000"] = now
+            self._1000["time"] = now
             self.is_postponed = True
-            if not self.is_1000:
+            if not self._1000["done"]:
                 log.debug("Reached 1000")
                 log.debug("Users impact:")
                 log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
-        self.is_500 = is_500
-        self.is_1000 = is_1000
+        self._500["done"] = is_500
+        self._1000["done"] = is_1000
