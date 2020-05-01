@@ -315,7 +315,7 @@ def manage_admins(m):
     text += "👁 %s _[администратор бота]_\n" % common.ROOT_ADMIN[1]
     for admin in common.admins:
         if common.BOT_USERNAME not in admin or admin != common.ROOT_ADMIN[1]:
-            if str(user[0]) == ROOT_ADMIN[0]: # show admins IDs for root admin
+            if str(user[0]) == common.ROOT_ADMIN[0]: # show admins IDs for root admin
                 text += ICON_MEMBER+" %s _(ID=%s)_\n" % (common.admins[admin], admin)
             else:
                 text += (ICON_MEMBER+" %s\n" % common.admins[admin])
