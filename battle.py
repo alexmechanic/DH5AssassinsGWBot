@@ -162,22 +162,22 @@ def reset_control(m):
             raise Exception()
     except:
         
-        if not hlp.CanStartNewPrecheck():
+        if not hlp.CanStartNewPrecheck(): # should hit 'end' to start another
             common.current_precheck.DoEndPrecheck()
             bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
                                   parse_mode="markdown")
             common.current_precheck = None
-        if not hlp.CanStartNewBattle():
+        if not hlp.CanStartNewBattle(): # should hit 'end' to start another
             common.current_battle.DoEndBattle()
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown")
             common.current_battle = None
-        if common.current_arscheck:
+        if common.current_arscheck: # postponed is not a condition that check ended
             common.current_arscheck.DoEndArsenal()
             bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
             common.current_arscheck = None
-        if not hlp.CanStartNewNumbers():
+        if common.current_numcheck: # postponed is not a condition that check ended
             common.current_numcheck.DoEndCheck()
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
