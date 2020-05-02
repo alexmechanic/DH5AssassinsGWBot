@@ -15,16 +15,25 @@ from icons import *
 
 log = get_logger("bot")
 
+def CheckInlineQuery(pattern, query): # check query for primary pattern support function 
+    res = re.compile(pattern).findall(query.query)
+    if res != [] and len(res) == 1:
+        return True
+    return False
+
 def IsCheckTimeQuery(query): # return if query contains check time and check time list
-    times = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
-    if times != [] and len(times) == 2:
-        return True, times
+    pattern = COMMANDS["battle"] + " "
+    if CheckInlineQuery(pattern, query):
+        battle_query = query.query.replace(pattern, "")
+        time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
+        if time != [] and len(time) == 1:
+            return True, time
     return False, None
 
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
-    res = re.findall(r'номера ', query.query)
-    if res != [] and len(res) == 1:
-        numbers_list = query.query.replace(COMMANDS["numbers"] + " ", "")
+    pattern = COMMANDS["numbers"] + " "
+    if CheckInlineQuery(pattern, query):
+        numbers_list = query.query.replace(pattern, "")
         numbers_all = re.findall(r'\b(\d?\d)\b', numbers_list)
         numbers_correct = re.findall(r'\b([1-9]|[1-2]\d|[3][0])\b', numbers_list)
         if len(numbers_all) != len(numbers_correct):
@@ -39,16 +48,13 @@ def IsNumbersQuery(query): # return if query contains numbers check and the list
         return False, None
 
 def IsArsQuery(query): # return if query contains ars check and the time of rage
-    res = re.findall(r'арс ', query.query)
-    if res != [] and len(res) == 1:
-        rage_time_query = query.query.replace(COMMANDS["arsenal"] + " ", "")
+    pattern = COMMANDS["arsenal"] + " "
+    if CheckInlineQuery(pattern, query):
+        rage_time_query = query.query.replace(pattern, "")
         rage_time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', rage_time_query)
-        if rage_time == [] or len(rage_time) != 1:
-            return False, None
-        else:
+        if rage_time != [] or len(rage_time) == 1:
             return True, rage_time
-    else:
-        return False, None
+    return False, None
 
 def SendHelpNonAdmin(message):
     text =  "Мной могут управлять только офицеры гильдии.\n"

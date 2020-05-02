@@ -8,6 +8,7 @@
 
 COMMANDS = {
     "precheck": "чек",
+    "battle": "бой",
     "arsenal" : "арс",
     "numbers" : "номера",
 }

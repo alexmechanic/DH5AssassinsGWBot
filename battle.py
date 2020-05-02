@@ -127,10 +127,10 @@ def battle_query_inline(q):
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    times = hlp.IsCheckTimeQuery(q)[1]
+    time = hlp.IsCheckTimeQuery(q)[1]
     if hlp.CanStartNewBattle():
         res = types.InlineQueryResultArticle('battle',
-                                            title='[%s/%s] Создать чек на бой' % (times[0], times[1]),
+                                            title='[%s] Создать чек на бой' % time[0],
                                             description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
                                             input_message_content=types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
                                             thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
@@ -138,8 +138,7 @@ def battle_query_inline(q):
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
         log.error("Trying to setup another battle while current is not finished")
-        error_text = "Уже имеется активный бой в %0.2d:%0.2d" \
-                     % (common.current_battle.time["start"].hour, common.current_battle.time["start"].minute)
+        error_text = "Уже имеется активный бой в %0.2d:%0.2d" % (*common.current_battle.GetTime(start=True),)
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
@@ -194,7 +193,7 @@ def reset_control(m):
 
 class Battle():
     check_id = None
-    time = {"check": None, "start": None, "end": None}
+    time = {"start": None, "end": None}
     is_rolling = False
     is_started = False
     is_postponed = False
@@ -207,9 +206,8 @@ class Battle():
     cancels = {}
     lates = {}
 
-    def __init__(self, check, start):
+    def __init__(self, start):
         now = datetime.datetime.now()
-        self.time["check"] = now.replace(hour=int(check[:2]), minute=int(check[3:]))
         self.time["start"] = now.replace(hour=int(start[:2]), minute=int(start[3:]))
         self.checks = {}
         self.rages = {}
@@ -221,12 +219,18 @@ class Battle():
         self.is_rolling = False
         self.is_started = False
         self.is_postponed = False
-        log.info("New battle created (%0.2d:%0.2d / %0.2d:%0.2d)" \
-                % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute))
+        log.info("New battle created (%0.2d:%0.2d)" % (self.time["start"].hour, self.time["start"].minute))
 
     def SetMessageID(self, message_id):
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
+
+    def GetTime(self, start=False, end=False):
+        if start:
+            return [self.time["start"].hour, self.time["start"].minute]
+        elif end:
+            return [self.time["end"].hour, self.time["end"].minute]
+        return []
 
     # Notify participated users if battle has been rolled
     def BattleRollNotifyActiveUsers(self):
@@ -313,8 +317,7 @@ class Battle():
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def GetHeader(self):
-        text = ICON_SWORDS+" *Чек:* %0.2d:%0.2d, *Бой:* %.2d:%.2d\n" \
-                % (self.time["check"].hour, self.time["check"].minute, self.time["start"].hour, self.time["start"].minute)
+        text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)
         return text
 
     def GetText(self):

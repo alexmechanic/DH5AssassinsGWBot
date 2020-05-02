@@ -44,8 +44,8 @@ def chosen_inline_handler(r):
     user = [r.from_user.id, r.from_user.username, r.from_user.first_name]
     if r.result_id == 'battle':
         log.debug("User %d (%s %s) created battle check (%s)" % (*user, r.query))
-        times = hlp.IsCheckTimeQuery(r)[1]
-        common.current_battle = Battle(times[0], times[1])
+        time = hlp.IsCheckTimeQuery(r)[1]
+        common.current_battle = Battle(time[0])
         common.current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK)
@@ -108,12 +108,12 @@ def show_help(m):
         text += "\n*В военном чате:*\n" + \
                 "/warchat - запомнить военный чат _(для отправки сообщений боя)_\n" + \
                 "/snow - вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n" + \
-                "_@assassinsgwbot чек_ - создать чек перед ВГ\n" + \
-                "_@assassinsgwbot XX:XX YY:YY_ - создать чек на бой\n" + \
-                "_@assassinsgwbot арс XX:XX_ - создать чек арсенала (при наличии боя)\n" + \
-                "_@assassinsgwbot номера X_ - создать чек Х номеров по скринам (при наличии боя)\n" + \
-                "_@assassinsgwbot номера X Y Z ..._ - создать чек перечисленных номеров по игре (при наличии боя)\n" + \
-                "Разделительные символы времени могут быть любыми (даже пробелом)"
+                "`@assassinsgwbot чек` - создать чек перед ВГ\n" + \
+                "`@assassinsgwbot бой XX:XX` - создать чек на бой\n" + \
+                "`@assassinsgwbot арс XX:XX` - создать чек арсенала (при наличии боя)\n" + \
+                "`@assassinsgwbot номера X` - создать чек Х номеров по скринам (при наличии боя)\n" + \
+                "`@assassinsgwbot номера X Y Z ...` - создать чек перечисленных номеров по игре (при наличии боя)\n" + \
+                "_Разделительные символы времени могут быть любыми (даже пробелом)_"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
@@ -135,7 +135,7 @@ def show_help_officer(m):
                 "`@assassinsgwbot чек` - создать чек перед ВГ.\n" + \
                 "+ _Лучше создавать заранее, а завершать перед первым боем_\n"
         text += "\n1️⃣ *Начало боя*\n" + \
-                "`@assassinsgwbot XX:XX YY:YY` - создать чек на бой\n" + \
+                "`@assassinsgwbot бой XX:XX` - создать чек на бой\n" + \
                 "+ _После запуска поиска нажать на '"+ICON_ROLL+"', чтобы пришло уведомление в чат_\n" + \
                 "+ _Когда бой начнется, нажать на '"+ICON_START+"', чтобы пришло уведомление в чат и в личку участников_\n" + \
                 "+ _Если кто-нибудь опоздает к началу и отметится позже, в чат придет уведомление_\n" + \
@@ -206,9 +206,7 @@ def command_start(m):
             bot.send_message(m.chat.id, text)
         elif inline_error == "existing_battle":
             if not hlp.CanStartNewBattle():
-                text =  "Текущий бой: %0.2d:%0.2d / %0.2d:%0.2d.\n\n" \
-                        % (common.current_battle.time["check"].hour, common.current_battle.time["check"].minute,
-                           common.current_battle.time["start"].hour, common.current_battle.time["start"].minute)
+                text =  "Текущий бой: %0.2d:%0.2d.\n\n" % (*common.current_battle.GetTime(start=True),)
                 text += ("Чтобы начать новый бой, необходимо завершить (%s) предыдущий.\n" % ICON_STOP) + \
                          "Если бой был назначен ошибочно - остановите бой, " + \
                          "затем создайте новый, а старое сообщение удалите."
@@ -244,8 +242,7 @@ def command_battle_start(m):
         return
     if not hlp.CanStartNewBattle():
         if not common.current_battle.is_started:
-            text = "Запустить текущий бой [%0.2d:%0.2d]?" \
-                    % (common.current_battle.time["start"].hour, common.current_battle.time["start"].minute)
+            text = "Запустить текущий бой [%0.2d:%0.2d]?" % (*common.current_battle.GetTime(start=True),)
             bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_START)
         else:
             bot.send_message(m.chat.id, "Бой уже запущен")
@@ -267,8 +264,7 @@ def command_battle_stop(m):
         return
     if not hlp.CanStartNewBattle():
         if not common.current_battle.is_postponed:
-            text = "Завершить текущий бой [%0.2d:%0.2d]?" \
-                    % (common.current_battle.time["start"].hour, common.current_battle.time["start"].minute)
+            text = "Завершить текущий бой [%0.2d:%0.2d]?" % (*common.current_battle.GetTime(start=True),)
             bot.send_message(m.chat.id, text, reply_markup=kb.KEYBOARD_STOP)
         else:
             bot.send_message(m.chat.id, "Бой уже завершен")
