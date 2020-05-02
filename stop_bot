@@ -1,0 +1,3 @@
+#!/bin/bash
+
+heroku ps:scale web=0
