@@ -77,6 +77,7 @@ def battle_control(call):
     userChoice = call.data
     if common.current_battle:
         notification_text = ""
+        user_addend = " ([%s](tg://user?id=%d))" % (user[2], user[0])
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             common.current_battle.DoRollBattle()
             notification_text = ICON_ROLL+" Крутит"
@@ -95,7 +96,10 @@ def battle_control(call):
             reset_control(call)
             notification_text = ICON_FINISH+" Бой завершен"
         if common.warchat_id:
-            notification = bot.send_message(common.warchat_id, notification_text, disable_notification=False).wait()
+            notification = bot.send_message(common.warchat_id,
+                                            notification_text + user_addend,
+                                            disable_notification=False,
+                                            parse_mode="markdown").wait()
             if userChoice not in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]: # roll / stop
                 bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
             else:
