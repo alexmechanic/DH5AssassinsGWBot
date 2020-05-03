@@ -13,6 +13,7 @@ from telebot import types
 import common
 from common import bot
 from icons import *
+from statistics import User, Score
 from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb
@@ -145,6 +146,12 @@ class Arsenal():
     def DoEndArsenal(self):
         self.is_postponed = True
         log.info("Arsenal check stopped")
+
+    def CollectStatistic(self):
+        statistic = {}
+        for k, v in self.done_users.items():
+            statistic[User(k, v[0], v[1])] = Score(arsenal=v[2])
+        return statistic
 
     def CheckNotifyIfCritical(self):
         if self.progress >= 92: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage

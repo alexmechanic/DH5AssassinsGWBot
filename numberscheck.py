@@ -13,6 +13,7 @@ from telebot import types
 import common
 from common import bot
 from icons import *
+from statistics import User, Score
 from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb
@@ -195,6 +196,12 @@ class NumbersCheck():
     def DoEndCheck(self):
         self.is_postponed = True
         log.info("Numbers check stopped")
+
+    def CollectStatistic(self):
+        statistic = {}
+        for k, v in self.users.items():
+            statistic[User(k)] = Score(stars=len(v))
+        return statistic
 
     def Is500(self):
         return self._500["done"]

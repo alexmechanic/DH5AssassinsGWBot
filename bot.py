@@ -20,6 +20,7 @@ from warprecheck import *
 from arsenal import *
 from numberscheck import *
 from screens import *
+from statistics import *
 from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb
@@ -417,7 +418,7 @@ def command_snow(m):
         log.error("Failed: not an admin")
         hlp.SendHelpNonAdmin(m)
         return
-    if not hlp.IsSnowAvailable():
+    if not hlp.IsGWEndingTime():
         bot.send_message(user[0], "Ой! Вызвать Снегурочку можно только в воскресенье после окончания ВГ!")
         log.error("Failed: wrong time")
         return
@@ -452,7 +453,7 @@ def snow_control(call):
         else:
             log.error("Failed: already praised")
             bot.answer_callback_query(call.id, "Поприветствовать Снегурочку можно только один раз!")
-        if not hlp.IsSnowAvailable():
+        if not hlp.IsGWEndingTime():
             log.info("Snow White overtime, ending")
             bot.delete_message(common.current_snowwhite["message"].chat.id, common.current_snowwhite["message"].message_id)
             bot.send_message(call.message.chat.id,

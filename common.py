@@ -40,6 +40,11 @@ current_snowwhite = {}
 screen_message_list = []
 rage_time_workaround = []
 
+statistics = {"current" : None,
+              "previous": None
+             }
+is_stats_posted = False
+
 #
 # Manage admins list through file at start
 #

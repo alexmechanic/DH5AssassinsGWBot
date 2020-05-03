@@ -13,6 +13,7 @@ from telebot import types
 import common
 from common import bot
 from icons import *
+from statistics import *
 import keyboards as kb
 import callbacks as cb
 import helpers as hlp
@@ -164,7 +165,8 @@ def reset_control(m):
         else:
             raise Exception()
     except:
-        
+        if not common.statistics["current"]: # after first battle is ended - create new current statistic
+            common.statistics["current"] = Statistic()
         if not hlp.CanStartNewPrecheck(): # should hit 'end' to start another
             common.current_precheck.DoEndPrecheck()
             bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
@@ -174,16 +176,20 @@ def reset_control(m):
             common.current_battle.DoEndBattle()
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown")
+
+            common.statistics["current"].Update(common.current_battle.CollectStatistic())
             common.current_battle = None
         if common.current_arscheck: # postponed is not a condition that check ended
             common.current_arscheck.DoEndArsenal()
             bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
+            common.statistics["current"].Update(common.current_arscheck.CollectStatistic())
             common.current_arscheck = None
         if common.current_numcheck: # postponed is not a condition that check ended
             common.current_numcheck.DoEndCheck()
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
+            common.statistics["current"].Update(common.current_numcheck.CollectStatistic())
             common.current_numcheck = None
     try:
         bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
@@ -315,6 +321,20 @@ class Battle():
         self.is_postponed = True
         self.is_rolling = False
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
+
+    def CollectStatistic(self):
+        statistic = {}
+        for k, v in self.checks.items():
+            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        for k, v in self.rages.items():
+            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        for k, v in self.fasts.items():
+            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        for k, v in self.arsenals.items():
+            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        for k, v in self.lates.items():
+            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        return statistic
 
     def GetHeader(self):
         text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)

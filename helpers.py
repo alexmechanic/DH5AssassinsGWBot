@@ -123,7 +123,7 @@ def IsInPrivateChat(message):
         return True
     return False
 
-def IsSnowAvailable():
+def IsGWEndingTime():
     now = datetime.datetime.now()
     avail_weekday = 6 # Sunday
     avail_time = [now.replace(hour=18, minute=0, second=0),
