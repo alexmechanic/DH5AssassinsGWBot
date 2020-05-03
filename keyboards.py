@@ -136,9 +136,8 @@ def SetupNumbersKeyboard(count=30, ingame_nums=None):
           for i in range(nums_count):
               buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
-        KEYBOARD_NUMBERS.add(buttonsNumsCancel)
+        KEYBOARD_NUMBERS.add(buttonsNumsCancel, buttonsNumsStop)
         KEYBOARD_NUMBERS.add(buttonsNums500, buttonsNums1000)
-        KEYBOARD_NUMBERS.add(buttonsNumsStop)
     return KEYBOARD_NUMBERS
 
 NUMBERS_OPTIONS = [ button.callback_data for button in buttonsNums ]

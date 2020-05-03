@@ -316,23 +316,28 @@ class NumbersCheck():
         log.info("Vote successful")
         return True
 
-    # undo numbers result for user if user made mistake
+    # undo last number result for user if user made mistake
     def UncheckUser(self, user):
-        log.debug("User %d (%s %s) reverting all his votes" % (user[0], user[1], user[2]))
-        userNumbers = []
+        log.debug("User %d (%s %s) reverting his last vote" % (user[0], user[1], user[2]))
+        lastNumber = None
         userid = user[0]
         modified = False
         # obtain user impact
         for user in self.users:
             if user == userid: # record exist
-                userNumbers = self.users[user]
+                lastNumber = self.users[user][-1]
                 modified = True
-                del self.users[user]
+                # revert last number record
+                self.users[user] = self.users[user][:-1]
+                # restore star
+                self.numbers[lastNumber] = self.numbers[lastNumber] + 1
+                if self.users[user] == []: # if record is empty now - delete record
+                    del self.users[user]
                 break
-        # revoke numbers hit
-        for number in userNumbers:
-            self.numbers[number] = self.numbers[number] + 1
-        log.info("Revert successful")
+        if modified:
+            log.info("Revert successful")
+        else:
+            log.info("Revert failed - user record not found")
         return modified
 
     def CheckAchievements(self):
