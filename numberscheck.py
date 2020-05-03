@@ -217,8 +217,9 @@ class NumbersCheck():
         now = datetime.datetime.now()
         for number in self.numbers:
             self.numbers[number] = 0
-        self._500["done"] = True
-        self._500["time"] = now
+        if not self._500["done"]:
+            self._500["done"] = True
+            self._500["time"] = now
         self._1000["done"] = True
         self._1000["time"] = now
         self.DoEndCheck()
@@ -352,14 +353,16 @@ class NumbersCheck():
                 break # save time consume for iterating list if no condition is already met
         now = datetime.datetime.now()
         if is_500:
-            self._500["time"] = now
+            if not self._500["time"]:
+                self._500["time"] = now
             self.is_postponed = True
             if not self._500["done"]:
                 log.debug("Reached 500")
                 log.debug("Users impact:")
                 log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
         if is_1000:
-            self._1000["time"] = now
+            if not self._1000["time"]:
+                self._1000["time"] = now
             self.is_postponed = True
             if not self._1000["done"]:
                 log.debug("Reached 1000")
