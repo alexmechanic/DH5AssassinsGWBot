@@ -259,12 +259,12 @@ class NumbersCheck():
             keys = list(nonempty_nums.keys())
             values = list(nonempty_nums.values())
             for i in range(0, rows):
-                text += ("*%2d: *" % keys[i]) + ICON_STAR*values[i] + "      "*(3-values[i])
+                text += ("`%2d: `" % keys[i]) + ICON_STAR*values[i] + " `  `"*(3-values[i])
                 if i < rows-1: # not last row
-                    text += ("* %2d: *" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
+                    text += ("` %2d: `" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
                 else:
                     if odd == 0:
-                        text += ("* %2d: *" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
+                        text += ("` %2d: `" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
                     else:
                         text += "\n"
 
