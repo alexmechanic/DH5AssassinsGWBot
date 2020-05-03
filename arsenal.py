@@ -38,7 +38,6 @@ def arsenal_check_user(call):
             if (ret):
                 bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=message_id,
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
-                common.current_arscheck.CheckNotifyIfFired()
             else:
                 log.error("Failed")
             bot.answer_callback_query(call.id)
@@ -147,6 +146,19 @@ class Arsenal():
         self.is_postponed = True
         log.info("Arsenal check stopped")
 
+    def CheckNotifyIfCritical(self):
+        if self.progress >= 92: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage
+            log.info("Arsenal is critical! %s/120", self.progress)
+            if common.warchat_id:
+                text = ICON_ARS+" Прогресс арсенала: %s/120!" % self.progress
+                notification = common.bot.send_message(common.warchat_id, text, disable_notification=False).wait()
+                common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+                log.debug("Arsenal critical status notification posted")
+            else:
+                log.error("War chat_id is not set, cannot post arsenal critical status notification!")
+            return True
+        return False
+
     # Notify participated users if arsenal has been fired
     def CheckNotifyIfFired(self):
         if self.is_fired and not self.is_fire_notified:
@@ -167,6 +179,8 @@ class Arsenal():
                 log.debug("Arsenal status notification posted")
             else:
                 log.error("War chat_id is not set, cannot post arsenal status notification!")
+            return True
+        return False
 
 
     def GetHeader(self):
@@ -247,6 +261,8 @@ class Arsenal():
         log.debug("User %d (%s %s) total impact: %s" % (*user, str(user_record[2:])))
         self.done_users[userid] = user_record
         log.info("Vote successful")
+        if not self.CheckNotifyIfFired():
+            self.CheckNotifyIfCritical()
         return True
 
     # undo arsenal result for user if user made mistake
