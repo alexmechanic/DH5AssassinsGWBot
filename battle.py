@@ -165,8 +165,7 @@ def reset_control(m):
         else:
             raise Exception()
     except:
-        if not common.statistics["current"]: # after first battle is ended - create new current statistic
-            common.statistics["current"] = Statistic()
+        common.statistics.CycleIfNeed()
         if not hlp.CanStartNewPrecheck(): # should hit 'end' to start another
             common.current_precheck.DoEndPrecheck()
             bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
@@ -177,19 +176,19 @@ def reset_control(m):
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown")
 
-            common.statistics["current"].Update(common.current_battle.CollectStatistic())
+            common.statistics.Update(common.current_battle.CollectStatistic())
             common.current_battle = None
         if common.current_arscheck: # postponed is not a condition that check ended
             common.current_arscheck.DoEndArsenal()
             bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
-            common.statistics["current"].Update(common.current_arscheck.CollectStatistic())
+            common.statistics.Update(common.current_arscheck.CollectStatistic())
             common.current_arscheck = None
         if common.current_numcheck: # postponed is not a condition that check ended
             common.current_numcheck.DoEndCheck()
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
-            common.statistics["current"].Update(common.current_numcheck.CollectStatistic())
+            common.statistics.Update(common.current_numcheck.CollectStatistic())
             common.current_numcheck = None
     try:
         bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
@@ -336,6 +335,10 @@ class Battle():
             statistic[User(k, v[0], v[1])] = Score(battle=1)
         return statistic
 
+    def GetNominatedPrefix(self, user, group):
+        user = User(user, group[user][0], group[user][1])
+        return common.statistics.GetNominatedPrefix(user)
+
     def GetHeader(self):
         text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)
         return text
@@ -356,17 +359,17 @@ class Battle():
         if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
             text += "\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
         for user in self.checks:
-            text += ICON_CHECK + " [%s" % self.checks[user][0]
+            text += "%s %s[%s" % (ICON_CHECK, self.GetNominatedPrefix(user, self.checks), self.checks[user][0])
             if self.checks[user][1] != None:
                 text += " (%s)" % self.checks[user][1]
             text += "](tg://user?id=%d)\n" % user
         for user in self.rages:
-            text += ICON_RAGE + " [%s" % self.rages[user][0]
+            text += "%s %s[%s" % (ICON_RAGE, self.GetNominatedPrefix(user, self.rages), self.rages[user][0])
             if self.rages[user][1] != None:
                 text += " (%s)" % self.rages[user][1]
             text += "](tg://user?id=%d)\n" % user
         for user in self.fasts:
-            text += ICON_FAST + " [%s" % self.fasts[user][0]
+            text += "%s %s[%s" % (ICON_FAST, self.GetNominatedPrefix(user, self.fasts), self.fasts[user][0])
             if self.fasts[user][1] != None:
                 text += " (%s)" % self.fasts[user][1]
             text += "](tg://user?id=%d)\n" % user
@@ -374,7 +377,7 @@ class Battle():
         if len(self.arsenals) > 0:
             text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
         for user in self.arsenals:
-            text += ICON_ARS + " [%s" % self.arsenals[user][0]
+            text += "%s %s[%s" % (ICON_ARS, self.GetNominatedPrefix(user, self.arsenals), self.arsenals[user][0])
             if self.arsenals[user][1] != None:
                 text += " (%s)" % self.arsenals[user][1]
             text += "](tg://user?id=%d)\n" % user
@@ -382,7 +385,7 @@ class Battle():
         if len(self.thinking) > 0:
             text += "\n" + "*%d думают:*\n" % len(self.thinking)
         for user in self.thinking:
-            text += ICON_THINK + " [%s" % self.thinking[user][0]
+            text += "%s %s[%s" % (ICON_THINK, self.GetNominatedPrefix(user, self.thinking), self.thinking[user][0])
             if self.thinking[user][1] != None:
                 text += " (%s)" % self.thinking[user][1]
             text += "](tg://user?id=%d)\n" % user
@@ -390,7 +393,7 @@ class Battle():
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
         for user in self.cancels:
-            text += ICON_CANCEL + " [%s" % self.cancels[user][0]
+            text += "%s %s[%s" % (ICON_CANCEL, self.GetNominatedPrefix(user, self.cancels), self.cancels[user][0])
             if self.cancels[user][1] != None:
                 text += " (%s)" % self.cancels[user][1]
             text += "](tg://user?id=%d)\n" % user
@@ -398,7 +401,7 @@ class Battle():
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
         for user in self.lates:
-            text += ICON_LATE + " [%s" % self.lates[user][0]
+            text += "%s %s[%s" % (ICON_LATE, self.GetNominatedPrefix(user, self.lates), self.lates[user][0])
             if self.lates[user][1] != None:
                 text += " (%s)" % self.lates[user][1]
             text += "](tg://user?id=%d)\n" % user

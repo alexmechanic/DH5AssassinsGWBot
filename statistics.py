@@ -8,19 +8,15 @@
 
 import datetime, time, copy
 from logger import get_logger
-from telebot import types
 
 import common
-from common import bot
 from icons import *
-import keyboards as kb
-import callbacks as cb
 import helpers as hlp
 
 log = get_logger("bot." + __name__)
 
 def GetBestListText(best_list, key="battles"):
-    MEDALS = ["🥇", "🥈", "🥉"]
+    MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
     text = ""
     for i in range(0, len(best_list)):
         user  = best_list[i]["user"].GetData()
@@ -34,7 +30,7 @@ def GetBestListText(best_list, key="battles"):
 # Call to show guild statistics
 # (war chat command)
 #
-@bot.message_handler(commands=['best'])
+@common.bot.message_handler(commands=['best'])
 def command_best(m):
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
@@ -42,32 +38,30 @@ def command_best(m):
     if hlp.IsInPrivateChat(m):
         hlp.SendHelpWrongChat(m.from_user.id, "/best", "получить список лучших за ВГ", False)
         return
-    bot.delete_message(m.chat.id, m.message_id)
+    common.bot.delete_message(m.chat.id, m.message_id)
     # if not hlp.IsGWEndingTime():
     if False:
-        common.is_stats_posted = False
-        bot.send_message(user[0], "Получить статистику можно только в воскресенье после окончания ВГ!")
+        common.bot.send_message(user[0], "Получить статистику можно только в воскресенье после окончания ВГ!")
         log.error("Failed: wrong time")
         return
     
-    if not common.is_stats_posted:
+    if not common.statistics.is_posted:
         if common.warchat_id:
             DELAY = 5
-            stats = common.statistics["current"]
-            total_stats = stats.GetTotalValues().GetData()
+            total_stats = common.statistics.GetTotalValues().GetData()
             # starting message
-            init_stats_msg = bot.send_message(common.warchat_id,
+            init_stats_msg = common.bot.send_message(common.warchat_id,
                                               "📈 *Статистика войны гильдий:*\n\n" + \
                                               ICON_SWORDS+" *Проведено боев:* " + str(total_stats["battles"]) + "\n" + \
                                               ICON_ARS+" *Собрано боевых доспехов:* " + str(total_stats["arsenal"]) + "\n" + \
                                               ICON_STAR+" *Снято вражеских звезд:* " + str(total_stats["stars"]) + "\n",
                                               parse_mode="markdown").wait()
-            bot.send_chat_action(common.warchat_id, "typing")
+            common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
-            bot.send_message(common.warchat_id,
+            common.bot.send_message(common.warchat_id,
                              "🏆 *Списки лучших игроков:*",
                              parse_mode="markdown").wait()
-            bot.send_chat_action(common.warchat_id, "typing")
+            common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
             # best players
             best_actives_header   = ICON_SWORDS+" *Лучший актив*:\n\n"
@@ -75,49 +69,47 @@ def command_best(m):
             best_attackers_header = ICON_STAR+  " *Лучшие танки*:\n\n"
             WAIT_SUFFIX = "🥁..."
             # best active players
-            text = GetBestListText(stats.GetBestActives(), "battles")
-            best_actives_msg = bot.send_message(common.warchat_id,
+            text = GetBestListText(common.statistics.GetBestActives(), "battles")
+            best_actives_msg = common.bot.send_message(common.warchat_id,
                                                 best_actives_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
-            bot.send_chat_action(common.warchat_id, "typing")
+            common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
-            bot.edit_message_text(best_actives_header + text,
+            common.bot.edit_message_text(best_actives_header + text,
                                   chat_id=best_actives_msg.chat.id,
                                   message_id=best_actives_msg.message_id,
                                   parse_mode="markdown")
             # best arsenal players
-            text = GetBestListText(stats.GetBestArsenals(), "arsenal")
-            best_arsenal_msg = bot.send_message(common.warchat_id,
+            text = GetBestListText(common.statistics.GetBestArsenals(), "arsenal")
+            best_arsenal_msg = common.bot.send_message(common.warchat_id,
                                                 best_arsenal_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
-            bot.send_chat_action(common.warchat_id, "typing")
+            common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
-            bot.edit_message_text(best_arsenal_header + text,
+            common.bot.edit_message_text(best_arsenal_header + text,
                                   chat_id=best_arsenal_msg.chat.id,
                                   message_id=best_arsenal_msg.message_id,
                                   parse_mode="markdown")
             # best attackers
-            text = GetBestListText(stats.GetBestAttackers(), "stars")
-            best_attackers_msg = bot.send_message(common.warchat_id,
+            text = GetBestListText(common.statistics.GetBestAttackers(), "stars")
+            best_attackers_msg = common.bot.send_message(common.warchat_id,
                                                 best_attackers_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
-            bot.send_chat_action(common.warchat_id, "typing")
+            common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
-            bot.edit_message_text(best_attackers_header + text,
+            common.bot.edit_message_text(best_attackers_header + text,
                                   chat_id=best_attackers_msg.chat.id,
                                   message_id=best_attackers_msg.message_id,
                                   parse_mode="markdown")
             # ending messages
-            bot.send_message(common.warchat_id,
+            common.bot.send_message(common.warchat_id,
                              ICON_PRAISE+" *Поздравляем победителей!* " + ICON_PRAISE + "\n\n" + \
                              "_Лучшему игроку в любой номинации присуждается 🎖 орден, " + \
-                             "который будет виден в течение всей следующей войны._",
+                             "который будет виден на войнах в течение " + \
+                             str(common.statistics.cycle_time) + " последующих войн._",
                              parse_mode="markdown")
-            common.is_stats_posted = True
+            common.statistics.is_posted = True
             log.info("Guild stats posted!")
-            # shift the stats cycle
-            common.statistics["previous"] = common.statistics["current"]
-            common.statistics["current"] = None
         else:
             hlp.SendHelpWrongChat(m.from_user.id, "/warchat", "запомнить военный чат", False)
             log.error("War chat_id is not set, cannot post GW stats!")
@@ -154,6 +146,7 @@ class User():
                 "name"    : self.name,
                 "username": self.username
                 }
+
 
 #
 # Base class representing a war record object
@@ -204,23 +197,37 @@ class Score():
                 "stars"  : self.stars
                 }
 
-class Statistic():
-    stats = {} # {User: Score}
 
-    def Update(self, update):
-        if not isinstance(update, dict):
-            log.error("Invalid update type: %s (need dict)", type(update))
-            return
-        for user, score in update.items():
-            if not isinstance(user, User) or not isinstance(score, Score):
-                log.error("Invalid update item: %s:%s (need User: Score)", type(user), type(score))
-                return
-            if user not in self.stats:
-                self.stats[user] = score
-            else:
-                self.stats[user].AddScore(score)
+class StatRecord():
+    date = None # datetime
+    stats = {}  # {User: Score}
 
-    def get_best_internal(self, key, count):
+    def __init__(self):
+        self.date = datetime.datetime.now()
+        self.stats = {}
+
+    def __repr__(self):
+        text = []
+        for user, score in self.stats.items():
+            text.append(repr(user) + ": " + repr(score))
+        return "StatRecord[%s](%s)" % (self.date, ", ".join(text))
+
+    def AddStat(self, user, record):
+        if user not in self.stats:
+            self.stats[user] = record
+        else:
+            self.stats[user].AddScore(record)
+
+    def GetDate(self):
+        return self.date
+
+    def GetStat(self):
+        return self.stats
+
+    def GetRawData(self):
+        return [(user.GetData(), score.GetData()) for user, score in self.stats.items()]
+
+    def GetBest(self, key, count):
         stats_temp = copy.deepcopy(self.stats)
         best = []
         best_temp = {"user" : User(-1),
@@ -231,7 +238,9 @@ class Statistic():
             best_one = copy.deepcopy(best_temp)
             # find the best user
             for user, score in stats_temp.items():
-                if score.GetData()[key] > best_one["score"].GetData()[key]:
+                new_score = score.GetData()[key]
+                if new_score >= best_one["score"].GetData()[key] and \
+                   new_score != 0:
                     best_one["user"] = user
                     best_one["score"] = score
             if best_one["user"] != best_temp["user"]:
@@ -241,20 +250,100 @@ class Statistic():
                 del stats_temp[best_one["user"]]
         return best
 
+class Statistic():
+    statistics  = [] # [StatRecord] of size cycle_time. lowest index is the newer stat
+    nominated   = [] # [User]
+    cycle_time  = 4  # in weeks
+    is_posted = False
+
+    def __init__(self, cycle_time):
+        self.cycle_time    = cycle_time
+        self.statistics    = [StatRecord() for i in range(0, cycle_time)]
+        self.nominated     = []
+        self.is_posted     = False
+
+    def Update(self, update):
+        print("UPDATE: ", update)
+        print("NONUPDATED STATS:")
+        print(self.statistics)
+        if not isinstance(update, dict):
+            log.error("Invalid update type: %s (need dict)", type(update))
+            return
+        for user, score in update.items():
+            if not isinstance(user, User) or not isinstance(score, Score):
+                log.error("Invalid update item: %s:%s (need User: Score)", type(user), type(score))
+                return
+            self.statistics[0].AddStat(user, score)
+        print("UPDATED STATS:")
+        print(self.statistics)
+
     def GetTotalValues(self):
         total = Score()
-        for score in self.stats.values():
+        for score in self.statistics[0].GetStat().values():
             total.AddScore(score)
         return total
 
+    def GetNominatedPrefix(self, user):
+        # workaround User object creation if argument is simple list
+        if not isinstance(user, User):
+            user = User(*user,)
+        if user in self.nominated:
+            return "🎖 "
+        return ""
+
+    def AddNomination(self, best_record):
+        if len(best_record) == 0:
+            return
+        if best_record[0]["user"] not in self.nominated:
+            self.nominated.append(best_record[0]["user"])
+
+    def RemoveNominations(self, stat):
+        if not stat: # at the very start older stats do not exist yet
+            return
+        for user in stat.GetStat().keys():
+            if user in self.nominated:
+                self.nominated.remove(user)
+
     # get users that checked for battle the most
     def GetBestActives(self, count=3):
-        return self.get_best_internal("battles", count)
+        result = self.statistics[0].GetBest("battles", count)
+        self.AddNomination(result)
+        return result
 
     # get users that checked for battle the most
     def GetBestArsenals(self, count=3):
-        return self.get_best_internal("arsenal", count)
+        result = self.statistics[0].GetBest("arsenal", count)
+        self.AddNomination(result)
+        return result
 
     # get users that checked for battle the most
     def GetBestAttackers(self, count=3):
-        return self.get_best_internal("stars", count)
+        result = self.statistics[0].GetBest("stars", count)
+        self.AddNomination(result)
+        return result
+
+    def CycleIfNeed(self):
+        """
+        Statistics cyclying funcion.
+        Executes cycling if checked from Friday to Sunday (next GW detected) and making sure it is not the same GW.
+        """
+        now = datetime.datetime.now()
+        # if (now - self.statistics[0].GetDate()).days > 3 and hlp.IsGWDurationTime():
+        if True:
+            self.do_cycle_internal()
+
+    def do_cycle_internal(self):
+        print("before cycle:")
+        print(self.statistics)        
+        # shift the stats records to the right
+        self.statistics = self.statistics[-1:] + self.statistics[:-1]
+        # eliminate oldest nominated users
+        self.RemoveNominations(self.statistics[0])
+        # destroy the oldest (now first)
+        print("before destroy old StatRecord:")
+        print(self.statistics)
+        self.statistics[0] = StatRecord()
+        print("after re-init newest:")
+        print(self.statistics)
+        self.is_posted = False
+

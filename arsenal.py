@@ -120,8 +120,7 @@ class Arsenal():
     is_fired = False
     is_fire_notified = False
     rage_time = None
-    # dict with lists formatted [name, nick, value, count, is_fired]
-    done_users = {}
+    done_users = {} # {userid: [name, nick, value, count, is_fired]}
     is_postponed = False
 
     def __init__(self):
@@ -189,6 +188,9 @@ class Arsenal():
             return True
         return False
 
+    def GetNominatedPrefix(self, user):
+        user = User(user, self.done_users[user][0], self.done_users[user][1])
+        return common.statistics.GetNominatedPrefix(user)
 
     def GetHeader(self):
         iteration = self.progress
@@ -218,8 +220,8 @@ class Arsenal():
             count = self.done_users[user][3]
             is_fired = self.done_users[user][4]
             text += ICON_RAGE*is_fired
-            text += (" *+%d*" % inc)
-            text += " [%s" % name
+            text += " *+%d*" % inc
+            text += " %s[%s" % (self.GetNominatedPrefix(user), name)
             if nick != None:
                 text += " (%s)" % nick
             text += "](tg://user?id=%d) (x%d)\n" % (user, count)

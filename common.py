@@ -40,10 +40,8 @@ current_snowwhite = {}
 screen_message_list = []
 rage_time_workaround = []
 
-statistics = {"current" : None,
-              "previous": None
-             }
-is_stats_posted = False
+import statistics
+statistics = statistics.Statistic(cycle_time=2) # 2 for first GW test
 
 #
 # Manage admins list through file at start

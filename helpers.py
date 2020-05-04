@@ -123,6 +123,16 @@ def IsInPrivateChat(message):
         return True
     return False
 
+def IsGWDurationTime():
+    now = datetime.datetime.now()
+    gw_time = [now.replace(day=4, hour=18, minute=0, second=1), # 18-00 (MSK) Friday
+               now.replace(day=6, hour=17, minute=59, second=59), # 18-00 (MSK) Sunday
+               ]
+    if now >= gw_time[0] and \
+       now <= gw_time[1]:
+       return True
+    return False
+
 def IsGWEndingTime():
     now = datetime.datetime.now()
     avail_weekday = 6 # Sunday
