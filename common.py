@@ -41,7 +41,7 @@ screen_message_list = []
 rage_time_workaround = []
 
 import statistics
-statistics = statistics.Statistic(cycle_time=2) # 2 for first GW test
+statistics = statistics.Statistic(cycle_time=4) # set 2 for first GW test
 
 #
 # Manage admins list through file at start

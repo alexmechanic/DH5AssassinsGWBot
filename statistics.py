@@ -167,8 +167,7 @@ def command_best(m):
         hlp.SendHelpWrongChat(m.from_user.id, "/best", "получить список лучших за ВГ", False)
         return
     common.bot.delete_message(m.chat.id, m.message_id)
-    # if not hlp.IsGWEndingTime():
-    if False:
+    if not hlp.IsGWEndingTime():
         common.bot.send_message(user[0], "Получить статистику можно только в воскресенье после окончания ВГ!")
         log.error("Failed: wrong time")
         return
@@ -475,8 +474,7 @@ class Statistic(Jsonable):
         Executes cycling if checked from Friday to Sunday (next GW detected) and making sure it is not the same GW.
         """
         now = datetime.datetime.now()
-        # if (now - self.statistics[0].GetDate()).days > 3 and hlp.IsGWDurationTime():
-        if True:
+        if (now - self.statistics[0].GetDate()).days > 3 and hlp.IsGWDurationTime():
             self.do_cycle_internal()
 
     def do_cycle_internal(self):
