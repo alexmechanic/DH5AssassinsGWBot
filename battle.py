@@ -315,7 +315,8 @@ class Battle():
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
         self.is_rolling = False
-        common.statistics.Update(self.CollectStatistic())
+        if self.is_started:
+            common.statistics.Update(self.CollectStatistic())
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def CollectStatistic(self):
