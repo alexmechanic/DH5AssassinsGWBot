@@ -32,6 +32,7 @@ def GetBestListText(best_list, key="battles"):
 #
 @common.bot.message_handler(commands=['best'])
 def command_best(m):
+    # print("command_best")
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
     log.debug("User %d (%s %s) is trying to request guild stats" % (*user,))
@@ -48,19 +49,20 @@ def command_best(m):
     if not common.statistics.is_posted:
         if common.warchat_id:
             DELAY = 5
-            total_stats = common.statistics.GetTotalValues().GetData()
+            total_stats   = common.statistics.GetTotalValues().GetData()
+            total_battles = common.statistics.GetBattlesCount()
             # starting message
             init_stats_msg = common.bot.send_message(common.warchat_id,
-                                              "📈 *Статистика войны гильдий:*\n\n" + \
-                                              ICON_SWORDS+" *Проведено боев:* " + str(total_stats["battles"]) + "\n" + \
-                                              ICON_ARS+" *Собрано боевых доспехов:* " + str(total_stats["arsenal"]) + "\n" + \
-                                              ICON_STAR+" *Снято вражеских звезд:* " + str(total_stats["stars"]) + "\n",
-                                              parse_mode="markdown").wait()
+                "📈 *Статистика войны гильдий:*\n\n" + \
+                ICON_SWORDS+" *Проведено боев:* " + str(total_battles) + " _(" + str(total_stats["battles"]) + " участников)_\n" + \
+                ICON_ARS+" *Собрано боевых доспехов:* " + str(total_stats["arsenal"]) + "\n" + \
+                ICON_STAR+" *Снято вражеских звезд:* " + str(total_stats["stars"]) + "\n",
+                parse_mode="markdown").wait()
             common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
             common.bot.send_message(common.warchat_id,
-                             "🏆 *Списки лучших игроков:*",
-                             parse_mode="markdown").wait()
+                                    "🏆 *Списки лучших игроков:*",
+                                    parse_mode="markdown").wait()
             common.bot.send_chat_action(common.warchat_id, "typing")
             time.sleep(DELAY)
             # best players
@@ -114,6 +116,7 @@ def command_best(m):
             hlp.SendHelpWrongChat(m.from_user.id, "/warchat", "запомнить военный чат", False)
             log.error("War chat_id is not set, cannot post GW stats!")
     else:
+        common.bot.send_message(user[0], "Статистика уже была опубликована!")
         log.error("Guild stats has been already posted!")
 
 #
@@ -201,10 +204,12 @@ class Score():
 class StatRecord():
     date = None # datetime
     stats = {}  # {User: Score}
+    battles_count = 0
 
     def __init__(self):
         self.date = datetime.datetime.now()
         self.stats = {}
+        self.battles_count = 0
 
     def __repr__(self):
         text = []
@@ -217,6 +222,12 @@ class StatRecord():
             self.stats[user] = record
         else:
             self.stats[user].AddScore(record)
+
+    def AddBattle(self):
+        self.battles_count += 1
+
+    def GetBattlesCount(self):
+        return self.battles_count
 
     def GetDate(self):
         return self.date
@@ -266,14 +277,21 @@ class Statistic():
         print("UPDATE: ", update)
         print("NONUPDATED STATS:")
         print(self.statistics)
-        if not isinstance(update, dict):
-            log.error("Invalid update type: %s (need dict)", type(update))
+        is_battle_update = False
+        if isinstance(update, StatRecord): # unpack StatRecord to dict type
+            update = update.GetStat()
+        elif not isinstance(update, dict): # default update type
+            log.error("Invalid update type: %s (dict or StatRecord expected)", type(update))
             return
         for user, score in update.items():
             if not isinstance(user, User) or not isinstance(score, Score):
                 log.error("Invalid update item: %s:%s (need User: Score)", type(user), type(score))
                 return
             self.statistics[0].AddStat(user, score)
+            if score.GetData()["battles"] > 0:
+                is_battle_update = True
+        if is_battle_update:
+            self.statistics[0].AddBattle()
         print("UPDATED STATS:")
         print(self.statistics)
 
@@ -282,6 +300,9 @@ class Statistic():
         for score in self.statistics[0].GetStat().values():
             total.AddScore(score)
         return total
+
+    def GetBattlesCount(self):
+        return self.statistics[0].GetBattlesCount()
 
     def GetNominatedPrefix(self, user):
         # workaround User object creation if argument is simple list
