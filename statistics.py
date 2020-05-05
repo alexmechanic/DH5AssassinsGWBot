@@ -6,7 +6,7 @@
 # Class and methods representing guild war statistics collection
 #
 
-import datetime, time, copy
+import os, datetime, time, copy, pickle, json
 from logger import get_logger
 
 import common
@@ -15,7 +15,48 @@ import helpers as hlp
 
 log = get_logger("bot." + __name__)
 
+class Jsonable(object):
+    """
+    Base class to make JSON serialize nested statistic objects
+    """
+    def __iter__(self):
+        for attr, value in self.__dict__.iteritems():
+            if isinstance(value, datetime.datetime):
+                iso = value.isoformat()
+                yield attr, iso
+            elif(hasattr(value, '__iter__')):
+                if(hasattr(value, 'pop')):
+                    a = []
+                    for subval in value:
+                        if(hasattr(subval, '__iter__')):
+                            a.append(dict(subval))
+                        else:
+                            a.append(subval)
+                    yield attr, a
+                else:
+                    yield attr, dict(value)
+            else:
+                yield attr, value
+
+class StatsEncoder(json.JSONEncoder):
+    """
+    Encoder for statistic objects for JSON
+    """
+    def default(self, obj):
+        if isinstance(obj, User) or \
+           isinstance(obj, Score) or \
+           isinstance(obj, StatRecord):
+            return repr(obj)
+        elif isinstance(obj, Statistic):
+            return obj.__dict__
+        else:
+            return json.JSONEncoder.default(self, obj)
+
 def GetBestListText(best_list, key="battles"):
+    """
+    Support function getting the best users list in text view.
+    Prefixes user records with medals, suffixes with personal count
+    """
     MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
     text = ""
     for i in range(0, len(best_list)):
@@ -26,12 +67,98 @@ def GetBestListText(best_list, key="battles"):
             text += " (%s)" % user["username"]
         text += "](tg://user?id=%d) _(%d)_\n" % (user["id"], score[key])
     return text if text != "" else "_нет победителей_"
-#
-# Call to show guild statistics
-# (war chat command)
-#
+
+
+@common.bot.message_handler(commands=['statbackup'])
+def command_stat_backup(m):
+    """
+    Backup whole current statistic into pickle and json-readable files.
+    Send files to user
+    """
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    log.debug("User %d (%s %s) is requested statistics backup" % (*user,))
+    if not hlp.IsInPrivateChat(m):
+        common.bot.delete_message(m.chat.id, m.message_id)
+        hlp.SendHelpWrongChat(m.from_user.id, "/statbackup", "создать резервную копию статистики", True)
+        return
+    if not hlp.IsUserAdmin(m):
+        hlp.SendHelpNonAdmin(m)
+        return
+    FILE_PREFIX = "GWBotStatistic"
+    common.bot.send_message(m.from_user.id, "📥 Сохраняю статистику...")
+    # dump pickle Statistic object
+    with open(FILE_PREFIX+'.BAK', 'wb') as backup:
+        pickle.dump(common.statistics, backup, pickle.HIGHEST_PROTOCOL)
+        backup.close()
+    # dump json Statistic object
+    with open(FILE_PREFIX+'.json', 'w') as backup_json:
+        json.dump(common.statistics, backup_json, separators=(',', ': '), cls=StatsEncoder, indent=4)
+        backup_json.close()
+    # send pickle
+    common.bot.send_chat_action(m.from_user.id, "upload_document")
+    with open(FILE_PREFIX+'.BAK', 'rb') as backup:
+        common.bot.send_document(m.from_user.id, backup, caption="Файл-объект статистики").wait()
+        backup.close()
+    os.remove(FILE_PREFIX+'.BAK')
+    # send json
+    common.bot.send_chat_action(m.from_user.id, "upload_document")
+    with open(FILE_PREFIX+'.json', 'r') as backup_json:
+        common.bot.send_document(m.from_user.id, backup_json, caption="JSON-описание статистики").wait()
+        backup_json.close()
+    os.remove(FILE_PREFIX+'.json')
+
+
+@common.bot.message_handler(commands=['statrestore'])
+def command_stat_restore(m):
+    """
+    Restore whole current statistic from pickle file (command help part).
+    """
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    log.debug("User %d (%s %s) is requested statistics restore" % (*user,))
+    if not hlp.IsInPrivateChat(m):
+        common.bot.delete_message(m.chat.id, m.message_id)
+        hlp.SendHelpWrongChat(m.from_user.id, "/statbackup", "создать резервную копию статистики", True)
+        return
+    if not hlp.IsUserAdmin(m):
+        hlp.SendHelpNonAdmin(m)
+        return
+    common.bot.send_message(m.from_user.id,
+                            "🗄 Чтобы восстановить статистику, пришлите файл резервной копии статистики в формате _.BAK_",
+                            parse_mode="markdown")
+
+
+@common.bot.message_handler(func=lambda message: os.path.splitext(message.document.file_name)[1].lower() == ".bak" if message.document else False,
+                            content_types=['document'])
+def file_stat_restore(m):
+    """
+    Restore whole current statistic from pickle file.
+    """
+    # print(m)
+    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+    log.debug("User %d (%s %s) is trying to restore statistics" % (*user,))
+    FILENAME = "stats.BAK"
+    common.bot.send_message(m.from_user.id, "⏳ Загружаю статистику...")
+    backup = common.bot.download_file(common.bot.get_file(m.document.file_id).wait().file_path).wait()
+    with open(FILENAME, 'wb') as f:
+        f.write(backup)
+        f.close()
+    common.bot.send_message(m.from_user.id, "📤 Восстанавливаю статистику...")
+    try:
+        with open(FILENAME, 'rb') as f:
+            common.statistics = pickle.load(f)
+            f.close()
+        os.remove(FILENAME)
+        common.bot.send_message(m.from_user.id, ICON_CHECK+" Статистика успешно восстановлена!")
+        log.error("Restoring statistics successful")
+    except Exception as err:
+        log.error("Restoring statistics failed: ", str(err))
+        common.bot.send_message(m.from_user.id, ICON_CANCEL+" Ошибка восстановления статистики!")
+
 @common.bot.message_handler(commands=['best'])
 def command_best(m):
+    """
+    Call to show guild statistics (war chat command)
+    """
     # print("command_best")
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
@@ -122,7 +249,7 @@ def command_best(m):
 #
 # Base class representing a User object
 #
-class User():
+class User(Jsonable):
     _id      = None
     name     = None
     username = None
@@ -154,7 +281,7 @@ class User():
 #
 # Base class representing a war record object
 #
-class Score():
+class Score(Jsonable):
     battles = 0
     arsenal = 0
     stars   = 0
@@ -200,8 +327,7 @@ class Score():
                 "stars"  : self.stars
                 }
 
-
-class StatRecord():
+class StatRecord(Jsonable):
     date = None # datetime
     stats = {}  # {User: Score}
     battles_count = 0
@@ -261,7 +387,7 @@ class StatRecord():
                 del stats_temp[best_one["user"]]
         return best
 
-class Statistic():
+class Statistic(Jsonable):
     statistics  = [] # [StatRecord] of size cycle_time. lowest index is the newer stat
     nominated   = [] # [User]
     cycle_time  = 4  # in weeks
@@ -367,4 +493,3 @@ class Statistic():
         print("after re-init newest:")
         print(self.statistics)
         self.is_posted = False
-
