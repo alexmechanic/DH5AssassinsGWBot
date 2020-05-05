@@ -195,6 +195,7 @@ class NumbersCheck():
 
     def DoEndCheck(self):
         self.is_postponed = True
+        common.statistics.Update(self.CollectStatistic())
         log.info("Numbers check stopped")
 
     def CollectStatistic(self):

@@ -144,6 +144,7 @@ class Arsenal():
 
     def DoEndArsenal(self):
         self.is_postponed = True
+        common.statistics.Update(self.CollectStatistic())
         log.info("Arsenal check stopped")
 
     def CollectStatistic(self):

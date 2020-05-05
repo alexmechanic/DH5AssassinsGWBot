@@ -175,20 +175,16 @@ def reset_control(m):
             common.current_battle.DoEndBattle()
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown")
-
-            common.statistics.Update(common.current_battle.CollectStatistic())
             common.current_battle = None
         if common.current_arscheck: # postponed is not a condition that check ended
             common.current_arscheck.DoEndArsenal()
             bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
-            common.statistics.Update(common.current_arscheck.CollectStatistic())
             common.current_arscheck = None
         if common.current_numcheck: # postponed is not a condition that check ended
             common.current_numcheck.DoEndCheck()
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
-            common.statistics.Update(common.current_numcheck.CollectStatistic())
             common.current_numcheck = None
     try:
         bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
@@ -319,6 +315,7 @@ class Battle():
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
         self.is_rolling = False
+        common.statistics.Update(self.CollectStatistic())
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
 
     def CollectStatistic(self):
