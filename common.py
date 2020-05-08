@@ -52,14 +52,15 @@ with open("ADMINS", "r") as f:
     ROOT_ADMIN = admins_list[0]
     admins = admins_list[1]
     f.close()
-    print("Load root admin: ", ROOT_ADMIN)
-    print("Load admins list: ", admins)
+    log.debug("Load root admin: ", ROOT_ADMIN)
+    log.debug("Load admins list: ", admins)
 
 # save edited list
 def SaveAdminsList(newlist):
+    global admins
     admins = newlist
     admins_list = [ROOT_ADMIN, admins]
     with open("ADMINS", "w") as f:
         json.dump(admins_list, f)
         f.close()
-    print("Saved admins list: ", admins_list)
+    log.debug("Saved admins list: ", admins_list)
