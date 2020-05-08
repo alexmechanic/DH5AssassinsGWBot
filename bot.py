@@ -468,9 +468,11 @@ def snow_control(call):
     log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
     bot.answer_callback_query(call.id)
 
+
 if "HEROKU" in list(os.environ.keys()):
     log.warning("Running on Heroku, setup webhook")
     server = Flask(__name__)
+    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
 
     @server.route('/bot' + common.TOKEN, methods=['POST'])
     def getMessage():
@@ -486,4 +488,5 @@ if "HEROKU" in list(os.environ.keys()):
 else:
     log.warning("Running locally, start polling")
     bot.remove_webhook()
+    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
     bot.polling(none_stop=True, interval=0, timeout=20)
