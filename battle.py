@@ -85,14 +85,14 @@ def battle_control(call):
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
-            common.current_battle.BattleRollNotifyActiveUsers()
+            common.current_battle.BattleRollNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             common.current_battle.DoStartBattle()
             notification_text = ICON_SWORDS+" Бой начался"
             KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
-            common.current_battle.BattleStartNotifyActiveUsers()
+            common.current_battle.BattleStartNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             reset_control(call)
             notification_text = ICON_FINISH+" Бой завершен"
@@ -203,7 +203,7 @@ class Battle():
     is_rolling = False
     is_started = False
     is_postponed = False
-    # dicts with lists formatted [name, nick]
+    # { userid: [name, nick] }
     checks = {}
     rages = {}
     fasts = {}
@@ -239,17 +239,21 @@ class Battle():
         return []
 
     # Notify participated users if battle has been rolled
-    def BattleRollNotifyActiveUsers(self):
+    def BattleRollNotifyActiveUsers(self, except_user=[None]):
         activeUsers = self.GetActiveUsersID()
         for user in activeUsers:
-            if user not in self.rages: # do not notify user if checked for rage
+            # do not notify user if checked for rage or is one preseed the button
+            if user not in self.rages and \
+               user != except_user[0]:
                 bot.send_message(user, ICON_ROLL+" Крутит!")
 
     # Notify participated users if battle has been started
-    def BattleStartNotifyActiveUsers(self):
+    def BattleStartNotifyActiveUsers(self, except_user=[None]):
         activeUsers = self.GetActiveUsersID()
         for user in activeUsers:
-            if user not in self.rages: # do not notify user if checked for rage
+            # do not notify user if checked for rage or is one preseed the button
+            if user not in self.rages and \
+               user != except_user[0]:
                 bot.send_message(user, ICON_SWORDS+" Бой начинается!")
 
     def GetActiveUsersID(self):

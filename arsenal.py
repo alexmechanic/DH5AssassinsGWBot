@@ -167,7 +167,7 @@ class Arsenal():
         return False
 
     # Notify participated users if arsenal has been fired
-    def CheckNotifyIfFired(self):
+    def CheckNotifyIfFired(self, except_user=[None]):
         if self.is_fired and not self.is_fire_notified:
             # get active users from battle check
             activeUsers = common.current_battle.GetActiveUsersID()
@@ -176,8 +176,8 @@ class Arsenal():
             log.debug(activeUsers)
             now = datetime.datetime.now()
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
-            for user in activeUsers:
-                now = datetime.datetime.now()
+            for user in activeUsers and \
+                user != except_user[0]:
                 common.bot.send_message(user, text)
             self.is_fire_notified = True
             if common.warchat_id:
@@ -271,7 +271,7 @@ class Arsenal():
         log.debug("User %d (%s %s) total impact: %s" % (*user, str(user_record[2:])))
         self.done_users[userid] = user_record
         log.info("Vote successful")
-        if not self.CheckNotifyIfFired():
+        if not self.CheckNotifyIfFired(except_user=user):
             self.CheckNotifyIfCritical()
         return True
 
