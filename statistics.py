@@ -86,26 +86,30 @@ def command_stat_backup(m):
         return
     FILE_PREFIX = "GWBotStatistic"
     common.bot.send_message(m.from_user.id, "📥 Сохраняю статистику...")
-    # dump pickle Statistic object
-    with open(FILE_PREFIX+'.BAK', 'wb') as backup:
-        pickle.dump(common.statistics, backup, pickle.HIGHEST_PROTOCOL)
-        backup.close()
-    # dump json Statistic object
-    with open(FILE_PREFIX+'.json', 'w') as backup_json:
-        json.dump(common.statistics, backup_json, separators=(',', ': '), cls=StatsEncoder, indent=4)
-        backup_json.close()
-    # send pickle
-    common.bot.send_chat_action(m.from_user.id, "upload_document")
-    with open(FILE_PREFIX+'.BAK', 'rb') as backup:
-        common.bot.send_document(m.from_user.id, backup, caption="Файл-объект статистики").wait()
-        backup.close()
-    os.remove(FILE_PREFIX+'.BAK')
-    # send json
-    common.bot.send_chat_action(m.from_user.id, "upload_document")
-    with open(FILE_PREFIX+'.json', 'r') as backup_json:
-        common.bot.send_document(m.from_user.id, backup_json, caption="JSON-описание статистики").wait()
-        backup_json.close()
-    os.remove(FILE_PREFIX+'.json')
+    try:
+        # dump pickle Statistic object
+        with open(FILE_PREFIX+'.BAK', 'wb') as backup:
+            pickle.dump(common.statistics, backup, pickle.HIGHEST_PROTOCOL)
+            backup.close()
+        # dump json Statistic object
+        with open(FILE_PREFIX+'.txt', 'w') as backup_json:
+            json.dump(common.statistics, backup_json, separators=(',', ': '), cls=StatsEncoder, indent=4, ensure_ascii=False)
+            backup_json.close()
+        # send pickle
+        common.bot.send_chat_action(m.from_user.id, "upload_document")
+        with open(FILE_PREFIX+'.BAK', 'rb') as backup:
+            common.bot.send_document(m.from_user.id, backup, caption="Файл-объект статистики").wait()
+            backup.close()
+        os.remove(FILE_PREFIX+'.BAK')
+        # send json
+        common.bot.send_chat_action(m.from_user.id, "upload_document")
+        with open(FILE_PREFIX+'.txt', 'r') as backup_json:
+            common.bot.send_document(m.from_user.id, backup_json, caption="JSON-описание статистики").wait()
+            backup_json.close()
+        os.remove(FILE_PREFIX+'.txt')
+    except Exception as err:
+        log.error("Backup statistics failed: ", str(err))
+        common.bot.send_message(m.from_user.id, ICON_CANCEL+" Ошибка сохранения статистики!")
 
 
 @common.bot.message_handler(commands=['statrestore'])
@@ -137,13 +141,12 @@ def file_stat_restore(m):
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
     log.debug("User %d (%s %s) is trying to restore statistics" % (*user,))
     FILENAME = "stats.BAK"
-    common.bot.send_message(m.from_user.id, "⏳ Загружаю статистику...")
-    backup = common.bot.download_file(common.bot.get_file(m.document.file_id).wait().file_path).wait()
-    with open(FILENAME, 'wb') as f:
-        f.write(backup)
-        f.close()
     common.bot.send_message(m.from_user.id, "📤 Восстанавливаю статистику...")
     try:
+        backup = common.bot.download_file(common.bot.get_file(m.document.file_id).wait().file_path).wait()
+        with open(FILENAME, 'wb') as f:
+            f.write(backup)
+            f.close()
         with open(FILENAME, 'rb') as f:
             common.statistics = pickle.load(f)
             f.close()
@@ -300,7 +303,7 @@ class Score(Jsonable):
         return not(self == other)
 
     def __repr__(self):
-        return "Score(%s %d, %s %d, %s %d)" % (ICON_SWORDS, self.battles, ICON_ARS, self.arsenal, ICON_STAR, self.stars)
+        return "Score(B: %d, A: %d, S: %d)" % (self.battles, self.arsenal, self.stars)
 
     def AddScore(self, score):
         if not isinstance(score, self.__class__):
