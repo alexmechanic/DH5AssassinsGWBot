@@ -154,7 +154,7 @@ class Arsenal():
         return statistic
 
     def CheckNotifyIfCritical(self):
-        if self.progress >= 92: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage
+        if self.progress >= 92 and self.progress < 120: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage
             log.info("Arsenal is critical! %s/120", self.progress)
             if common.warchat_id:
                 text = ICON_ARS+" Прогресс арсенала: %s/120!" % self.progress
