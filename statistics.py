@@ -274,7 +274,12 @@ class User(Jsonable):
         return not(self == other)
 
     def __repr__(self):
-        return "User(%d, %s, %s)" % (self._id, self.name, self.username)
+        text = "User(%d, %s" % (self._id, self.name)
+        if self.username:
+            text += ", %s)" % self.username
+        else:
+            text += ")"
+        return text
 
     def GetData(self):
         return {"id"      : self._id,
