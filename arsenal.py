@@ -176,9 +176,9 @@ class Arsenal():
             log.debug(activeUsers)
             now = datetime.datetime.now()
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
-            for user in activeUsers and \
-                user != except_user[0]:
-                common.bot.send_message(user, text)
+            for user in activeUsers:
+                if user != except_user[0]:
+                    common.bot.send_message(user, text)
             self.is_fire_notified = True
             if common.warchat_id:
                 notification = common.bot.send_message(common.warchat_id, text).wait()
