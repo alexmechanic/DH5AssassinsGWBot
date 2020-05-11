@@ -191,6 +191,7 @@ def reset_control(m):
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
             common.current_numcheck = None
+        common.statistics.BackupIfNeed(m)
     try:
         bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
     except: # no need to send private message if checks have been reset via battle control

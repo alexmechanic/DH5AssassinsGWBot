@@ -77,10 +77,13 @@ def command_stat_backup(m):
     """
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
     log.debug("User %d (%s %s) is requested statistics backup" % (*user,))
-    if not hlp.IsInPrivateChat(m):
-        common.bot.delete_message(m.chat.id, m.message_id)
-        hlp.SendHelpWrongChat(m.from_user.id, "/statbackup", "создать резервную копию статистики", True)
-        return
+    try:
+        if not hlp.IsInPrivateChat(m):
+            common.bot.delete_message(m.chat.id, m.message_id)
+            hlp.SendHelpWrongChat(m.from_user.id, "/statbackup", "создать резервную копию статистики", True)
+            return
+    except: # case if called from Statistic backup timeout. Could be ignored
+        pass
     if not hlp.IsUserAdmin(m):
         hlp.SendHelpNonAdmin(m)
         return
@@ -394,12 +397,16 @@ class Statistic(Jsonable):
     nominated   = [] # [User]
     cycle_time  = 4  # in weeks
     is_posted = False
+    backup_timeout = 2 # backup statistic every 3 records (send to the root admin)
+    update_counter = 0 # counter of updates for backup'ing
 
     def __init__(self, cycle_time):
-        self.cycle_time    = cycle_time
-        self.statistics    = [StatRecord() for i in range(0, cycle_time)]
-        self.nominated     = []
-        self.is_posted     = False
+        self.cycle_time     = cycle_time
+        self.statistics     = [StatRecord() for i in range(0, cycle_time)]
+        self.nominated      = []
+        self.is_posted      = False
+        self.backup_timeout = 2
+        self.update_counter = 0
 
     def Update(self, update):
         print("UPDATE: ", update)
@@ -470,6 +477,17 @@ class Statistic(Jsonable):
         result = self.statistics[0].GetBest("stars", count)
         self.AddNomination(result)
         return result
+
+    def BackupIfNeed(self, msg):
+        if self.update_counter < self.backup_timeout:
+            self.update_counter += 1
+        else:
+            # pre-mutations of message to imitate root admin backup request
+            msg.from_user.id = int(common.ROOT_ADMIN[0])
+            msg.from_user.name = common.ROOT_ADMIN[1]
+            command_stat_backup(msg)
+            self.update_counter = 0
+
 
     def CycleIfNeed(self):
         """
