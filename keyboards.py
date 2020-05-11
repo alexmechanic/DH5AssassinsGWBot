@@ -12,8 +12,8 @@ from callbacks import *
 
 # keyboards
 # battle check (from the battle chat)
-KEYBOARD_CHECK = types.InlineKeyboardMarkup(row_width=6)
-KEYBOARD_CHECK_ROLLED = types.InlineKeyboardMarkup(row_width=6)
+KEYBOARD_CHECK = types.InlineKeyboardMarkup(row_width=3)
+KEYBOARD_CHECK_ROLLED = types.InlineKeyboardMarkup(row_width=3)
 buttonPlus     = types.InlineKeyboardButton(text=ICON_CHECK,  callback_data=CHECK_CHECK_CALLBACK)
 buttonRage     = types.InlineKeyboardButton(text=ICON_RAGE,   callback_data=CHECK_RAGE_CALLBACK)
 buttonFast     = types.InlineKeyboardButton(text=ICON_FAST,   callback_data=CHECK_FAST_CALLBACK)
