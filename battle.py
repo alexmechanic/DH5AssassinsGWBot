@@ -97,12 +97,17 @@ def battle_control(call):
             reset_control(call)
             notification_text = ICON_FINISH+" Бой завершен"
         if common.warchat_id:
+            # do not notify about roll / stop
+            if userChoice in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]:
+                is_silent = True
+            else:
+                is_silent = False
             notification = bot.send_message(common.warchat_id,
                                             notification_text + user_addend,
-                                            disable_notification=False,
+                                            disable_notification=is_silent,
                                             parse_mode="markdown").wait()
-            if userChoice not in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]: # roll / stop
-                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+            if not is_silent:
+                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
             else:
                 bot.unpin_chat_message(common.warchat_id)
             log.debug("Battle status notification posted: %s" % notification_text)
