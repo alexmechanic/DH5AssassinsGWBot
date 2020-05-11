@@ -236,21 +236,15 @@ class Battle():
     # Notify participated users if battle has been rolled
     def BattleRollNotifyActiveUsers(self):
         activeUsers = self.GetActiveUsersID()
-        print("BattleRollNotifyActiveUsers:")
-        print(activeUsers)
         for user in activeUsers:
             if user not in self.rages: # do not notify user if checked for rage
-                print("Notify user: ", user)
                 bot.send_message(user, ICON_ROLL+" Крутит!")
 
     # Notify participated users if battle has been started
     def BattleStartNotifyActiveUsers(self):
         activeUsers = self.GetActiveUsersID()
-        print("BattleStartNotifyActiveUsers:")
-        print(activeUsers)
         for user in activeUsers:
             if user not in self.rages: # do not notify user if checked for rage
-                print("Notify user: ", user)
                 bot.send_message(user, ICON_SWORDS+" Бой начинается!")
 
     def GetActiveUsersID(self):
@@ -267,8 +261,6 @@ class Battle():
             users.add(user)
         for user in self.lates:
             users.add(user)
-        print("GetActiveUsersID:")
-        print(users)
         return users
 
     def GetActiveUsersNames(self):
