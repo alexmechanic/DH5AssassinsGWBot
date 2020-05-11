@@ -61,6 +61,6 @@ def SaveAdminsList(newlist):
     admins = newlist
     admins_list = [ROOT_ADMIN, admins]
     with open("ADMINS", "w") as f:
-        json.dump(admins_list, f)
+        json.dump(admins_list, f, ensure_ascii=False)
         f.close()
     log.debug("Saved admins list: ", admins_list)
