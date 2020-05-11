@@ -196,7 +196,7 @@ class Arsenal():
     def GetHeader(self):
         iteration = self.progress
         total = 120
-        length = 26
+        length = 25
         # form progress bar
         percent = iteration if iteration <= 120 else 120
         filledLength = int(length * percent // total)
