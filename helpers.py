@@ -7,6 +7,7 @@
 #
 
 import re, datetime
+from random import sample
 from logger import get_logger
 import common
 from collections import Counter
