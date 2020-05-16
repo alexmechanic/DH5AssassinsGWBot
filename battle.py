@@ -138,7 +138,7 @@ def battle_query_inline(q):
         res = types.InlineQueryResultArticle('battle',
                                             title='[%s] Создать чек на бой' % time[0],
                                             description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
-                                            input_message_content=types.InputTextMessageContent("BATTLE PLACEHOLDER", parse_mode="markdown"),
+                                            input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Бой*: %s" % time[0], parse_mode="markdown"),
                                             thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
                                             reply_markup=kb.KEYBOARD_CHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)

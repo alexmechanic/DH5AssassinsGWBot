@@ -99,8 +99,8 @@ def arsenal_query_inline(q):
             common.rage_time_workaround = rage[1][0]
             res = types.InlineQueryResultArticle('arsenal',
                                                  title='Добавить прогресс арсенала',
-                                                 description='📦 |████--| Х/120\nЯрость в %s' % common.rage_time_workaround,
-                                                 input_message_content=types.InputTextMessageContent("ARS PLACEHOLDER", parse_mode="markdown"),
+                                                 description=ICON_ARS+' |████--| Х/120\nЯрость в %s' % common.rage_time_workaround,
+                                                 input_message_content=types.InputTextMessageContent(ICON_ARS+" *Прогресс арсенала:* 0/120", parse_mode="markdown"),
                                                  thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
                                                  reply_markup=kb.KEYBOARD_ARS)
             bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)

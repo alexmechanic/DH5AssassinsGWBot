@@ -129,7 +129,7 @@ def numbers_query_inline(q):
             res = types.InlineQueryResultArticle('numbers',
                                                  title=text,
                                                  description=text2,
-                                                 input_message_content=types.InputTextMessageContent("NUMBERS PLACEHOLDER", parse_mode="markdown"),
+                                                 input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Прогресс номеров*", parse_mode="markdown"),
                                                  thumb_url="https://i.ibb.co/JRRMLjv/numbers.png",
                                                  reply_markup=kb.KEYBOARD_NUMBERS
                                                  )
