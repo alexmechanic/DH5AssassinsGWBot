@@ -1,5 +1,5 @@
 [loggers]
-keys=root,battle,warprecheck,arsenal,numberscheck,screens
+keys=root,battle,warprecheck,arsenal,numberscheck,screens,statistics
 
 [handlers]
 keys=file,stdout
@@ -57,3 +57,9 @@ level=DEBUG
 handlers=file,stdout
 propagate=0
 qualname=bot.screens
+
+[logger_statistics]
+level=DEBUG
+handlers=file,stdout
+propagate=0
+qualname=bot.statistics
