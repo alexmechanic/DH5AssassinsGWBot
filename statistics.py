@@ -311,9 +311,12 @@ class Score(Jsonable):
         return not(self == other)
 
     def __sub__(self, other):
-        self.battles -= other.battles
-        self.arsenal -= other.arsenal
-        self.stars   -= other.stars
+        diff = [self.battles - other.battles,
+                self.arsenal - other.arsenal,
+                self.stars   - other.stars]
+        self.battles = diff[0] if diff[0] > 0 else 0
+        self.arsenal = diff[1] if diff[1] > 0 else 0 
+        self.stars   = diff[2] if diff[2] > 0 else 0
         return self
 
     def __repr__(self):
