@@ -26,7 +26,7 @@ import keyboards as kb
 import callbacks as cb
 import helpers as hlp
 
-log = get_logger("bot")
+log = get_logger("root")
 
 DOUBLESHOP_TIME = [4, [17, 58], [18, 13]]
 DOUBLESHOP_TIME_CALLED = False
@@ -182,7 +182,7 @@ def command_set_warchat(m):
         bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
     else:
         common.warchat_id = m.chat.id
-        log.info("war chat set: ", common.warchat_id)
+        log.info("war chat set: %d", common.warchat_id)
         bot.send_message(m.from_user.id, ICON_CHECK+" Военный чат успешно задан!")
 
 
