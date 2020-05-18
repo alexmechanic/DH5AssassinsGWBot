@@ -310,6 +310,12 @@ class Score(Jsonable):
     def __ne__(self, other):
         return not(self == other)
 
+    def __sub__(self, other):
+        self.battles -= other.battles
+        self.arsenal -= other.arsenal
+        self.stars   -= other.stars
+        return self
+
     def __repr__(self):
         return "Score(B: %d, A: %d, S: %d)" % (self.battles, self.arsenal, self.stars)
 
@@ -347,11 +353,19 @@ class StatRecord(Jsonable):
         self.stats = {}
         self.battles_count = 0
 
+    def __sub__(self, other):
+        self.battles_count -= other.battles_count
+        for user1, score1 in self.stats.items():
+            for user2, score2 in other.stats.items():
+                if user1 == user2:
+                    self.stats[user1] = self.stats[user1] - other.stats[user2]
+        return self
+
     def __repr__(self):
         text = []
         for user, score in self.stats.items():
             text.append(repr(user) + ": " + repr(score))
-        return "StatRecord[%s](%s)" % (self.date, ", ".join(text))
+        return "StatRecord[%s][B: %d](%s)" % (self.date, self.battles_count, ", ".join(text))
 
     def AddStat(self, user, record):
         if user not in self.stats:
