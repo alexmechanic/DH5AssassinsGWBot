@@ -157,7 +157,7 @@ def file_stat_restore(m):
         common.bot.send_message(m.from_user.id, ICON_CHECK+" Статистика успешно восстановлена!")
         log.error("Restoring statistics successful")
     except Exception as err:
-        log.error("Restoring statistics failed: ", str(err))
+        log.error("Restoring statistics failed: %s", str(err))
         common.bot.send_message(m.from_user.id, ICON_CANCEL+" Ошибка восстановления статистики!")
 
 @common.bot.message_handler(commands=['best'])
