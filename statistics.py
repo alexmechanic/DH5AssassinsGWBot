@@ -570,7 +570,8 @@ class Statistic(Jsonable):
         """
         now = datetime.datetime.now()
         # TODO: check if 3 days threshold is enough to detect new GW (mind testing!)
-        if (now - self.statistics[0].GetDate()).days > 3:# and hlp.IsGWDurationTime():
+        diff = now - self.statistics[0].GetDate()
+        if diff.days >= 3 :# and hlp.IsGWDurationTime():
             self.do_cycle_internal()
 
     def do_cycle_internal(self):
