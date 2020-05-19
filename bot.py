@@ -472,7 +472,6 @@ def snow_control(call):
 if "HEROKU" in list(os.environ.keys()):
     log.warning("Running on Heroku, setup webhook")
     server = Flask(__name__)
-    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
 
     @server.route('/bot' + common.TOKEN, methods=['POST'])
     def getMessage():
@@ -485,8 +484,11 @@ if "HEROKU" in list(os.environ.keys()):
         bot.set_webhook(url='https://' + common.BOT_USERNAME + '.herokuapp.com/bot' + common.TOKEN)
         return "?", 200
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 80)))
+    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+    aws_stat_restore()
 else:
     log.warning("Running locally, start polling")
     bot.remove_webhook()
     bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+    aws_stat_restore()
     bot.polling(none_stop=True, interval=0, timeout=20)

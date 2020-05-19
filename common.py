@@ -6,10 +6,10 @@
 # Common shared resources for modules 
 #
 
-import telebot, sys, os, json
+import telebot, sys, os, json, boto3
 from logger import get_logger
 
-log = get_logger("bot")
+log = get_logger("root")
 
 # setup proxy if asked
 if len(sys.argv) > 1:
@@ -19,13 +19,28 @@ if len(sys.argv) > 1:
 if "HEROKU" in list(os.environ.keys()):
     TOKEN = os.environ['TOKEN']
     log.info("[HEROKU] read token: '%s'" % TOKEN)
+    AWS_KEY = os.environ['CLOUDCUBE_ACCESS_KEY_ID']
+    log.info("[HEROKU] read couldcube access key: '%s'" % AWS_KEY)
+    AWS_SECRET = os.environ['CLOUDCUBE_SECRET_ACCESS_KEY']
+    log.info("[HEROKU] read couldcube secret access key: '%s'" % AWS_SECRET)
 else:
     with open("TOKEN", "r") as tfile: # local run
         TOKEN = tfile.readline().strip('\n')
         log.info("[LOCAL] read token: '%s'" % TOKEN)
         tfile.close()
+    with open("CLOUDCUBE_ACCESS_KEY_ID", "r") as f: # local run
+        AWS_KEY = f.readline().strip('\n')
+        log.info("[LOCAL] read couldcube access key: '%s'" % AWS_KEY)
+        f.close()
+    with open("CLOUDCUBE_SECRET_ACCESS_KEY", "r") as f: # local run
+        AWS_SECRET = f.readline().strip('\n')
+        log.info("[LOCAL] read couldcube secret access key: '%s'" % AWS_SECRET)
+        f.close()
+
 
 bot = telebot.AsyncTeleBot(TOKEN)
+
+aws_client = boto3.client('s3', aws_access_key_id=AWS_KEY, aws_secret_access_key=AWS_SECRET)
 
 BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator

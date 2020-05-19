@@ -103,6 +103,7 @@ def command_stat_backup(m):
         with open(FILE_PREFIX+'.BAK', 'rb') as backup:
             common.bot.send_document(m.from_user.id, backup, caption="Файл-объект статистики").wait()
             backup.close()
+        aws_stat_backup(FILE_PREFIX+'.BAK', burst=True)
         os.remove(FILE_PREFIX+'.BAK')
         # send json
         common.bot.send_chat_action(m.from_user.id, "upload_document")
@@ -115,6 +116,27 @@ def command_stat_backup(m):
         common.bot.send_message(m.from_user.id, ICON_CANCEL+" Ошибка сохранения статистики!")
 
 
+def aws_stat_backup(filename="GWBotStatistic.BAK", burst=False):
+    """
+    Backup whole current statistic into pickle file.
+    Upload to AWS
+    @param burst Do not save backup to file
+    """
+    common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Сохраняю статистику (AWS)...")
+    # if burst-upload requested (no additional file backup)
+    if not burst:
+        with open(filename, 'wb') as backup:
+            pickle.dump(common.statistics, backup, pickle.HIGHEST_PROTOCOL)
+            backup.close()
+    # upload file
+    if hlp.AWSUploadFile(filename):
+        log.debug("Statistics has been successfully uploaded to AWS cloud.")
+        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно сохранена!")
+    else:
+        log.error("Statistics AWS upload failed.")
+        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CANCEL+" Ошибка сохранения статистики!")
+
+
 @common.bot.message_handler(commands=['statrestore'])
 def command_stat_restore(m):
     """
@@ -124,7 +146,7 @@ def command_stat_restore(m):
     log.debug("User %d (%s %s) is requested statistics restore" % (*user,))
     if not hlp.IsInPrivateChat(m):
         common.bot.delete_message(m.chat.id, m.message_id)
-        hlp.SendHelpWrongChat(m.from_user.id, "/statbackup", "создать резервную копию статистики", True)
+        hlp.SendHelpWrongChat(m.from_user.id, "/statrestore", "восстановить статистику из резервной копии", True)
         return
     if not hlp.IsUserAdmin(m):
         hlp.SendHelpNonAdmin(m)
@@ -132,6 +154,33 @@ def command_stat_restore(m):
     common.bot.send_message(m.from_user.id,
                             "🗄 Чтобы восстановить статистику, пришлите файл резервной копии статистики в формате _.BAK_",
                             parse_mode="markdown")
+
+
+def aws_stat_restore(filename="GWBotStatistic.BAK", force=True):
+    """
+    Restore whole current statistic from pickle file (download from AWS).
+    @param force Remove old local backup
+    """
+    common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Восстанавливаю статистику (AWS)...")
+    try:
+        # remove old statistics backup if forced update
+        if force:
+            if os.path.isfile(filename):
+                os.remove(filename)
+        # download backup
+        filepath = hlp.AWSDownloadFile(filename)
+        if filepath == None:
+            raise Exception("Statistics AWS download failed.")
+        log.debug("Statistics has been successfully downloaded from AWS cloud.")
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            common.statistics = pickle.load(f)
+            f.close()
+        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно восстановлена!")
+        log.debug("Restoring statistics successful (AWS)")
+    except Exception as err:
+        log.error("Restoring statistics failed (AWS): %s", str(err))
+        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CANCEL+" Ошибка восстановления статистики!")
 
 
 @common.bot.message_handler(func=lambda message: os.path.splitext(message.document.file_name)[1].lower() == ".bak" if message.document else False,
@@ -155,7 +204,7 @@ def file_stat_restore(m):
             f.close()
         os.remove(FILENAME)
         common.bot.send_message(m.from_user.id, ICON_CHECK+" Статистика успешно восстановлена!")
-        log.error("Restoring statistics successful")
+        log.debug("Restoring statistics successful")
     except Exception as err:
         log.error("Restoring statistics failed: %s", str(err))
         common.bot.send_message(m.from_user.id, ICON_CANCEL+" Ошибка восстановления статистики!")
@@ -501,14 +550,17 @@ class Statistic(Jsonable):
         return result
 
     def BackupIfNeed(self, msg):
-        if self.update_counter < self.backup_timeout:
-            self.update_counter += 1
-        else:
-            # pre-mutations of message to imitate root admin backup request
-            msg.from_user.id = int(common.ROOT_ADMIN[0])
-            msg.from_user.name = common.ROOT_ADMIN[1]
-            command_stat_backup(msg)
-            self.update_counter = 0
+        # new AWS backup
+        aws_stat_backup()
+        # old local backup cycle
+        # if self.update_counter < self.backup_timeout:
+        #     self.update_counter += 1
+        # else:
+        #     # pre-mutations of message to imitate root admin backup request
+        #     msg.from_user.id = int(common.ROOT_ADMIN[0])
+        #     msg.from_user.name = common.ROOT_ADMIN[1]
+        #     command_stat_backup(msg)
+        #     self.update_counter = 0
 
 
     def CycleIfNeed(self):
@@ -517,7 +569,8 @@ class Statistic(Jsonable):
         Executes cycling if checked from Friday to Sunday (next GW detected) and making sure it is not the same GW.
         """
         now = datetime.datetime.now()
-        if (now - self.statistics[0].GetDate()).days > 3 and hlp.IsGWDurationTime():
+        # TODO: check if 3 days threshold is enough to detect new GW (mind testing!)
+        if (now - self.statistics[0].GetDate()).days > 3:# and hlp.IsGWDurationTime():
             self.do_cycle_internal()
 
     def do_cycle_internal(self):

@@ -6,7 +6,7 @@
 # Various support functions
 #
 
-import re, datetime
+import re, datetime, os
 from random import sample
 from logger import get_logger
 import common
@@ -14,7 +14,25 @@ from collections import Counter
 from commands import COMMANDS
 from icons import *
 
-log = get_logger("bot")
+log = get_logger("root")
+
+def AWSUploadFile(filepath):
+    if not os.path.isfile(filepath):
+        return False
+    common.aws_client.upload_file(filepath, 'cloud-cube', 'tthoivsc7apn/' + filepath)
+    return True
+
+def AWSDownloadFile(filepath):
+    if not os.path.isdir('AWS_TEMP'):
+        os.mkdir('AWS_TEMP')
+    destpath = 'AWS_TEMP/' + filepath
+    # delete old file if exists
+    if os.path.isfile(destpath):
+        os.remove(destpath)
+    common.aws_client.download_file('cloud-cube', 'tthoivsc7apn/' + filepath, destpath)
+    if os.path.isfile(destpath):
+        return destpath
+    return None
 
 def CheckInlineQuery(pattern, query): # check query for primary pattern support function 
     res = re.compile(pattern).findall(query.query)
