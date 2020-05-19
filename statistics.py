@@ -122,6 +122,7 @@ def aws_stat_backup(filename="GWBotStatistic.BAK", burst=False):
     Upload to AWS
     @param burst Do not save backup to file
     """
+    log.debug("AWS Statistic backup started")
     common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Сохраняю статистику (AWS)...")
     # if burst-upload requested (no additional file backup)
     if not burst:
@@ -161,6 +162,7 @@ def aws_stat_restore(filename="GWBotStatistic.BAK", force=True):
     Restore whole current statistic from pickle file (download from AWS).
     @param force Remove old local backup
     """
+    log.debug("AWS Statistic restore started")
     common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Восстанавливаю статистику (AWS)...")
     try:
         # remove old statistics backup if forced update

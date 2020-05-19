@@ -6,6 +6,7 @@
 # Class and methods representing pre-check for Guild war
 #
 
+import pickle
 from logger import get_logger
 from telebot import types
 
@@ -18,6 +19,8 @@ import callbacks as cb
 import helpers as hlp
 
 log = get_logger("bot." + __name__)
+
+BACKUP_NAME = "WarPreCheck.BAK"
 
 #
 # Pre-check actions
@@ -98,6 +101,41 @@ def precheck_query_inline(q):
                                 switch_pm_text=error_text, switch_pm_parameter="existing_precheck")
 
 
+def aws_precheck_backup():
+    """
+    Backup  current precheck into pickle file.
+    Upload to AWS
+    """
+    log.debug("AWS Pre-check backup started")
+    with open(BACKUP_NAME, 'wb') as backup:
+        pickle.dump(common.current_precheck, backup, pickle.HIGHEST_PROTOCOL)
+        backup.close()
+    if hlp.AWSUploadFile(BACKUP_NAME):
+        log.debug("Pre-check has been successfully uploaded to AWS cloud.")
+    else:
+        log.error("Pre-check AWS upload failed.")
+
+def aws_precheck_restore():
+    """
+    Restore  current precheck from pickle file (download from AWS).
+    """
+    log.debug("AWS Pre-check restore started")
+    try:
+        # download backup
+        filepath = hlp.AWSDownloadFile(BACKUP_NAME)
+        if filepath == None:
+            raise Exception("Pre-check AWS download failed.")
+        log.debug("Pre-check has been successfully downloaded from AWS cloud.")
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            common.current_precheck = pickle.load(f)
+            f.close()
+        log.debug("Restoring Pre-check successful (AWS)")
+    except Exception as err:
+        log.error("Restoring Pre-check failed (AWS): %s", str(err))
+
+
+
 class WarPreCheck():
     check_id = None
     is_postponed = False
@@ -121,6 +159,7 @@ class WarPreCheck():
 
     def DoEndPrecheck(self):
         self.is_postponed = True
+        aws_precheck_backup()
         log.info("Pre-check ended")
 
     def GetHeader(self):
@@ -208,8 +247,11 @@ class WarPreCheck():
             ret = self.SetThinking(user)
         elif action == cb.PRECHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
-        if ret: log.info("Vote successful")
-        else: log.error("Vote failed - already voted the same")
+        if ret:
+            log.info("Vote successful")
+        else:
+            log.error("Vote failed - already voted the same")
+        aws_precheck_backup()
         return ret
 
     def SetFriday(self, user):

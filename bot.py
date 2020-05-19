@@ -474,6 +474,7 @@ if "HEROKU" in list(os.environ.keys()):
     server = Flask(__name__)
     bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
     aws_stat_restore()
+    aws_precheck_restore()
 
     @server.route('/bot' + common.TOKEN, methods=['POST'])
     def getMessage():
@@ -491,4 +492,5 @@ else:
     bot.remove_webhook()
     bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
     aws_stat_restore()
+    aws_precheck_restore()
     bot.polling(none_stop=True, interval=0, timeout=20)
