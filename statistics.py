@@ -123,7 +123,7 @@ def aws_stat_backup(filename="GWBotStatistic.BAK", burst=False):
     @param burst Do not save backup to file
     """
     log.debug("AWS Statistic backup started")
-    common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Сохраняю статистику (AWS)...")
+    # common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Сохраняю статистику (AWS)...")
     # if burst-upload requested (no additional file backup)
     if not burst:
         with open(filename, 'wb') as backup:
@@ -132,7 +132,7 @@ def aws_stat_backup(filename="GWBotStatistic.BAK", burst=False):
     # upload file
     if hlp.AWSUploadFile(filename):
         log.debug("Statistics has been successfully uploaded to AWS cloud.")
-        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно сохранена!")
+        # common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно сохранена!")
     else:
         log.error("Statistics AWS upload failed.")
         common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CANCEL+" Ошибка сохранения статистики!")
@@ -163,7 +163,7 @@ def aws_stat_restore(filename="GWBotStatistic.BAK", force=True):
     @param force Remove old local backup
     """
     log.debug("AWS Statistic restore started")
-    common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Восстанавливаю статистику (AWS)...")
+    # common.bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Восстанавливаю статистику (AWS)...")
     try:
         # remove old statistics backup if forced update
         if force:
@@ -178,7 +178,7 @@ def aws_stat_restore(filename="GWBotStatistic.BAK", force=True):
         with open(filepath, 'rb') as f:
             common.statistics = pickle.load(f)
             f.close()
-        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно восстановлена!")
+        # common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Статистика успешно восстановлена!")
         log.debug("Restoring statistics successful (AWS)")
     except Exception as err:
         log.error("Restoring statistics failed (AWS): %s", str(err))
