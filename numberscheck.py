@@ -129,7 +129,7 @@ def numbers_query_inline(q):
             res = types.InlineQueryResultArticle('numbers',
                                                  title=text,
                                                  description=text2,
-                                                 input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Прогресс номеров*", parse_mode="markdown"),
+                                                 input_message_content=types.InputTextMessageContent(ICON_NUMBERS+" *Прогресс номеров*", parse_mode="markdown"),
                                                  thumb_url="https://i.ibb.co/JRRMLjv/numbers.png",
                                                  reply_markup=kb.KEYBOARD_NUMBERS
                                                  )
@@ -241,8 +241,7 @@ class NumbersCheck():
             self._500["notified"] = True
 
     def GetHeader(self):
-        return ICON_SWORDS+" *Прогресс номеров " + \
-                "(по скринам)"*(not self.ingame) + "(по игре)"*(self.ingame) + ":*\n"
+        return ICON_NUMBERS+" *Прогресс номеров:*\n"
 
     def GetText(self):
         text = self.GetHeader()
