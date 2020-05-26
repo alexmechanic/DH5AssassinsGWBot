@@ -554,15 +554,6 @@ class Statistic(Jsonable):
     def BackupIfNeed(self, msg):
         # new AWS backup
         aws_stat_backup()
-        # old local backup cycle
-        # if self.update_counter < self.backup_timeout:
-        #     self.update_counter += 1
-        # else:
-        #     # pre-mutations of message to imitate root admin backup request
-        #     msg.from_user.id = int(common.ROOT_ADMIN[0])
-        #     msg.from_user.name = common.ROOT_ADMIN[1]
-        #     command_stat_backup(msg)
-        #     self.update_counter = 0
 
 
     def CycleIfNeed(self):
@@ -577,16 +568,13 @@ class Statistic(Jsonable):
             self.do_cycle_internal()
 
     def do_cycle_internal(self):
-        print("before cycle:")
         print(self.statistics)        
         # shift the stats records to the right
         self.statistics = self.statistics[-1:] + self.statistics[:-1]
         # eliminate oldest nominated users
         self.RemoveNominations(self.statistics[0])
         # destroy the oldest (now first)
-        print("before destroy old StatRecord:")
         print(self.statistics)
         self.statistics[0] = StatRecord()
-        print("after re-init newest:")
         print(self.statistics)
         self.is_posted = False
