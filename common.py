@@ -23,6 +23,8 @@ if "HEROKU" in list(os.environ.keys()):
     log.info("[HEROKU] read couldcube access key: '%s'" % AWS_KEY)
     AWS_SECRET = os.environ['CLOUDCUBE_SECRET_ACCESS_KEY']
     log.info("[HEROKU] read couldcube secret access key: '%s'" % AWS_SECRET)
+    DEFAULT_WARCHAT_ID = int(os.environ['DEFAULT_WARCHAT'])
+    log.info("[HEROKU] read default warchat_id: %d" % DEFAULT_WARCHAT_ID)
 else:
     with open("TOKEN", "r") as tfile: # local run
         TOKEN = tfile.readline().strip('\n')
@@ -36,7 +38,10 @@ else:
         AWS_SECRET = f.readline().strip('\n')
         log.info("[LOCAL] read couldcube secret access key: '%s'" % AWS_SECRET)
         f.close()
-
+    with open("DEFAULT_WARCHAT", "r") as f: # local run
+        DEFAULT_WARCHAT_ID = int(f.readline().strip('\n'))
+        log.info("[LOCAL] read default warchat_id: %d" % DEFAULT_WARCHAT_ID)
+        f.close()
 
 bot = telebot.AsyncTeleBot(TOKEN)
 
@@ -46,7 +51,7 @@ BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
 admins = {}
 
-warchat_id       = None
+warchat_id       = DEFAULT_WARCHAT_ID
 current_battle   = None
 current_precheck = None
 current_arscheck = None
