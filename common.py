@@ -9,7 +9,7 @@
 import telebot, sys, os, json, boto3
 from logger import get_logger
 
-log = get_logger("root")
+log = get_logger("bot." + __name__)
 
 # setup proxy if asked
 if len(sys.argv) > 1:
@@ -67,8 +67,10 @@ with open("ADMINS", "r") as f:
     ROOT_ADMIN = admins_list[0]
     admins = admins_list[1]
     f.close()
-    log.debug("Load root admin: ", ROOT_ADMIN)
-    log.debug("Load admins list: ", admins)
+log.debug("Load root admin: ")
+log.debug(ROOT_ADMIN)
+log.debug("Load admins list: ")
+log.debug(admins)
 
 # save edited list
 def SaveAdminsList(newlist):

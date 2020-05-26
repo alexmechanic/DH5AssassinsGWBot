@@ -1,5 +1,5 @@
 [loggers]
-keys=root,battle,warprecheck,arsenal,numberscheck,screens,statistics
+keys=root,common,helpers,battle,warprecheck,arsenal,numberscheck,screens,statistics
 
 [handlers]
 keys=file,stdout
@@ -27,6 +27,16 @@ datefmt=%Y-%m-%d %H:%M:%S
 level=DEBUG
 handlers=file,stdout
 qualname=bot
+
+[logger_common]
+level=DEBUG
+handlers=file,stdout
+qualname=bot.common
+
+[logger_helpers]
+level=DEBUG
+handlers=file,stdout
+qualname=bot.helpers
 
 [logger_battle]
 level=DEBUG

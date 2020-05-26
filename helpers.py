@@ -14,7 +14,7 @@ from collections import Counter
 from commands import COMMANDS
 from icons import *
 
-log = get_logger("root")
+log = get_logger("bot." + __name__)
 
 def AWSUploadFile(filepath):
     if not os.path.isfile(filepath):

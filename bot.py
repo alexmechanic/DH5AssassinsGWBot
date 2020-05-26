@@ -26,10 +26,7 @@ import keyboards as kb
 import callbacks as cb
 import helpers as hlp
 
-log = get_logger("root")
-
-DOUBLESHOP_TIME = [4, [17, 58], [18, 13]]
-DOUBLESHOP_TIME_CALLED = False
+log = get_logger("bot.root")
 
 #####################
 # Callback handlers #
@@ -468,29 +465,29 @@ def snow_control(call):
     log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
     bot.answer_callback_query(call.id)
 
+if __name__ == '__main__':
+    if "HEROKU" in list(os.environ.keys()):
+        log.warning("Running on Heroku, setup webhook")
+        server = Flask(__name__)
+        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        aws_stat_restore()
+        aws_precheck_restore()
 
-if "HEROKU" in list(os.environ.keys()):
-    log.warning("Running on Heroku, setup webhook")
-    server = Flask(__name__)
-    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
-    aws_stat_restore()
-    aws_precheck_restore()
+        @server.route('/bot' + common.TOKEN, methods=['POST'])
+        def getMessage():
+            bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+            return "!", 200
 
-    @server.route('/bot' + common.TOKEN, methods=['POST'])
-    def getMessage():
-        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-        return "!", 200
-
-    @server.route("/")
-    def webhook():
-        time.sleep(1)
-        bot.set_webhook(url='https://' + common.BOT_USERNAME + '.herokuapp.com/bot' + common.TOKEN)
-        return "?", 200
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 80)))
-else:
-    log.warning("Running locally, start polling")
-    bot.remove_webhook()
-    bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
-    aws_stat_restore()
-    aws_precheck_restore()
-    bot.polling(none_stop=True, interval=0, timeout=20)
+        @server.route("/")
+        def webhook():
+            time.sleep(1)
+            bot.set_webhook(url='https://' + common.BOT_USERNAME + '.herokuapp.com/bot' + common.TOKEN)
+            return "?", 200
+        server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 80)))
+    else:
+        log.warning("Running locally, start polling")
+        bot.remove_webhook()
+        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        aws_stat_restore()
+        aws_precheck_restore()
+        bot.polling(none_stop=True, interval=0, timeout=20)
