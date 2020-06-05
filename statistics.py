@@ -254,7 +254,7 @@ def command_best(m):
             best_attackers_header = ICON_STAR+  " *Лучшие танки*:\n\n"
             WAIT_SUFFIX = "🥁..."
             # best active players
-            text = GetBestListText(common.statistics.GetBestActives(), "battles")
+            text = GetBestListText(common.statistics.GetBestActives(5), "battles")
             best_actives_msg = common.bot.send_message(common.warchat_id,
                                                 best_actives_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
@@ -265,7 +265,7 @@ def command_best(m):
                                   message_id=best_actives_msg.message_id,
                                   parse_mode="markdown")
             # best arsenal players
-            text = GetBestListText(common.statistics.GetBestArsenals(), "arsenal")
+            text = GetBestListText(common.statistics.GetBestArsenals(5), "arsenal")
             best_arsenal_msg = common.bot.send_message(common.warchat_id,
                                                 best_arsenal_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
@@ -276,7 +276,7 @@ def command_best(m):
                                   message_id=best_arsenal_msg.message_id,
                                   parse_mode="markdown")
             # best attackers
-            text = GetBestListText(common.statistics.GetBestAttackers(), "stars")
+            text = GetBestListText(common.statistics.GetBestAttackers(5), "stars")
             best_attackers_msg = common.bot.send_message(common.warchat_id,
                                                 best_attackers_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
