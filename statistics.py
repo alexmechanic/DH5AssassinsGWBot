@@ -254,7 +254,7 @@ def command_best(m):
             best_attackers_header = ICON_STAR+  " *Лучшие танки*:\n\n"
             WAIT_SUFFIX = "🥁..."
             # best active players
-            text = GetBestListText(common.statistics.GetBestActives(5), "battles")
+            text = GetBestListText(common.statistics.GetBestActives(count=5), "battles")
             best_actives_msg = common.bot.send_message(common.warchat_id,
                                                 best_actives_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
@@ -265,7 +265,7 @@ def command_best(m):
                                   message_id=best_actives_msg.message_id,
                                   parse_mode="markdown")
             # best arsenal players
-            text = GetBestListText(common.statistics.GetBestArsenals(5), "arsenal")
+            text = GetBestListText(common.statistics.GetBestArsenals(count=5), "arsenal")
             best_arsenal_msg = common.bot.send_message(common.warchat_id,
                                                 best_arsenal_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
@@ -276,7 +276,7 @@ def command_best(m):
                                   message_id=best_arsenal_msg.message_id,
                                   parse_mode="markdown")
             # best attackers
-            text = GetBestListText(common.statistics.GetBestAttackers(5), "stars")
+            text = GetBestListText(common.statistics.GetBestAttackers(count=5), "stars")
             best_attackers_msg = common.bot.send_message(common.warchat_id,
                                                 best_attackers_header + WAIT_SUFFIX,
                                                 parse_mode="markdown").wait()
@@ -534,20 +534,20 @@ class Statistic(Jsonable):
                 self.nominated.remove(user)
 
     # get users that checked for battle the most
-    def GetBestActives(self, count=3):
-        result = self.statistics[0].GetBest("battles", count)
+    def GetBestActives(self, stat=0, count=3):
+        result = self.statistics[stat].GetBest("battles", count)
         self.AddNomination(result)
         return result
 
     # get users that checked for battle the most
-    def GetBestArsenals(self, count=3):
-        result = self.statistics[0].GetBest("arsenal", count)
+    def GetBestArsenals(self, stat=0, count=3):
+        result = self.statistics[stat].GetBest("arsenal", count)
         self.AddNomination(result)
         return result
 
     # get users that checked for battle the most
-    def GetBestAttackers(self, count=3):
-        result = self.statistics[0].GetBest("stars", count)
+    def GetBestAttackers(self, stat=0, count=3):
+        result = self.statistics[stat].GetBest("stars", count)
         self.AddNomination(result)
         return result
 
@@ -572,6 +572,11 @@ class Statistic(Jsonable):
         self.statistics = self.statistics[-1:] + self.statistics[:-1]
         # eliminate oldest nominated users
         self.RemoveNominations(self.statistics[0])
+        # restore other but oldest nominations
+        for stat in range(1, self.cycle_time):
+            self.GetBestActives(stat=stat, count=1)
+            self.GetBestArsenals(stat=stat, count=1)
+            self.GetBestAttackers(stat=stat, count=1)
         # destroy the oldest (now first)
         self.statistics[0] = StatRecord()
         self.is_posted = False
