@@ -482,9 +482,9 @@ class Statistic(Jsonable):
         self.update_counter = 0
 
     def Update(self, update):
-        print("UPDATE: ", update)
-        print("NONUPDATED STATS:")
-        print(self.statistics)
+        # print("UPDATE: ", update)
+        # print("NONUPDATED STATS:")
+        # print(self.statistics)
         is_battle_update = False
         if isinstance(update, StatRecord): # unpack StatRecord to dict type
             update = update.GetStat()
@@ -500,8 +500,8 @@ class Statistic(Jsonable):
                 is_battle_update = True
         if is_battle_update:
             self.statistics[0].AddBattle()
-        print("UPDATED STATS:")
-        print(self.statistics)
+        # print("UPDATED STATS:")
+        # print(self.statistics)
 
     def GetTotalValues(self):
         total = Score()
@@ -568,13 +568,10 @@ class Statistic(Jsonable):
             self.do_cycle_internal()
 
     def do_cycle_internal(self):
-        print(self.statistics)        
         # shift the stats records to the right
         self.statistics = self.statistics[-1:] + self.statistics[:-1]
         # eliminate oldest nominated users
         self.RemoveNominations(self.statistics[0])
         # destroy the oldest (now first)
-        print(self.statistics)
         self.statistics[0] = StatRecord()
-        print(self.statistics)
         self.is_posted = False
