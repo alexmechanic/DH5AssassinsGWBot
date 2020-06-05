@@ -151,7 +151,7 @@ class NumbersCheck():
     count = 1
     ingame = False
     numbers = {} # {number: value (0-3)}
-    users = {}   # {userid: [numbers done]}
+    users = {}   # {User: [numbers done]}
     _500 = {
         "done": False,
         "notified": False,
@@ -201,7 +201,7 @@ class NumbersCheck():
     def CollectStatistic(self):
         statistic = {}
         for k, v in self.users.items():
-            statistic[User(k)] = Score(stars=len(v))
+            statistic[k] = Score(stars=len(v))
         return statistic
 
     def Is500(self):
@@ -297,7 +297,7 @@ class NumbersCheck():
 
     def CheckUser(self, user, value):
         ret = True
-        userid = user[0]
+        newUser = User(*user,)
         try:
             number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
         except: # user hit Cancel
@@ -312,14 +312,15 @@ class NumbersCheck():
         # record user action
         done = False
         for user in self.users:
-            if user == userid: # record exist
+            if user == newUser: # record exist
                 oldRecord = self.users[user]
                 oldRecord.append(number_to_check)
                 self.users[user] = oldRecord
                 done = True
+                break
         # user record is new
         if not done:
-            self.users[userid] = [number_to_check]
+            self.users[newUser] = [number_to_check]
         self.CheckAchievements()
         log.info("Vote successful")
         return True
@@ -328,11 +329,11 @@ class NumbersCheck():
     def UncheckUser(self, user):
         log.debug("User %d (%s %s) reverting his last vote" % (user[0], user[1], user[2]))
         lastNumber = None
-        userid = user[0]
+        newUser = User(*user,)
         modified = False
         # obtain user impact
         for user in self.users:
-            if user == userid: # record exist
+            if user == newUser: # record exist
                 lastNumber = self.users[user][-1]
                 modified = True
                 # revert last number record
