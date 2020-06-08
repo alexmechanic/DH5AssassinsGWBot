@@ -14,6 +14,7 @@ import common
 from common import bot
 from icons import *
 from statistics import *
+from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb
 import helpers as hlp
@@ -122,7 +123,7 @@ def battle_control(call):
 # Battle check creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: hlp.IsCheckTimeQuery(query)[0])
+@bot.inline_handler(lambda query: query.query[:len(COMMANDS["battle"])] == COMMANDS["battle"])
 def battle_query_inline(q):
     # print("battle_query_inline")
     # print(q)
@@ -133,18 +134,24 @@ def battle_query_inline(q):
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    time = hlp.IsCheckTimeQuery(q)[1]
-    if hlp.CanStartNewBattle():
-        res = types.InlineQueryResultArticle('battle',
-                                            title='[%s] Создать чек на бой' % time[0],
-                                            description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
-                                            input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Бой*: %s" % time[0], parse_mode="markdown"),
-                                            thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
-                                            reply_markup=kb.KEYBOARD_CHECK)
-        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+    res, time = hlp.IsCheckTimeQuery(q)
+    if res:
+        if hlp.CanStartNewBattle():
+            res = types.InlineQueryResultArticle('battle',
+                                                title='[%s] Создать чек на бой' % time[0],
+                                                description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
+                                                input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Бой*: %s" % time[0], parse_mode="markdown"),
+                                                thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
+                                                reply_markup=kb.KEYBOARD_CHECK)
+            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+        else:
+            log.error("Trying to setup another battle while current is not finished")
+            error_text = "Уже имеется активный бой в %0.2d:%0.2d" % (*common.current_battle.GetTime(start=True),)
+            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
+                                    switch_pm_text=error_text, switch_pm_parameter="existing_battle")
     else:
-        log.error("Trying to setup another battle while current is not finished")
-        error_text = "Уже имеется активный бой в %0.2d:%0.2d" % (*common.current_battle.GetTime(start=True),)
+        log.error("Failed (invalid query)")
+        error_text = "Неверный формат запроса"
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
