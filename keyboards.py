@@ -10,6 +10,20 @@ from telebot import types
 from icons import *
 from callbacks import *
 
+#
+# Function that counts maximum row width for inline keyboard based on total buttons count
+#
+def FitButtons(total, maxwdth=5):
+  if total <= maxwdth:
+      return total
+  else:
+      new_count = maxwdth
+      for i in range(2, maxwdth):
+          count_try = total // i + total % i
+          if count_try <= maxwdth:
+              return count_try
+  return -1
+
 # keyboards
 # battle check (from the battle chat)
 KEYBOARD_CHECK = types.InlineKeyboardMarkup(row_width=3)
@@ -113,27 +127,18 @@ buttonsNumsStop   = types.InlineKeyboardButton(text=ICON_STOP,   callback_data=N
 
 def SetupNumbersKeyboard(count=30, ingame_nums=None):
     global KEYBOARD_NUMBERS
-    MAX_ROW_WIDTH = 5 # lowered for 8 to support some devices with small screens
-    nums_count = count
-    if ingame_nums != None: # if check is for in-game numbers - counter is list size (not 'count' anymore!)
-      nums_count = len(ingame_nums)
-    if nums_count <= MAX_ROW_WIDTH:
-        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=nums_count)
+    row_size = FitButtons(total=count)
+    if row_size > 0:
+      KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=row_size)
     else:
-        new_count = MAX_ROW_WIDTH
-        for i in range(2, MAX_ROW_WIDTH):
-            count_try = nums_count // i + nums_count % i
-            if (count_try) <= MAX_ROW_WIDTH:
-                new_count = count_try
-                break
-        KEYBOARD_NUMBERS = types.InlineKeyboardMarkup(row_width=new_count)
-    if nums_count > 0 and nums_count <= 30:
+      return None
+    if count > 0 and count <= 30:
         buttons = []
         if ingame_nums != None:
           for num in ingame_nums: # if check is for in-game numbers - add only specified number buttons
             buttons.append(buttonsNums[num-1])
         else: # else - add all buttons from 1 to counter
-          for i in range(nums_count):
+          for i in range(count):
               buttons.append(buttonsNums[i])
         KEYBOARD_NUMBERS.add(*buttons)
         KEYBOARD_NUMBERS.add(buttonsNumsCancel, buttonsNumsStop)
