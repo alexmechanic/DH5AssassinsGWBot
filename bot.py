@@ -109,13 +109,8 @@ def show_help(m):
         if str(userid) == common.ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
         text += "/warchat - запомнить военный чат _(для отправки сообщений боя)_\n"
+        text += "/best - показать список лучших _(только в Вс после окончания ВГ)_\n"
         text += "/snow - вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n"
-        text += "`@assassinsgwbot чек` - создать чек перед ВГ\n"
-        text += "`@assassinsgwbot бой XX:XX` - создать чек на бой\n"
-        text += "`@assassinsgwbot арс XX:XX` - создать чек арсенала (при наличии боя)\n"
-        text += "`@assassinsgwbot номера X` - создать чек Х номеров по скринам (при наличии боя)\n"
-        text += "`@assassinsgwbot номера X Y Z ...` - создать чек перечисленных номеров по игре (при наличии боя)\n"
-        text += "_Разделительные символы времени могут быть любыми (даже пробелом)_"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
