@@ -90,7 +90,7 @@ def precheck_query_inline(q):
         res = types.InlineQueryResultArticle('precheck',
                                             title='Создать чек перед ВГ',
                                             description='🗓✅💤❌',
-                                            input_message_content=types.InputTextMessageContent("PRECHECK PLACEHOLDER", parse_mode="markdown"),
+                                            input_message_content=types.InputTextMessageContent("📝 *Чек перед ВГ*", parse_mode="markdown"),
                                             thumb_url="https://i.ibb.co/G79HtRG/precheck.png",
                                             reply_markup=kb.KEYBOARD_PRECHECK)
         bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
