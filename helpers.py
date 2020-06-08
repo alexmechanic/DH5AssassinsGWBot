@@ -66,6 +66,19 @@ def IsNumbersQuery(query): # return if query contains numbers check and the list
     else:
         return False, None
 
+def IsCrysQuery(query): # return if query contains crystals check
+    pattern = COMMANDS["crystals"] + " "
+    if CheckInlineQuery(pattern, query):
+        range_list = query.query.replace(pattern, "")
+        values = re.findall(r'\b(\d+)\b', range_list)
+        if values != [] and len(values) == 2: # exactly 2 numbers
+            # max >= step, step > 0
+            if int(values[0]) >= int(values[1]) and int(values[1]) > 0: 
+                # not too much buttons
+                if int(values[0]) // int(values[1]) < 30:
+                    return True, values
+    return False, None
+
 def IsArsQuery(query): # return if query contains ars check and the time of rage
     pattern = COMMANDS["arsenal"] + " "
     if CheckInlineQuery(pattern, query):
@@ -102,6 +115,13 @@ def CanStartNewPrecheck():
     res = common.current_precheck == None
     if not res:
         res = common.current_precheck.is_postponed
+    return res
+
+
+def CanStartNewCryscheck():
+    res = common.current_cryscheck == None
+    if not res:
+        res = common.current_cryscheck.is_postponed
     return res
 
 def CanStartNewBattle():

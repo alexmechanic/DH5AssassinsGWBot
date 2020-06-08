@@ -1,5 +1,5 @@
 [loggers]
-keys=root,common,helpers,battle,warprecheck,arsenal,numberscheck,screens,statistics
+keys=root,common,helpers,battle,warprecheck,arsenal,numberscheck,crystals,screens,statistics
 
 [handlers]
 keys=file,stdout
@@ -61,6 +61,12 @@ level=DEBUG
 handlers=file,stdout
 propagate=0
 qualname=bot.numberscheck
+
+[logger_crystals]
+level=DEBUG
+handlers=file,stdout
+propagate=0
+qualname=bot.crystals
 
 [logger_screens]
 level=DEBUG

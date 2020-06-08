@@ -17,6 +17,7 @@ from common import bot
 from icons import *
 from battle import *
 from warprecheck import *
+from crystals import *
 from arsenal import *
 from numberscheck import *
 from screens import *
@@ -53,6 +54,13 @@ def chosen_inline_handler(r):
         common.current_precheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
+    elif r.result_id == 'cryscheck':
+        res, ranges = hlp.IsCrysQuery(r)
+        log.debug("User %d (%s %s) created crystals check" % (*user,))
+        common.current_cryscheck = Crystals(ranges)
+        common.current_cryscheck.SetMessageID(r.inline_message_id)
+        bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=r.inline_message_id,
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_CRYSTALS)
     elif r.result_id == 'arsenal':
         log.debug("User %d (%s %s) created arsenal check" % (*user,))
         common.current_arscheck = Arsenal()
@@ -61,6 +69,7 @@ def chosen_inline_handler(r):
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
     elif r.result_id == 'numbers':
+        log.debug("User %d (%s %s) created numbers check" % (*user,))
         res, numbers = hlp.IsNumbersQuery(r)
         if len(numbers) == 1:
             log.debug("User %d (%s %s) created screens numbers check (%s)" % (*user, numbers[0]))
@@ -149,6 +158,10 @@ def show_help_officer(m):
                 "+ _Кнопки '"+ICON_500+"' и '"+ICON_1000+"' доступны только вам, используйте при необходимости_\n" + \
                 "+ _При достижении отметки '"+ICON_1000+"' чек номеров автоматически завершится_\n" + \
                 "+ _Если требуется 'добить' номера по игре, не бойтесь завершить текущий чек и начать новый_\n"
+        text += "\n4️⃣ *Прочее*\n" + \
+                "`@assassinsgwbot кри X Y` - создать чек по кри (X кри масимум) с шагом Y\n" + \
+                "+ _Иногда бывает полезно (особенно на топах) проверить, сколько кри осталось у бойцов_\n" + \
+                "+ _Пример: @assassinsgwbot кри 5000 500 создаст чек с 10 кнопками: 0-500, 501-1000, 1001-5000 и тд_\n"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
@@ -221,6 +234,11 @@ def command_start(m):
                     ("Чтобы начать чек номеров заново, необходимо достичь хотя бы '500' или остановить (%s) его.\n" % ICON_STOP) + \
                     "Если чек номеров был добавлен ошибочно (или не было сделано хотя бы '500') - " + \
                     "остановите чек, затем создайте новый, а старое сообщение удалите."
+        elif inline_error == "existing_crystals":
+            text =  "Уже имеетя активный чек по кри\n\n" + \
+                    ("Чтобы начать чек по кри заново, необходимо завершить (%s) предыдущий.\n" % ICON_STOP) + \
+                    "Если чек был добавлен ошибочно - завершите чек, " + \
+                    "затем создайте новый, а старое сообщение удалите."
             bot.send_message(m.chat.id, text)
 
 

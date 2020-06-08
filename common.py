@@ -51,11 +51,12 @@ BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
 admins = {}
 
-warchat_id       = DEFAULT_WARCHAT_ID
-current_battle   = None
-current_precheck = None
-current_arscheck = None
-current_numcheck = None
+warchat_id        = DEFAULT_WARCHAT_ID
+current_battle    = None
+current_precheck  = None
+current_arscheck  = None
+current_numcheck  = None
+current_cryscheck = None
 current_snowwhite = {}
 screen_message_list = []
 rage_time_workaround = []

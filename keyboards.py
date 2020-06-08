@@ -177,6 +177,46 @@ KEYBOARD_PRECHECK.add(*buttonsPrecheck)
 PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # do not include stop button
 PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
 
+# crystals check
+KEYBOARD_CRYSTALS = types.InlineKeyboardMarkup()
+buttonsCrysStop   = types.InlineKeyboardButton(text=ICON_STOP, callback_data=CRYSTALS_STOP_CALLBACK)
+
+CRYSTALS_OPTIONS = []
+CRYSTALS_CONTROL_OPTIONS = [buttonsCrysStop.callback_data]
+
+def SetupCrystalsKeyboard(maxvalue=3000, step=500):
+  global KEYBOARD_CRYSTALS
+  global CRYSTALS_OPTIONS
+  try:
+    buttons_count = FitButtons(total=maxvalue//step, maxwdth=4)
+  except ZeroDivisionError:
+    buttons_count = -1
+  if buttons_count > 0:
+    KEYBOARD_CRYSTALS = types.InlineKeyboardMarkup(row_width=buttons_count)
+  else:
+    return None
+  value = (0, step)
+  buttonsCrystals = []
+  while value[1] <= maxvalue:
+    suffixText = "%d - %d" % value
+    buttonText = ICON_CRYSTAL + " " + suffixText
+    buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
+    buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
+    CRYSTALS_OPTIONS.append(buttonCb)
+    value = (value[1]+1, value[1]+step)
+  if maxvalue % step:
+    value = (value[0], maxvalue)
+    suffixText = "%d - %d" % value
+    buttonText = ICON_CRYSTAL + " " + suffixText
+    buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
+    buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
+    CRYSTALS_OPTIONS.append(buttonCb)
+  KEYBOARD_CRYSTALS.add(*buttonsCrystals)
+  KEYBOARD_CRYSTALS.add(buttonsCrysStop)
+
+PRECHECK_OPTIONS = [button.callback_data for button in buttonsPrecheck[:-1]] # do not include stop button
+PRECHECK_CONTROL_OPTIONS = [buttonsPrecheck[-1].callback_data] # only stop button
+
 # reset bot keyboard (from the bot chat)
 KEYBOARD_RESET      = types.ReplyKeyboardMarkup(one_time_keyboard=True, row_width=2, resize_keyboard=True)
 buttonReset         = types.KeyboardButton(text=ICON_START+" Сброс")

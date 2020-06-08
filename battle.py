@@ -198,6 +198,11 @@ def reset_control(m):
             bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
             common.current_numcheck = None
+        if common.current_cryscheck: # postponed is not a condition that check ended
+            common.current_cryscheck.DoEndCryscheck()
+            bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=common.current_cryscheck.check_id,
+                                  parse_mode="markdown")
+            common.current_cryscheck = None
         common.statistics.BackupIfNeed(m)
     try:
         bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
