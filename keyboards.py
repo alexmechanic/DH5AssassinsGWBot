@@ -187,18 +187,16 @@ CRYSTALS_CONTROL_OPTIONS = [buttonsCrysStop.callback_data]
 def SetupCrystalsKeyboard(maxvalue=3000, step=500):
   global KEYBOARD_CRYSTALS
   global CRYSTALS_OPTIONS
-  try:
-    buttons_count = FitButtons(total=maxvalue//step, maxwdth=4)
-  except ZeroDivisionError:
-    buttons_count = -1
-  if buttons_count > 0:
-    KEYBOARD_CRYSTALS = types.InlineKeyboardMarkup(row_width=buttons_count)
-  else:
-    return None
+  width = 1
+  if maxvalue < 10000:
+    width = 2
+  if maxvalue < 1000:
+    width = 3
+  KEYBOARD_CRYSTALS = types.InlineKeyboardMarkup(row_width=width)
   value = (0, step)
   buttonsCrystals = []
   while value[1] <= maxvalue:
-    suffixText = "%d - %d" % value
+    suffixText = "%d-%d" % value
     buttonText = ICON_CRYSTAL + " " + suffixText
     buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
     buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
@@ -206,7 +204,7 @@ def SetupCrystalsKeyboard(maxvalue=3000, step=500):
     value = (value[1]+1, value[1]+step)
   if maxvalue % step:
     value = (value[0], maxvalue)
-    suffixText = "%d - %d" % value
+    suffixText = "%d-%d" % value
     buttonText = ICON_CRYSTAL + " " + suffixText
     buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
     buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))

@@ -122,13 +122,13 @@ class Crystals():
         self.users = {}
         value = (0, self.step)
         while value[1] <= self.max:
-            key = "%d - %d" % value
+            key = "%d-%d" % value
             self.users[key] = []
             value = (value[1]+1, value[1]+self.step)
         # do not forget remainder
         if self.max % self.step:
             value = (value[0], self.max)
-            key = "%d - %d" % value
+            key = "%d-%d" % value
             self.users[key] = []
         log.info("New crystals check created")
 
