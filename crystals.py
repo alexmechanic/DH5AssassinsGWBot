@@ -149,9 +149,9 @@ class Crystals():
 
         for step in self.users:
             if len(self.users[step]) > 0:
-                text += "\n*%s:*\n" % step
+                text += "\n*%s (%d):*\n" % (step, len(self.users[step]))
                 for user in self.users[step]:
-                    text += "      [%s" % user.name
+                    text += ICON_MEMBER+" [%s" % user.name
                     if user.username != None:
                         text += " (%s)" % user.username
                     text += "](tg://user?id=%d)\n" % user._id
