@@ -15,12 +15,12 @@ from flask import Flask, request
 import common
 from common import bot
 from icons import *
-from battle import *
-from warprecheck import *
-from crystals import *
-from arsenal import *
-from numberscheck import *
-from screens import *
+from checks.battle import *
+from checks.warprecheck import *
+from checks.crystals import *
+from checks.arsenal import *
+from checks.numberscheck import *
+from checks.screens import *
 from statistics import *
 from commands import COMMANDS
 import keyboards as kb

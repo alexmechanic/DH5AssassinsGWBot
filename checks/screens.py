@@ -12,7 +12,7 @@ from logger import get_logger
 
 import common
 from common import bot
-from screen_parser import ocr_core
+from .screen_parser import ocr_core
 import helpers as hlp
 
 log = get_logger("bot." + __name__)

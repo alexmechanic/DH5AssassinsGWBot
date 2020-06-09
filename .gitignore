@@ -6,4 +6,8 @@ CLOUDCUBE_URL
 DEFAULT_WARCHAT
 __pycache__
 *.pyc
-*.log
+**/logs
+**/imgtest
+**/pyTelegramBotAPI
+**/AWS_TEMP
+*.BAK

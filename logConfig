@@ -42,37 +42,37 @@ qualname=bot.helpers
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.battle
+qualname=bot.checks.battle
 
 [logger_warprecheck]
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.warprecheck
+qualname=bot.checks.warprecheck
 
 [logger_arsenal]
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.arsenal
+qualname=bot.checks.arsenal
 
 [logger_numberscheck]
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.numberscheck
+qualname=bot.checks.numberscheck
 
 [logger_crystals]
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.crystals
+qualname=bot.checks.crystals
 
 [logger_screens]
 level=DEBUG
 handlers=file,stdout
 propagate=0
-qualname=bot.screens
+qualname=bot.checks.screens
 
 [logger_statistics]
 level=DEBUG
