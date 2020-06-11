@@ -6,8 +6,9 @@
 # Common shared resources for modules 
 #
 
-import telebot, sys, os, json, boto3
+import telebot, sys, os, json, boto3, pickle
 from logger import get_logger
+import helpers as hlp
 
 log = get_logger("bot." + __name__)
 
@@ -80,10 +81,60 @@ log.debug(admins)
 
 # save edited list
 def SaveAdminsList(newlist):
-    global admins
+    global ROOT_ADMIN, admins
     admins = newlist
     admins_list = [ROOT_ADMIN, admins]
     with open("ADMINS", "w") as f:
         json.dump(admins_list, f, ensure_ascii=False)
         f.close()
     log.debug("Saved admins list: ", admins_list)
+    aws_admins_backup()
+
+
+def aws_admins_backup(filename="GWBotAdmins.BAK", newlist=[], burst=False):
+    """
+    Backup current admins into pickle file.
+    Upload to AWS
+    @param burst Do not save backup to file
+    """
+    global ROOT_ADMIN, admins
+    log.debug("AWS admins backup started")
+    # if burst-upload requested (no additional file backup)
+    if not burst:
+        with open(filename, 'wb') as backup:
+            admins = newlist
+            admins_list = [ROOT_ADMIN, admins]
+            pickle.dump(admins_list, backup, pickle.HIGHEST_PROTOCOL)
+            backup.close()
+    # upload file
+    if hlp.AWSUploadFile(filename):
+        log.debug("Admins has been successfully uploaded to AWS cloud.")
+    else:
+        log.error("Admins AWS upload failed.")
+
+def aws_admins_restore(filename="GWBotAdmins.BAK", force=True):
+    """
+    Restore whole current admins from pickle file (download from AWS).
+    @param force Remove old local backup
+    """
+    global ROOT_ADMIN, admins
+    log.debug("AWS Admins restore started")
+    try:
+        # remove old admins backup if forced update
+        if force:
+            if os.path.isfile(filename):
+                os.remove(filename)
+        # download backup
+        filepath = hlp.AWSDownloadFile(filename)
+        if filepath == None:
+            raise Exception("Admins AWS download failed.")
+        log.debug("Admins has been successfully downloaded from AWS cloud.")
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            admins_list = pickle.load(f)
+            ROOT_ADMIN = admins_list[0]
+            admins = admins_list[1]
+            f.close()
+        log.debug("Restoring admins successful (AWS)")
+    except Exception as err:
+        log.error("Restoring admins failed (AWS): %s", str(err))

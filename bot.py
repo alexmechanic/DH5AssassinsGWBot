@@ -313,7 +313,6 @@ def command_battle_checklist(m):
 #
 @bot.message_handler(commands=["setadmins"])
 def setup_admins(m):
-    
     # print("setup_admins")
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
@@ -343,7 +342,7 @@ def setup_admins(m):
             if admin.user.username != None:
                 name_record += " (" + admin.user.username + ")"
             admins[str(admin.user.id)] = name_record
-    common.SaveAdminsList(admins)
+    common.aws_admins_backup(newlist=admins)
     bot.send_message(m.chat.id, "👮🏻‍♂️ Список офицеров обновлен")
     log.info("Admins list updated")
 
@@ -483,6 +482,7 @@ if __name__ == '__main__':
         log.warning("Running on Heroku, setup webhook")
         server = Flask(__name__)
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()
 
@@ -501,6 +501,7 @@ if __name__ == '__main__':
         log.warning("Running locally, start polling")
         bot.remove_webhook()
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()
         bot.polling(none_stop=True, interval=0, timeout=20)
