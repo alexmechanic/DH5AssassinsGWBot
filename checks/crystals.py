@@ -20,6 +20,7 @@ import callbacks as cb
 import helpers as hlp
 
 log = get_logger("bot." + __name__)
+BACKUP_NAME = "Crystals.BAK"
 
 #
 # Crystals check
@@ -109,6 +110,43 @@ def crystals_query_inline(q):
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_crystals")
 
+
+def aws_crystals_backup():
+    """
+    Backup current crystals into pickle file.
+    Upload to AWS
+    """
+    log.debug("AWS Crystals check backup started")
+    with open(BACKUP_NAME, 'wb') as backup:
+        pickle.dump(common.current_cryscheck, backup, pickle.HIGHEST_PROTOCOL)
+        backup.close()
+    if hlp.AWSUploadFile(BACKUP_NAME):
+        log.debug("Crystals check has been successfully uploaded to AWS cloud.")
+    else:
+        log.error("Crystals check AWS upload failed.")
+
+def aws_crystals_restore():
+    """
+    Restore current crystals from pickle file (download from AWS).
+    """
+    log.debug("AWS Crystals check restore started")
+    try:
+        # download backup
+        filepath = hlp.AWSDownloadFile(BACKUP_NAME)
+        if filepath == None:
+            raise Exception("Crystals check AWS download failed.")
+        log.debug("Crystals check has been successfully downloaded from AWS cloud.")
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            common.current_cryscheck = pickle.load(f)
+            f.close()
+        # restore crystals keyboard
+        kb.SetupCrystalsKeyboard(maxvalue=common.current_cryscheck.max, step=common.current_cryscheck.step)
+        log.debug("Restoring Crystals check successful (AWS)")
+    except Exception as err:
+        log.error("Restoring Crystals check failed (AWS): %s", str(err))
+
+
 class Crystals():
     check_id = None
     is_postponed = False
@@ -138,6 +176,7 @@ class Crystals():
 
     def DoEndCryscheck(self):
         self.is_postponed = True
+        aws_crystals_backup()
         log.info("Crystals check ended")
 
     def GetHeader(self):
@@ -180,4 +219,5 @@ class Crystals():
                     pass # do not react if user is not in list
             self.users[action].append(user)
             log.info("Vote successful")
+        aws_crystals_backup()
         return ret

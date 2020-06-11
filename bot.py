@@ -485,6 +485,7 @@ if __name__ == '__main__':
         common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()
+        aws_crystals_restore()
 
         @server.route('/bot' + common.TOKEN, methods=['POST'])
         def getMessage():
@@ -504,4 +505,5 @@ if __name__ == '__main__':
         common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()
+        aws_crystals_restore()
         bot.polling(none_stop=True, interval=0, timeout=20)
