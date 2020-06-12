@@ -77,6 +77,7 @@ def battle_control(call):
         log.error("Failed (not an admin)")
         return
     userChoice = call.data
+    need_send_notification = True
     if common.current_battle:
         notification_text = ""
         user_addend = " ([%s](tg://user?id=%d))" % (user[2], user[0])
@@ -95,6 +96,8 @@ def battle_control(call):
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
             common.current_battle.BattleStartNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
+            if not common.current_battle.is_started: # if battle was cancelled - do not send notification
+                need_send_notification = False
             reset_control(call)
             notification_text = ICON_FINISH+" Бой завершен"
         if common.warchat_id:
@@ -103,15 +106,16 @@ def battle_control(call):
                 is_silent = True
             else:
                 is_silent = False
-            notification = bot.send_message(common.warchat_id,
-                                            notification_text + user_addend,
-                                            disable_notification=is_silent,
-                                            parse_mode="markdown").wait()
-            if not is_silent:
-                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
-            else:
-                bot.unpin_chat_message(common.warchat_id)
-            log.debug("Battle status notification posted: %s" % notification_text)
+            if need_send_notification:
+                notification = bot.send_message(common.warchat_id,
+                                                notification_text + user_addend,
+                                                disable_notification=is_silent,
+                                                parse_mode="markdown").wait()
+                if not is_silent:
+                    bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
+                else:
+                    bot.unpin_chat_message(common.warchat_id)
+                log.debug("Battle status notification posted: %s" % notification_text)
         else:
             log.error("War chat_id is not set, cannot post battle status notification!")
         bot.answer_callback_query(call.id, notification_text)
