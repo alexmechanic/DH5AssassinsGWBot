@@ -159,14 +159,22 @@ class Crystals():
         self.step = int(ranges[1])
         self.users = {}
         value = (0, self.step)
+        # calculate avaliable keys for choices
+        keys = []
         while value[1] <= self.max:
             key = "%d-%d" % value
-            self.users[key] = []
+            keys.append(key)
             value = (value[1]+1, value[1]+self.step)
         # do not forget remainder
         if self.max % self.step:
             value = (value[0], self.max)
             key = "%d-%d" % value
+            keys.append(key)
+        # add one key for more than max value
+        key = "%d+" % self.max
+        keys.append(key)
+        # setup dict for keys
+        for key in keys:
             self.users[key] = []
         log.info("New crystals check created")
 

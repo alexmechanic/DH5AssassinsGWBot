@@ -190,6 +190,7 @@ def SetupCrystalsKeyboard(maxvalue=3000, step=500):
   KEYBOARD_CRYSTALS = types.InlineKeyboardMarkup(row_width=width)
   value = (0, step)
   buttonsCrystals = []
+  # base values
   while value[1] <= maxvalue:
     suffixText = "%d-%d" % value
     buttonText = ICON_CRYSTAL + " " + suffixText
@@ -197,6 +198,7 @@ def SetupCrystalsKeyboard(maxvalue=3000, step=500):
     buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
     CRYSTALS_OPTIONS.append(buttonCb)
     value = (value[1]+1, value[1]+step)
+  # remainder
   if maxvalue % step:
     value = (value[0], maxvalue)
     suffixText = "%d-%d" % value
@@ -204,6 +206,13 @@ def SetupCrystalsKeyboard(maxvalue=3000, step=500):
     buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
     buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
     CRYSTALS_OPTIONS.append(buttonCb)
+  # add button for even more crystals
+  suffixText = "%d+" % maxvalue
+  buttonText = ICON_CRYSTAL + " " + suffixText
+  buttonCb   = CRYSTALS_CALLBACK_PREFIX + suffixText
+  buttonsCrystals.append(types.InlineKeyboardButton(text=buttonText, callback_data=buttonCb))
+  CRYSTALS_OPTIONS.append(buttonCb)
+  # setup final keyboard
   KEYBOARD_CRYSTALS.add(*buttonsCrystals)
   KEYBOARD_CRYSTALS.add(buttonsCrysStop)
 
