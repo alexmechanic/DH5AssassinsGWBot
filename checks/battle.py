@@ -6,7 +6,7 @@
 # Class and methods representing battle check
 #
 
-import datetime
+import datetime, re
 from logger import get_logger
 from telebot import types
 
@@ -231,7 +231,8 @@ class Battle():
 
     def __init__(self, start):
         now = datetime.datetime.now()
-        self.time["start"] = now.replace(hour=int(start[:2]), minute=int(start[3:]))
+        times = re.findall(r'\d+', start)
+        self.time["start"] = now.replace(hour=int(times[0]), minute=int(times[1]))
         self.checks = {}
         self.rages = {}
         self.fasts = {}
