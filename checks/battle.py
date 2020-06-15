@@ -140,7 +140,7 @@ def battle_query_inline(q):
         return
     res, time = hlp.IsCheckTimeQuery(q)
     if res:
-        if hlp.CanStartNewBattle():
+        if hlp.CanStartNewBattle() or hlp.CanStopCurrentBattle():
             res = types.InlineQueryResultArticle('battle',
                                                 title='[%s] Создать чек на бой' % time,
                                                 description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
@@ -148,6 +148,11 @@ def battle_query_inline(q):
                                                 thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
                                                 reply_markup=kb.KEYBOARD_CHECK)
             bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
+            # stop current battle as the time is passed anyway
+            # to help admin not doing exact battle stop but start another with auto-stopping the previous
+            if hlp.CanStopCurrentBattle():
+                q.data = kb.CHECK_CONTROL_OPTIONS[2]
+                battle_control(q)
         else:
             log.error("Trying to setup another battle while current is not finished")
             error_text = "Уже имеется активный бой в %0.2d:%0.2d" % (*common.current_battle.GetTime(start=True),)

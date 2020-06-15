@@ -130,6 +130,14 @@ def CanStartNewBattle():
         res = common.current_battle.is_postponed
     return res
 
+def CanStopCurrentBattle():
+    res = not CanStartNewBattle()
+    if res:
+        now = datetime.datetime.now()
+        elapsed = now - common.current_battle.time["start"]
+        res = int(elapsed.total_seconds()) >= 1*60*60 # more than 1 hour passed
+    return res
+
 def CanStartNewArs():
     res = common.current_arscheck == None
     if not res:
