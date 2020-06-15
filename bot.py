@@ -376,7 +376,7 @@ def manage_admins(m):
     return
 
 #
-# Emergency reset all checks
+# Emergency reset all checks query
 # (private bot chat)
 #
 @bot.message_handler(commands=['reset'])
@@ -391,6 +391,42 @@ def command_reset(m):
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
     log.debug("User %d (%s %s) is trying to reset bot" % (*user,))
     bot.send_message(m.chat.id, "Выполнить полный сброс?", reply_markup=kb.KEYBOARD_RESET)
+
+#
+# Emergency reset all checks processing
+# (private bot chat)
+#
+@bot.message_handler(func=lambda message: message.text in kb.RESET_CONTROL_OPTIONS)
+def hard_reset(m):
+    # it is a bug actually to use privately generated keyboard buttons outside private bot chat
+    # should not happen in any case, but who knows?
+    if not hlp.IsInPrivateChat(m):
+        return
+    if not hlp.IsUserAdmin(m):
+        hlp.SendHelpNonAdmin(m)
+        return
+    markup = types.ReplyKeyboardRemove(selective=False)
+    if m.text == kb.RESET_CONTROL_OPTIONS[1]: # cancel
+        bot.send_message(m.from_user.id, "⛔️ Действие отменено", reply_markup=markup)
+        log.debug("Reset calcelled")
+        return
+    if not hlp.CanStartNewPrecheck(): # should hit 'end' to start another
+        common.current_precheck.DoEndPrecheck()
+        bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
+                              parse_mode="markdown")
+        common.current_precheck = None
+    if common.current_cryscheck: # postponed is not a condition that check ended
+        common.current_cryscheck.DoEndCryscheck()
+        bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=common.current_cryscheck.check_id,
+                              parse_mode="markdown")
+        common.current_cryscheck = None
+    reset_battlechecks(m)
+    try:
+        bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
+    except: # no need to send private message if checks have been reset via battle control
+        pass
+    log.debug("Reset successful")
+
 
 #
 # Battle control
@@ -413,7 +449,7 @@ def battle_control(m):
         bot.send_message(m.chat.id, "✅ Бой успешно запущен", reply_markup=markup)
         common.current_battle.BattleStartNotifyActiveUsers()
     elif m.text == kb.buttonStopPrivate.text:
-        reset_control(m)
+        reset_battlechecks(m)
         bot.send_message(m.chat.id, "❎ Бой успешно завершен", reply_markup=markup)
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)

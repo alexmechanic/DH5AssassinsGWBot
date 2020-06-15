@@ -98,7 +98,7 @@ def battle_control(call):
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             if not common.current_battle.is_started: # if battle was cancelled - do not send notification
                 need_send_notification = False
-            reset_control(call)
+            reset_battlechecks(call)
             notification_text = ICON_FINISH+" Бой завершен"
         if common.warchat_id:
             # do not notify about roll / stop
@@ -160,59 +160,32 @@ def battle_query_inline(q):
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
 
 #
-# Emergency reset control
+# Battle checks reset control
 # (private bot chat)
 #
-@bot.message_handler(func=lambda message: message.text in kb.RESET_CONTROL_OPTIONS)
-def reset_control(m):
-    try:
-        if not hlp.IsInPrivateChat(m): return
-    except: # issue when resetting checks via battle stop. could be ignored
-        pass
-    if not hlp.IsUserAdmin(m):
-        hlp.SendHelpNonAdmin(m)
-        return
-    markup = types.ReplyKeyboardRemove(selective=False)
-    try:
-        if m.text == kb.RESET_CONTROL_OPTIONS[1]: # cancel
-            bot.send_message(m.from_user.id, "⛔️ Действие отменено", reply_markup=markup)
-            log.debug("Reset calcelled")
-            return
-        else:
-            raise Exception()
-    except:
-        common.statistics.CycleIfNeed()
-        if not hlp.CanStartNewPrecheck(): # should hit 'end' to start another
-            common.current_precheck.DoEndPrecheck()
-            bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=common.current_precheck.check_id,
-                                  parse_mode="markdown")
-            common.current_precheck = None
-        if not hlp.CanStartNewBattle(): # should hit 'end' to start another
-            common.current_battle.DoEndBattle()
-            bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
-                                  parse_mode="markdown")
-            common.current_battle = None
-        if common.current_arscheck: # postponed is not a condition that check ended
-            common.current_arscheck.DoEndArsenal()
-            bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
-                                  parse_mode="markdown")
-            common.current_arscheck = None
-        if common.current_numcheck: # postponed is not a condition that check ended
-            common.current_numcheck.DoEndCheck()
-            bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
-                                  parse_mode="markdown")
-            common.current_numcheck = None
-        if common.current_cryscheck: # postponed is not a condition that check ended
-            common.current_cryscheck.DoEndCryscheck()
-            bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=common.current_cryscheck.check_id,
-                                  parse_mode="markdown")
-            common.current_cryscheck = None
-        common.statistics.BackupIfNeed(m)
-    try:
-        bot.send_message(m.from_user.id, ICON_CHECK+" Бот успешно сброшен", reply_markup=markup)
-    except: # no need to send private message if checks have been reset via battle control
-        pass
-    log.debug("Reset successful")
+def reset_battlechecks(m):
+    common.statistics.CycleIfNeed()
+    if not hlp.CanStartNewBattle(): # should hit 'end' to start another
+        common.current_battle.DoEndBattle()
+        bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
+                              parse_mode="markdown")
+        common.current_battle = None
+    if common.current_arscheck: # postponed is not a condition that check ended
+        common.current_arscheck.DoEndArsenal()
+        bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
+                              parse_mode="markdown")
+        # unpin rage time message if can
+        try:
+            bot.unpin_chat_message(common.warchat_id)
+        except:
+            pass
+        common.current_arscheck = None
+    if common.current_numcheck: # postponed is not a condition that check ended
+        common.current_numcheck.DoEndCheck()
+        bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=common.current_numcheck.check_id,
+                              parse_mode="markdown")
+        common.current_numcheck = None
+    common.statistics.BackupIfNeed(m)
 
 class Battle():
     check_id = None
