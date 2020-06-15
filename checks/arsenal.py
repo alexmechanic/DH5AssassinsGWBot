@@ -6,7 +6,7 @@
 # Class and methods representing arsenal check
 #
 
-import datetime
+import datetime, re
 from logger import get_logger
 from telebot import types
 
@@ -93,13 +93,12 @@ def arsenal_query_inline(q):
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_battle")
         return
-    rage = hlp.IsArsQuery(q)
-    if rage[0]:
+    res, time = hlp.IsArsQuery(q)
+    if res:
         if hlp.CanStartNewArs():
-            common.rage_time_workaround = rage[1][0]
             res = types.InlineQueryResultArticle('arsenal',
                                                  title='Добавить прогресс арсенала',
-                                                 description=ICON_ARS+' |████--| Х/120\nЯрость в %s' % common.rage_time_workaround,
+                                                 description=ICON_ARS+' |████--| Х/120\nЯрость в %s' % time,
                                                  input_message_content=types.InputTextMessageContent(ICON_ARS+" *Прогресс арсенала:* 0/120", parse_mode="markdown"),
                                                  thumb_url="https://i.ibb.co/WfxPRks/arsenal.png",
                                                  reply_markup=kb.KEYBOARD_ARS)
@@ -123,21 +122,19 @@ class Arsenal():
     done_users = {} # {userid: [name, nick, value, count, is_fired]}
     is_postponed = False
 
-    def __init__(self):
+    def __init__(self, rage):
         self.progress = 0
         self.is_fired = False
         self.done_users = {}
-        self.rage_time = None
+        times = re.findall(r'\d+', rage)
+        now = datetime.datetime.now()
+        self.rage_time = now.replace(hour=int(times[0]), minute=int(times[1]))
         self.is_postponed = False
         log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
-
-    def SetRage(self, time):
-        now = datetime.datetime.now()
-        self.rage_time = now.replace(hour=int(time[:2]), minute=int(time[3:]))
 
     def GetProgress(self):
         return self.progress

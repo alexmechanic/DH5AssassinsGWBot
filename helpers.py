@@ -46,7 +46,7 @@ def IsCheckTimeQuery(query): # return if query contains check time and check tim
         battle_query = query.query.replace(pattern, "")
         time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
         if time != [] and len(time) == 1:
-            return True, time
+            return True, time[0]
     return False, None
 
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
@@ -85,7 +85,7 @@ def IsArsQuery(query): # return if query contains ars check and the time of rage
         rage_time_query = query.query.replace(pattern, "")
         rage_time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', rage_time_query)
         if rage_time != [] or len(rage_time) == 1:
-            return True, rage_time
+            return True, rage_time[0]
     return False, None
 
 def SendHelpNonAdmin(message):

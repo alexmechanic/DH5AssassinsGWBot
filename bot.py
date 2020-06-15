@@ -43,8 +43,8 @@ def chosen_inline_handler(r):
     user = [r.from_user.id, r.from_user.username, r.from_user.first_name]
     if r.result_id == 'battle':
         log.debug("User %d (%s %s) created battle check (%s)" % (*user, r.query))
-        time = hlp.IsCheckTimeQuery(r)[1]
-        common.current_battle = Battle(time[0])
+        _, time = hlp.IsCheckTimeQuery(r)
+        common.current_battle = Battle(time)
         common.current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK)
@@ -63,9 +63,9 @@ def chosen_inline_handler(r):
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_CRYSTALS)
     elif r.result_id == 'arsenal':
         log.debug("User %d (%s %s) created arsenal check" % (*user,))
-        common.current_arscheck = Arsenal()
+        _, time = hlp.IsArsQuery(r)
+        common.current_arscheck = Arsenal(time)
         common.current_arscheck.SetMessageID(r.inline_message_id)
-        common.current_arscheck.SetRage(common.rage_time_workaround)
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
     elif r.result_id == 'numbers':
