@@ -67,7 +67,10 @@ def chosen_inline_handler(r):
         common.current_arscheck = Arsenal(time)
         common.current_arscheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=r.inline_message_id,
-                              parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+                              parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS).wait()
+        rage_msg_text = ICON_RAGE+" *Ярость в %0.2d:%0.2d*" % (common.current_arscheck.rage_time.hour, common.current_arscheck.rage_time.minute)
+        rage_msg = bot.send_message(common.warchat_id, rage_msg_text, parse_mode="markdown").wait()
+        bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
     elif r.result_id == 'numbers':
         log.debug("User %d (%s %s) created numbers check" % (*user,))
         res, numbers = hlp.IsNumbersQuery(r)
