@@ -67,6 +67,8 @@ def arsenal_control(call):
             bot.edit_message_text(common.current_arscheck.GetText(),
                                   inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
+            # unpin rage time message
+            bot.unpin_chat_message(common.warchat_id)
             bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
             return
     log.error("Ars check not found!")
@@ -119,6 +121,7 @@ class Arsenal():
     is_fired = False
     is_fire_notified = False
     rage_time = None
+    rage_msg_id = None
     done_users = {} # {userid: [name, nick, value, count, is_fired]}
     is_postponed = False
 
@@ -129,12 +132,17 @@ class Arsenal():
         times = re.findall(r'\d+', rage)
         now = datetime.datetime.now()
         self.rage_time = now.replace(hour=int(times[0]), minute=int(times[1]))
+        self.rage_msg_id = None
         self.is_postponed = False
         log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
         self.check_id = message_id
         log.debug("Set inline message_id: %s" % self.check_id)
+
+    def SetRageMessageID(self, message_id):
+        self.rage_msg_id = message_id
+        log.debug("Set rage message_id: %s" % self.rage_msg_id)
 
     def GetProgress(self):
         return self.progress

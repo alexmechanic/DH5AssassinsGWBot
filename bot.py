@@ -70,6 +70,7 @@ def chosen_inline_handler(r):
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS).wait()
         rage_msg_text = ICON_RAGE+" *Ярость в %0.2d:%0.2d*" % (common.current_arscheck.rage_time.hour, common.current_arscheck.rage_time.minute)
         rage_msg = bot.send_message(common.warchat_id, rage_msg_text, parse_mode="markdown").wait()
+        common.current_arscheck.SetRageMessageID(rage_msg.message_id)
         bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
     elif r.result_id == 'numbers':
         log.debug("User %d (%s %s) created numbers check" % (*user,))
