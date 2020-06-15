@@ -227,5 +227,6 @@ class Crystals():
                     pass # do not react if user is not in list
             self.users[action].append(user)
             log.info("Vote successful")
-        aws_crystals_backup()
+        if ret:
+            aws_crystals_backup()
         return ret
