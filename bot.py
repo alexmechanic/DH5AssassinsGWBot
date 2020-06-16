@@ -56,7 +56,7 @@ def chosen_inline_handler(r):
         bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
     elif r.result_id == 'cryscheck':
-        res, ranges = hlp.IsCrysQuery(r)
+        ranges = common.settings.GetSetting("crystals_ranges")
         log.debug("User %d (%s %s) created crystals check" % (*user,))
         common.current_cryscheck = Crystals(ranges)
         common.current_cryscheck.SetMessageID(r.inline_message_id)
@@ -72,10 +72,11 @@ def chosen_inline_handler(r):
         rage_msg_text = ICON_RAGE+" *Ярость в %0.2d:%0.2d*" % (common.current_arscheck.rage_time.hour, common.current_arscheck.rage_time.minute)
         rage_msg = bot.send_message(common.warchat_id, rage_msg_text, parse_mode="markdown").wait()
         common.current_arscheck.SetRageMessageID(rage_msg.message_id)
-        bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
+        if common.settings.GetSetting("pin"):
+            bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
     elif r.result_id == 'numbers':
         log.debug("User %d (%s %s) created numbers check" % (*user,))
-        res, numbers = hlp.IsNumbersQuery(r)
+        _, numbers = hlp.IsNumbersQuery(r)
         if len(numbers) == 1:
             log.debug("User %d (%s %s) created screens numbers check (%s)" % (*user, numbers[0]))
             common.current_numcheck = NumbersCheck(int(numbers[0]))
@@ -155,6 +156,7 @@ def show_help_officer(m):
         text += "\n2️⃣ *Арсенал и ярость*\n" + \
                 "`@assassinsgwbot арс XX:XX` - создать чек арсенала (указывается время ярости)\n" + \
                 "+ _Отдельным сообщением дать указания, кому и сколько бить арсенал_\n" + \
+                "+ _При заполнении полосы до критической отметки в чат придет уведомление (регулируется администратором бота)_\n"
                 "+ _При полном заполнении полосы в чат и в личку участников придет уведомление о ярости_\n"
         text += "\n3️⃣ *Атака номеров*\n" + \
                 "`@assassinsgwbot номера N` - создать чек N номеров по скринам \n" + \
@@ -165,9 +167,9 @@ def show_help_officer(m):
                 "+ _При достижении отметки '"+ICON_1000+"' чек номеров автоматически завершится_\n" + \
                 "+ _Если требуется 'добить' номера по игре, не бойтесь завершить текущий чек и начать новый_\n"
         text += "\n4️⃣ *Прочее*\n" + \
-                "`@assassinsgwbot кри X Y` - создать чек по кри (X кри масимум) с шагом Y\n" + \
+                "`@assassinsgwbot кри` - создать чек по кри\n" + \
                 "+ _Иногда бывает полезно (особенно на топах) проверить, сколько кри осталось у бойцов_\n" + \
-                "+ _Пример: @assassinsgwbot кри 5000 500 создаст чек с 10 кнопками: 0-500, 501-1000, 1001-5000 и тд_\n"
+                "+ _Примечание: настройки кнопок регулируются администратором бота_\n"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
