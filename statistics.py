@@ -517,7 +517,7 @@ class Statistic(Jsonable):
         if not isinstance(user, User):
             user = User(*user,)
         if user in self.nominated:
-            return "🎖 "
+            return ICON_NOMINATE+" "
         return ""
 
     def AddNomination(self, best_record):

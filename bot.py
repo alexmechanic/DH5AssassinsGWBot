@@ -21,6 +21,7 @@ from checks.crystals import *
 from checks.arsenal import *
 from checks.numberscheck import *
 from checks.screens import *
+from settings.settings import *
 from statistics import *
 from commands import COMMANDS
 import keyboards as kb
@@ -106,6 +107,7 @@ def show_help(m):
     text += "/admins - вывод списка офицеров\n"
     if hlp.IsUserAdmin(m):
         if str(userid) == common.ROOT_ADMIN[0]:
+            text += "/settings изменить глобальные настройки бота\n"
             text += "/statbackup создать резервную копию текущей статистики\n"
             text += "/statrestore восстановить статистику по резервной копии\n"
         text += "/officer инструкция для офицеров\n"
@@ -522,6 +524,7 @@ if __name__ == '__main__':
         log.warning("Running on Heroku, setup webhook")
         server = Flask(__name__)
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        aws_settings_restore()
         common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()
@@ -542,6 +545,7 @@ if __name__ == '__main__':
         log.warning("Running locally, start polling")
         bot.remove_webhook()
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
+        aws_settings_restore()
         common.aws_admins_restore()
         aws_stat_restore()
         aws_precheck_restore()

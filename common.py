@@ -64,6 +64,9 @@ screen_message_list = []
 import statistics
 statistics = statistics.Statistic(cycle_time=4) # set 2 for first GW test
 
+from settings.settings import PersistentSettings
+settings = PersistentSettings()
+
 #
 # Manage admins list through file at start
 #
