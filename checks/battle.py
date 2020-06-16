@@ -111,7 +111,7 @@ def battle_control(call):
                                                 notification_text + user_addend,
                                                 disable_notification=is_silent,
                                                 parse_mode="markdown").wait()
-                if not is_silent:
+                if not is_silent and common.settings.GetSetting("pin"):
                     bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
                 else:
                     bot.unpin_chat_message(common.warchat_id)

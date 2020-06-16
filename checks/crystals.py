@@ -76,7 +76,7 @@ def crystals_control(call):
 # Crystals check creation
 # (war chat inline query)
 #
-@bot.inline_handler(lambda query: query.query[:len(COMMANDS["crystals"])] == COMMANDS["crystals"])
+@bot.inline_handler(lambda query: query.query == COMMANDS["crystals"])
 def crystals_query_inline(q):
     # print("crystals_query_inline")
     # print(q)
@@ -87,26 +87,19 @@ def crystals_query_inline(q):
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    res, ranges = hlp.IsCrysQuery(q)
-    if res:
-        ranges = (int(ranges[0]), int(ranges[1]))
-        if hlp.CanStartNewCryscheck():
-            kb.SetupCrystalsKeyboard(maxvalue=ranges[0], step=ranges[1])
-            res = types.InlineQueryResultArticle('cryscheck',
-                                                title='Создать чек по кри',
-                                                description='0 - %d, шаг %d' % ranges,
-                                                input_message_content=types.InputTextMessageContent(ICON_CRYSTAL+" *Чек по кри*", parse_mode="markdown"),
-                                                thumb_url="https://i.ibb.co/b7XSWQr/crystal.png",
-                                                reply_markup=kb.KEYBOARD_CRYSTALS)
-            bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
-        else:
-            log.error("Trying to setup another crystals check while current is not finished")
-            error_text = "Уже имеется активный чек по кри"
-            bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
-                                    switch_pm_text=error_text, switch_pm_parameter="existing_crystals")
+    if hlp.CanStartNewCryscheck():
+        ranges = common.settings.GetSetting("crystals_ranges")
+        kb.SetupCrystalsKeyboard(maxvalue=ranges[0], step=ranges[1])
+        res = types.InlineQueryResultArticle('cryscheck',
+                                            title='Создать чек по кри',
+                                            description='0 - %d, шаг %d' % ranges,
+                                            input_message_content=types.InputTextMessageContent(ICON_CRYSTAL+" *Чек по кри*", parse_mode="markdown"),
+                                            thumb_url="https://i.ibb.co/b7XSWQr/crystal.png",
+                                            reply_markup=kb.KEYBOARD_CRYSTALS)
+        bot.answer_inline_query(q.id, [res], is_personal=True, cache_time=2)
     else:
-        log.error("Failed (invalid query)")
-        error_text = "Неверный формат запроса"
+        log.error("Trying to setup another crystals check while current is not finished")
+        error_text = "Уже имеется активный чек по кри"
         bot.answer_inline_query(q.id, [], is_personal=True, cache_time=2,
                                 switch_pm_text=error_text, switch_pm_parameter="existing_crystals")
 
