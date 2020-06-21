@@ -320,7 +320,7 @@ def update_setting(m):
 @bot.message_handler(commands=["settings"])
 def change_settings(m):
     global Menu, activeMenu, settings_message_id, need_send_again
-    if hlp.IsUserAdmin(m) and str(m.from_user.id) == common.ROOT_ADMIN[0]:
+    if hlp.IsUserAdmin(m.from_user.id) and str(m.from_user.id) == common.ROOT_ADMIN[0]:
         text = activeMenu.description
         reply = activeMenu.keyboard
     else:

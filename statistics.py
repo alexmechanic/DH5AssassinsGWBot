@@ -84,7 +84,7 @@ def command_stat_backup(m):
             return
     except: # case if called from Statistic backup timeout. Could be ignored
         pass
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     FILE_PREFIX = "GWBotStatistic"
@@ -149,7 +149,7 @@ def command_stat_restore(m):
         common.bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/statrestore", "восстановить статистику из резервной копии", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     common.bot.send_message(m.from_user.id,

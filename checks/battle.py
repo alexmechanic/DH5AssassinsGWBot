@@ -69,7 +69,7 @@ def battle_control(call):
     # print(call)
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to control battle" % (*user,))
-    if not hlp.IsUserAdmin(call):
+    if not hlp.IsUserAdmin(user[0]):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
         log.error("Failed (not an admin)")
         return
@@ -120,7 +120,7 @@ def battle_query_inline(q):
     # print(q)
     user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
     log.debug("User %d (%s %s) is trying to create battle check" % (*user,))
-    if not hlp.IsUserAdmin(q): # non-admins cannot post votes
+    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
@@ -185,7 +185,7 @@ class Battle():
     is_rolling = False
     is_started = False
     is_postponed = False
-    # { userid: [name, nick] }
+    # { userid: [name, nick, twink_count] }
     checks = {}
     rages = {}
     fasts = {}

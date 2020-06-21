@@ -158,9 +158,9 @@ def GetScreenMessageByMediaID(_id):
                 return screen
     return None
 
-def IsUserAdmin(message):
-    if str(message.from_user.id) in common.admins or \
-       str(message.from_user.id) == common.ROOT_ADMIN[0]:
+def IsUserAdmin(id):
+    if str(id) in common.admins or \
+       str(id) == common.ROOT_ADMIN[0]:
         return True
     else:
         return False
