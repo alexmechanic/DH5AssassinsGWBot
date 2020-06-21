@@ -142,7 +142,7 @@ def show_help(m):
 def show_help_officer(m):
     userid = m.from_user.id
     if hlp.IsUserAdmin(m.from_user.id):
-        text =  "👮🏻‍♂️ *Инструкция по ведению боя для офицера*\n" + \
+        text =  ICON_OFFICER+" *Инструкция по ведению боя для офицера*\n" + \
                 "\n_Все команды следует вводить в военном чате_\n"
         text += "\n0️⃣ *До начала ВГ*\n" + \
                 "`@assassinsgwbot чек` - создать чек перед ВГ.\n" + \
@@ -351,7 +351,7 @@ def setup_admins(m):
                 name_record += " (" + admin.user.username + ")"
             admins[str(admin.user.id)] = name_record
     common.aws_admins_backup(newlist=admins)
-    bot.send_message(m.chat.id, "👮🏻‍♂️ Список офицеров обновлен")
+    bot.send_message(m.chat.id, ICON_OFFICER+" Список офицеров обновлен")
     log.info("Admins list updated")
 
 #
