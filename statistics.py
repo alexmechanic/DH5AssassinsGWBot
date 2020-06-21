@@ -230,74 +230,70 @@ def command_best(m):
         return
     
     if not common.statistics.is_posted:
-        if common.warchat_id:
-            DELAY = 5
-            total_stats   = common.statistics.GetTotalValues().GetData()
-            total_battles = common.statistics.GetBattlesCount()
-            # starting message
-            init_stats_msg = common.bot.send_message(common.warchat_id,
-                "📈 *Статистика войны гильдий:*\n\n" + \
-                ICON_SWORDS+" *Проведено боев:* " + str(total_battles) + " _(" + str(total_stats["battles"]) + " участников)_\n" + \
-                ICON_ARS+" *Собрано боевых доспехов:* " + str(total_stats["arsenal"]) + "\n" + \
-                ICON_STAR+" *Снято вражеских звезд:* " + str(total_stats["stars"]) + "\n",
-                parse_mode="markdown").wait()
-            common.bot.send_chat_action(common.warchat_id, "typing")
-            time.sleep(DELAY)
-            common.bot.send_message(common.warchat_id,
-                                    "🏆 *Списки лучших игроков:*",
-                                    parse_mode="markdown").wait()
-            common.bot.send_chat_action(common.warchat_id, "typing")
-            time.sleep(DELAY)
-            # best players
-            best_actives_header   = ICON_SWORDS+" *Лучший актив*:\n\n"
-            best_arsenal_header   = ICON_ARS+   " *Лучшие арсенальщики*:\n\n"
-            best_attackers_header = ICON_STAR+  " *Лучшие танки*:\n\n"
-            WAIT_SUFFIX = "🥁..."
-            # best active players
-            text = GetBestListText(common.statistics.GetBestActives(), "battles")
-            best_actives_msg = common.bot.send_message(common.warchat_id,
-                                                best_actives_header + WAIT_SUFFIX,
-                                                parse_mode="markdown").wait()
-            common.bot.send_chat_action(common.warchat_id, "typing")
-            time.sleep(DELAY)
-            common.bot.edit_message_text(best_actives_header + text,
-                                  chat_id=best_actives_msg.chat.id,
-                                  message_id=best_actives_msg.message_id,
-                                  parse_mode="markdown")
-            # best arsenal players
-            text = GetBestListText(common.statistics.GetBestArsenals(), "arsenal")
-            best_arsenal_msg = common.bot.send_message(common.warchat_id,
-                                                best_arsenal_header + WAIT_SUFFIX,
-                                                parse_mode="markdown").wait()
-            common.bot.send_chat_action(common.warchat_id, "typing")
-            time.sleep(DELAY)
-            common.bot.edit_message_text(best_arsenal_header + text,
-                                  chat_id=best_arsenal_msg.chat.id,
-                                  message_id=best_arsenal_msg.message_id,
-                                  parse_mode="markdown")
-            # best attackers
-            text = GetBestListText(common.statistics.GetBestAttackers(), "stars")
-            best_attackers_msg = common.bot.send_message(common.warchat_id,
-                                                best_attackers_header + WAIT_SUFFIX,
-                                                parse_mode="markdown").wait()
-            common.bot.send_chat_action(common.warchat_id, "typing")
-            time.sleep(DELAY)
-            common.bot.edit_message_text(best_attackers_header + text,
-                                  chat_id=best_attackers_msg.chat.id,
-                                  message_id=best_attackers_msg.message_id,
-                                  parse_mode="markdown")
-            # ending messages
-            common.bot.send_message(common.warchat_id,
-                             ICON_PRAISE+" *Поздравляем победителей!* " + ICON_PRAISE + "\n\n" + \
-                             "_Лучшему игроку в любой номинации присуждается 🎖 орден, " + \
-                             "который будет виден на войнах в течение " + \
-                             str(common.statistics.cycle_time) + " последующих войн._",
-                             parse_mode="markdown")
-            common.statistics.is_posted = True
-            log.info("Guild stats posted!")
-        else:
-            hlp.SendHelpWrongChat(m.from_user.id, "/warchat", "запомнить военный чат", False)
-            log.error("War chat_id is not set, cannot post GW stats!")
+        DELAY = 5
+        total_stats   = common.statistics.GetTotalValues().GetData()
+        total_battles = common.statistics.GetBattlesCount()
+        # starting message
+        init_stats_msg = common.bot.send_message(common.warchat_id,
+            "📈 *Статистика войны гильдий:*\n\n" + \
+            ICON_SWORDS+" *Проведено боев:* " + str(total_battles) + " _(" + str(total_stats["battles"]) + " участников)_\n" + \
+            ICON_ARS+" *Собрано боевых доспехов:* " + str(total_stats["arsenal"]) + "\n" + \
+            ICON_STAR+" *Снято вражеских звезд:* " + str(total_stats["stars"]) + "\n",
+            parse_mode="markdown").wait()
+        common.bot.send_chat_action(common.warchat_id, "typing")
+        time.sleep(DELAY)
+        common.bot.send_message(common.warchat_id,
+                                "🏆 *Списки лучших игроков:*",
+                                parse_mode="markdown").wait()
+        common.bot.send_chat_action(common.warchat_id, "typing")
+        time.sleep(DELAY)
+        # best players
+        best_actives_header   = ICON_SWORDS+" *Лучший актив*:\n\n"
+        best_arsenal_header   = ICON_ARS+   " *Лучшие арсенальщики*:\n\n"
+        best_attackers_header = ICON_STAR+  " *Лучшие танки*:\n\n"
+        WAIT_SUFFIX = "🥁..."
+        # best active players
+        text = GetBestListText(common.statistics.GetBestActives(), "battles")
+        best_actives_msg = common.bot.send_message(common.warchat_id,
+                                            best_actives_header + WAIT_SUFFIX,
+                                            parse_mode="markdown").wait()
+        common.bot.send_chat_action(common.warchat_id, "typing")
+        time.sleep(DELAY)
+        common.bot.edit_message_text(best_actives_header + text,
+                              chat_id=best_actives_msg.chat.id,
+                              message_id=best_actives_msg.message_id,
+                              parse_mode="markdown")
+        # best arsenal players
+        text = GetBestListText(common.statistics.GetBestArsenals(), "arsenal")
+        best_arsenal_msg = common.bot.send_message(common.warchat_id,
+                                            best_arsenal_header + WAIT_SUFFIX,
+                                            parse_mode="markdown").wait()
+        common.bot.send_chat_action(common.warchat_id, "typing")
+        time.sleep(DELAY)
+        common.bot.edit_message_text(best_arsenal_header + text,
+                              chat_id=best_arsenal_msg.chat.id,
+                              message_id=best_arsenal_msg.message_id,
+                              parse_mode="markdown")
+        # best attackers
+        text = GetBestListText(common.statistics.GetBestAttackers(), "stars")
+        best_attackers_msg = common.bot.send_message(common.warchat_id,
+                                            best_attackers_header + WAIT_SUFFIX,
+                                            parse_mode="markdown").wait()
+        common.bot.send_chat_action(common.warchat_id, "typing")
+        time.sleep(DELAY)
+        common.bot.edit_message_text(best_attackers_header + text,
+                              chat_id=best_attackers_msg.chat.id,
+                              message_id=best_attackers_msg.message_id,
+                              parse_mode="markdown")
+        # ending messages
+        common.bot.send_message(common.warchat_id,
+                         ICON_PRAISE+" *Поздравляем победителей!* " + ICON_PRAISE + "\n\n" + \
+                         "_Лучшему игроку в любой номинации присуждается 🎖 орден, " + \
+                         "который будет виден на войнах в течение " + \
+                         str(common.statistics.cycle_time) + " последующих войн._",
+                         parse_mode="markdown")
+        common.statistics.is_posted = True
+        log.info("Guild stats posted!")
     else:
         common.bot.send_message(user[0], "Статистика уже была опубликована!")
         log.error("Guild stats has been already posted!")

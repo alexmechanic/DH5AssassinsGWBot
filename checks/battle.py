@@ -45,16 +45,13 @@ def battle_check_user(call):
                 bot.edit_message_text(common.current_battle.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=markup)
                 bot.answer_callback_query(call.id, common.current_battle.GetVotedText(userChoice))
-                if common.warchat_id:
-                    if userChoice == cb.CHECK_LATE_CALLBACK:
-                        text = ICON_LATE + " [%s" % user[2]
-                        if user[1] != None:
-                            text += " (%s)" % user[1]
-                        text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
-                        bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
-                        log.debug("Battle user late notification posted")
-                else:
-                    log.error("War chat_id is not set, cannot post late notification!")
+                if userChoice == cb.CHECK_LATE_CALLBACK:
+                    text = ICON_LATE + " [%s" % user[2]
+                    if user[1] != None:
+                        text += " (%s)" % user[1]
+                    text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
+                    bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
+                    log.debug("Battle user late notification posted")
             else:
                 log.error("Failed")
                 bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
@@ -100,24 +97,21 @@ def battle_control(call):
                 need_send_notification = False
             reset_battlechecks(call)
             notification_text = ICON_FINISH+" Бой завершен"
-        if common.warchat_id:
             # do not notify about roll / stop
-            if userChoice in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]:
-                is_silent = True
-            else:
-                is_silent = False
-            if need_send_notification:
-                notification = bot.send_message(common.warchat_id,
-                                                notification_text + user_addend,
-                                                disable_notification=is_silent,
-                                                parse_mode="markdown").wait()
-                if not is_silent and common.settings.GetSetting("pin"):
-                    bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
-                else:
-                    bot.unpin_chat_message(common.warchat_id)
-                log.debug("Battle status notification posted: %s" % notification_text)
+        if userChoice in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]:
+            is_silent = True
         else:
-            log.error("War chat_id is not set, cannot post battle status notification!")
+            is_silent = False
+        if need_send_notification:
+            notification = bot.send_message(common.warchat_id,
+                                            notification_text + user_addend,
+                                            disable_notification=is_silent,
+                                            parse_mode="markdown").wait()
+            if not is_silent and common.settings.GetSetting("pin"):
+                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
+            else:
+                bot.unpin_chat_message(common.warchat_id)
+            log.debug("Battle status notification posted: %s" % notification_text)
         bot.answer_callback_query(call.id, notification_text)
         return
     log.error("Battle not found!")

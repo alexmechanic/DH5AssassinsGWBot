@@ -162,14 +162,11 @@ class Arsenal():
         critical = common.settings.GetSetting("critical_threshold")
         if self.progress > critical and self.progress < 120: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage
             log.info("Arsenal is critical! %s/120", self.progress)
-            if common.warchat_id:
-                text = ICON_ARS+" Прогресс арсенала: %s/120!\n‼️ Вставайте на паузу!" % self.progress
-                notification = common.bot.send_message(common.warchat_id, text, disable_notification=False).wait()
-                if common.settings.GetSetting("pin"):
-                    common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
-                log.debug("Arsenal critical status notification posted")
-            else:
-                log.error("War chat_id is not set, cannot post arsenal critical status notification!")
+            text = ICON_ARS+" Прогресс арсенала: %s/120!\n‼️ Вставайте на паузу!" % self.progress
+            notification = common.bot.send_message(common.warchat_id, text).wait()
+            if common.settings.GetSetting("pin"):
+                common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+            log.debug("Arsenal critical status notification posted")
             return True
         return False
 
@@ -187,13 +184,10 @@ class Arsenal():
                 if user != except_user[0]:
                     common.bot.send_message(user, text)
             self.is_fire_notified = True
-            if common.warchat_id:
-                notification = common.bot.send_message(common.warchat_id, text).wait()
-                if common.settings.GetSetting("pin"):
-                    common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
-                log.debug("Arsenal status notification posted")
-            else:
-                log.error("War chat_id is not set, cannot post arsenal status notification!")
+            notification = common.bot.send_message(common.warchat_id, text).wait()
+            if common.settings.GetSetting("pin"):
+                common.bot.pin_chat_message(notification.chat.id, notification.message_id)
+            log.debug("Arsenal status notification posted")
             return True
         return False
 
