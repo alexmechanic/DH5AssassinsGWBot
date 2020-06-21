@@ -95,22 +95,15 @@ def battle_control(call):
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             if not common.current_battle.is_started: # if battle was cancelled - do not send notification
                 need_send_notification = False
+            else: # unpin other battle messages
+                bot.unpin_chat_message(common.warchat_id)
             reset_battlechecks(call)
             notification_text = ICON_FINISH+" Бой завершен"
             # do not notify about roll / stop
-        if userChoice in [kb.CHECK_CONTROL_OPTIONS[0], kb.CHECK_CONTROL_OPTIONS[2]]:
-            is_silent = True
-        else:
-            is_silent = False
         if need_send_notification:
-            notification = bot.send_message(common.warchat_id,
-                                            notification_text + user_addend,
-                                            disable_notification=is_silent,
-                                            parse_mode="markdown").wait()
-            if not is_silent and common.settings.GetSetting("pin"):
-                bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=is_silent)
-            else:
-                bot.unpin_chat_message(common.warchat_id)
+            bot.send_message(common.warchat_id,
+                             notification_text + user_addend,
+                             parse_mode="markdown")
             log.debug("Battle status notification posted: %s" % notification_text)
         bot.answer_callback_query(call.id, notification_text)
         return
