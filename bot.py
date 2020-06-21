@@ -106,7 +106,7 @@ def show_help(m):
     text += "\n\n📃 *Список моих команд*:\n"
     text += "/help - вывод этой справки\n"
     text += "/admins - вывод списка офицеров\n"
-    if hlp.IsUserAdmin(m):
+    if hlp.IsUserAdmin(m.from_user.id):
         if str(userid) == common.ROOT_ADMIN[0]:
             text += "/settings изменить глобальные настройки бота\n"
             text += "/statbackup создать резервную копию текущей статистики\n"
@@ -130,7 +130,7 @@ def show_help(m):
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
     bot.delete_message(m.chat.id, m.message_id)
 
@@ -141,7 +141,7 @@ def show_help(m):
 @bot.message_handler(commands=["officer"])
 def show_help_officer(m):
     userid = m.from_user.id
-    if hlp.IsUserAdmin(m):
+    if hlp.IsUserAdmin(m.from_user.id):
         text =  "👮🏻‍♂️ *Инструкция по ведению боя для офицера*\n" + \
                 "\n_Все команды следует вводить в военном чате_\n"
         text += "\n0️⃣ *До начала ВГ*\n" + \
@@ -173,7 +173,7 @@ def show_help_officer(m):
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
     bot.delete_message(m.chat.id, m.message_id)
 
@@ -187,7 +187,7 @@ def command_set_warchat(m):
         hlp.SendHelpWrongChat(m.from_user.id, "/warchat", "запомнить военный чат", False)
         return
     bot.delete_message(m.chat.id, m.message_id)
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     
@@ -211,7 +211,7 @@ def command_start(m):
         bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/start", "просмотреть информацию о бое", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     inline_error = m.text.replace("/start ", "")
@@ -260,7 +260,7 @@ def command_battle_start(m):
         bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/bstart", "начать бой", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     if not hlp.CanStartNewBattle():
@@ -282,7 +282,7 @@ def command_battle_stop(m):
         bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/bstop", "завершить или отменить бой", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     if not hlp.CanStartNewBattle():
@@ -304,7 +304,7 @@ def command_battle_checklist(m):
         bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/checklist", "получить список участвующих в бою", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     if not hlp.CanStartNewBattle():
@@ -325,7 +325,7 @@ def setup_admins(m):
     # print(m)
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
     log.debug("User %d (%s %s) is trying to update admins list" % (*user,))
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(m)
         return
@@ -389,7 +389,7 @@ def command_reset(m):
         bot.delete_message(m.chat.id, m.message_id)
         hlp.SendHelpWrongChat(m.from_user.id, "/reset", "выполнить полный сброс бота", True)
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
@@ -406,7 +406,7 @@ def hard_reset(m):
     # should not happen in any case, but who knows?
     if not hlp.IsInPrivateChat(m):
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
@@ -442,7 +442,7 @@ def battle_control(m):
     # should not happen in any case, but who knows?
     if not hlp.IsInPrivateChat(m):
         return
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
     markup = types.ReplyKeyboardRemove(selective=False)
@@ -471,7 +471,7 @@ def command_snow(m):
         hlp.SendHelpWrongChat(m.from_user.id, "/snow", "вызвать Снегурочку", False)
         return
     bot.delete_message(m.chat.id, m.message_id)
-    if not hlp.IsUserAdmin(m):
+    if not hlp.IsUserAdmin(m.from_user.id):
         log.error("Failed: not an admin")
         hlp.SendHelpNonAdmin(m)
         return
