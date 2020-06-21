@@ -257,31 +257,11 @@ class Battle():
 
     def GetActiveUsersNames(self):
         users = set()
-        for user in self.checks:
-            username = self.checks[user][0]
-            if self.checks[user][1] != None:
-                username += " (%s)" % self.checks[user][1]
-            users.add(username)
-        for user in self.rages:
-            username = self.rages[user][0]
-            if self.rages[user][1] != None:
-                username += " (%s)" % self.rages[user][1]
-            users.add(username)
-        for user in self.fasts:
-            username = self.fasts[user][0]
-            if self.fasts[user][1] != None:
-                username += " (%s)" % self.fasts[user][1]
-            users.add(username)
-        for user in self.arsenals:
-            username = self.arsenals[user][0]
-            if self.arsenals[user][1] != None:
-                username += " (%s)" % self.arsenals[user][1]
-            users.add(username)
-        for user in self.lates:
-            username = self.lates[user][0]
-            if self.lates[user][1] != None:
-                username += " (%s)" % self.lates[user][1]
-            users.add(username)
+        for group in [self.checks, self.rages, self.fasts, self.arsenals, self.lates]:
+            for user in group:
+                username = self.GetUserString(user, group)
+                username += self.GetPlusNumericSuffix(user, group)
+                users.add(username)
         return users
 
     def DoRollBattle(self):
@@ -317,9 +297,25 @@ class Battle():
             statistic[User(k, v[0], v[1])] = Score(battle=1)
         return statistic
 
+    def GetUserString(self, user, group, with_link=False):
+        text = ""
+        if with_link:
+            text += "["
+        text += "%s" % group[user][0]
+        if group[user][1] != None:
+            text += " (%s)" % group[user][1]
+        if with_link:
+            text += "](tg://user?id=%d)" % user
+        return text
+
     def GetNominatedPrefix(self, user, group):
         user = User(user, group[user][0], group[user][1])
         return common.statistics.GetNominatedPrefix(user)
+
+    def GetPlusNumericSuffix(self, user, group):
+        nums = "0¹²³⁴⁵⁶⁷⁸⁹"
+        count = group[user][2]
+        return "⁺" + nums[count] if count > 0 else ""
 
     def GetHeader(self):
         text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)
@@ -328,7 +324,7 @@ class Battle():
     def GetText(self):
         text = self.GetHeader()
         if self.is_rolling:
-            text += "Поиск запущен в %0.2d:%0.2d\n" % (self.time["roll"].hour, self.time["roll"].minute)
+            text += "⏳ Поиск: %0.2d:%0.2d\n" % (self.time["roll"].hour, self.time["roll"].minute)
         text += "❗ Бой начался ❗\n" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
             text += "🛑 Бой"
@@ -341,52 +337,60 @@ class Battle():
         if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
             text += "\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
         for user in self.checks:
-            text += "%s %s[%s" % (ICON_CHECK, self.GetNominatedPrefix(user, self.checks), self.checks[user][0])
-            if self.checks[user][1] != None:
-                text += " (%s)" % self.checks[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_CHECK + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.checks)
+            text += self.GetUserString(user, self.checks, with_link=True)
+            text += self.GetPlusNumericSuffix(user, self.checks) + "\n"
+
         for user in self.rages:
-            text += "%s %s[%s" % (ICON_RAGE, self.GetNominatedPrefix(user, self.rages), self.rages[user][0])
-            if self.rages[user][1] != None:
-                text += " (%s)" % self.rages[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_RAGE + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.rages)
+            text += self.GetUserString(user, self.rages, with_link=True)
+            text += self.GetPlusNumericSuffix(user, self.rages) + "\n"
+
         for user in self.fasts:
-            text += "%s %s[%s" % (ICON_FAST, self.GetNominatedPrefix(user, self.fasts), self.fasts[user][0])
-            if self.fasts[user][1] != None:
-                text += " (%s)" % self.fasts[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_FAST + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.fasts)
+            text += self.GetUserString(user, self.fasts, with_link=True)
+            text += self.GetPlusNumericSuffix(user, self.fasts) + "\n"
 
         if len(self.arsenals) > 0:
             text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
         for user in self.arsenals:
-            text += "%s %s[%s" % (ICON_ARS, self.GetNominatedPrefix(user, self.arsenals), self.arsenals[user][0])
-            if self.arsenals[user][1] != None:
-                text += " (%s)" % self.arsenals[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_ARS + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.arsenals)
+            text += self.GetUserString(user, self.arsenals, with_link=True)
+            text += self.GetPlusNumericSuffix(user, self.arsenals) + "\n"
 
         if len(self.thinking) > 0:
             text += "\n" + "*%d думают:*\n" % len(self.thinking)
         for user in self.thinking:
-            text += "%s %s[%s" % (ICON_THINK, self.GetNominatedPrefix(user, self.thinking), self.thinking[user][0])
-            if self.thinking[user][1] != None:
-                text += " (%s)" % self.thinking[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_THINK + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.thinking)
+            text += self.GetUserString(user, self.thinking, with_link=True)
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
         for user in self.cancels:
-            text += "%s %s[%s" % (ICON_CANCEL, self.GetNominatedPrefix(user, self.cancels), self.cancels[user][0])
-            if self.cancels[user][1] != None:
-                text += " (%s)" % self.cancels[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_CANCEL + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.cancels)
+            text += self.GetUserString(user, self.cancels, with_link=True)
 
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
         for user in self.lates:
-            text += "%s %s[%s" % (ICON_LATE, self.GetNominatedPrefix(user, self.lates), self.lates[user][0])
-            if self.lates[user][1] != None:
-                text += " (%s)" % self.lates[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += ICON_LATE + " "
+            text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
+            text += self.GetNominatedPrefix(user, self.lates)
+            text += self.GetUserString(user, self.lates, with_link=True)
+            text += self.GetPlusNumericSuffix(user, self.lates) + "\n"
+
         return text
 
     def GetVotedText(self, action):
@@ -409,19 +413,19 @@ class Battle():
         ret = True
         log.info("User %d (%s %s) voted for %s" % (*user, action.replace(cb.CHECK_CALLBACK_PREFIX, "")))
         if action == cb.CHECK_CHECK_CALLBACK:
-            ret = self.SetCheck(user)
+            self.SetCheck(user)
         elif action == cb.CHECK_RAGE_CALLBACK:
-            ret = self.SetRageOnly(user)
+            self.SetRageOnly(user)
         elif action == cb.CHECK_FAST_CALLBACK:
-            ret = self.SetFast(user)
+            self.SetFast(user)
         elif action == cb.CHECK_ARS_CALLBACK:
-            ret = self.SetArsenalOnly(user)
+            self.SetArsenalOnly(user)
         elif action == cb.CHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
         elif action == cb.CHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
         elif action == cb.CHECK_LATE_CALLBACK:
-            ret = self.SetLate(user)
+            self.SetLate(user)
         if ret: log.info("Vote successful")
         else: log.error("Vote failed")
         return ret
@@ -431,64 +435,76 @@ class Battle():
         nick = user[1]
         name = user[2]
         for user in self.checks:
-            if userid == user: # cannot check more than once
-                return False
+            if userid == user: # check +1 (twink case)
+                oldrecord = self.checks[userid]
+                oldrecord[2] = oldrecord[2]+1
+                self.checks[userid] = oldrecord
+                return
         # remove user from other lists
         if userid in self.rages: del self.rages[userid]
         if userid in self.arsenals: del self.arsenals[userid]
         if userid in self.fasts: del self.fasts[userid]
         if userid in self.thinking: del self.thinking[userid]
         if userid in self.cancels: del self.cancels[userid]
-        self.checks[userid] = [name, nick]
-        return True
+        # create record
+        self.checks[userid] = [name, nick, 0]
 
     def SetRageOnly(self, user):
         userid = user[0]
         nick = user[1]
         name = user[2]
         for user in self.rages:
-            if userid == user: # cannot check more than once
-                return False
+            if userid == user: # check +1 (twink case)
+                oldrecord = self.rages[userid]
+                oldrecord[2] = oldrecord[2]+1
+                self.rages[userid] = oldrecord
+                return
         # remove user from other lists
         if userid in self.checks: del self.checks[userid]
         if userid in self.arsenals: del self.arsenals[userid]
         if userid in self.fasts: del self.fasts[userid]
         if userid in self.thinking: del self.thinking[userid]
         if userid in self.cancels: del self.cancels[userid]
-        self.rages[userid] = [name, nick]
-        return True
+        # create record
+        self.rages[userid] = [name, nick, 0]
 
     def SetFast(self, user):
         userid = user[0]
         nick = user[1]
         name = user[2]
         for user in self.fasts:
-            if userid == user: # cannot check more than once
-                return False
+            if userid == user: # check +1 (twink case)
+                oldrecord = self.fasts[userid]
+                oldrecord[2] = oldrecord[2]+1
+                self.fasts[userid] = oldrecord
+                return
         # remove user from other lists
         if userid in self.checks: del self.checks[userid]
         if userid in self.rages: del self.rages[userid]
         if userid in self.arsenals: del self.arsenals[userid]
         if userid in self.thinking: del self.thinking[userid]
         if userid in self.cancels: del self.cancels[userid]
-        self.fasts[userid] = [name, nick]
-        return True
+        # create record
+        self.fasts[userid] = [name, nick, 0]
 
     def SetArsenalOnly(self, user):
         userid = user[0]
         nick = user[1]
         name = user[2]
         for user in self.arsenals:
-            if userid == user: # cannot check more than once
-                return False
+            if userid == user: # check +1 (twink case)
+                oldrecord = self.arsenals[userid]
+                oldrecord[2] = oldrecord[2]+1
+                self.arsenals[userid] = oldrecord
+                return
         # remove user from other lists
         if userid in self.checks: del self.checks[userid]
         if userid in self.rages: del self.rages[userid]
         if userid in self.fasts: del self.fasts[userid]
         if userid in self.thinking: del self.thinking[userid]
         if userid in self.cancels: del self.cancels[userid]
-        self.arsenals[userid] = [name, nick]
-        return True
+        # create record
+        self.arsenals[userid] = [name, nick, 0]
 
     def SetThinking(self, user):
         userid = user[0]
@@ -503,6 +519,7 @@ class Battle():
         if userid in self.fasts: del self.fasts[userid]
         if userid in self.arsenals: del self.arsenals[userid]
         if userid in self.cancels: del self.cancels[userid]
+        # create record
         self.thinking[userid] = [name, nick]
         return True
 
@@ -520,6 +537,7 @@ class Battle():
         if userid in self.arsenals: del self.arsenals[userid]
         if userid in self.thinking: del self.thinking[userid]
         if userid in self.lates: del self.lates[userid]
+        # create record
         self.cancels[userid] = [name, nick]
         return True
 
@@ -528,8 +546,11 @@ class Battle():
         nick = user[1]
         name = user[2]
         for user in self.lates:
-            if userid == user: # cannot check late more than once
-                return False
+            if userid == user: # check +1 (twink case)
+                oldrecord = self.lates[userid]
+                oldrecord[2] = oldrecord[2]+1
+                self.lates[userid] = oldrecord
+                return
         if  userid in self.checks or \
             userid in self.rages or  \
             userid in self.fasts or  \
@@ -537,5 +558,4 @@ class Battle():
             return False
         if userid in self.cancels: del self.cancels[userid]
         if userid in self.thinking: del self.thinking[userid]
-        self.lates[userid] = [name, nick]
-        return True
+        self.lates[userid] = [name, nick, 0]
