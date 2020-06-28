@@ -36,7 +36,7 @@ def battle_check_user(call):
     if common.current_battle:
         if message_id == common.current_battle.check_id:
             ret = common.current_battle.CheckUser(user, userChoice)
-            if (ret):
+            if ret or userChoice == cb.CHECK_LATE_CALLBACK:
                 markup = kb.KEYBOARD_CHECK
                 if common.current_battle.is_rolling:
                     markup = kb.KEYBOARD_CHECK_ROLLED
@@ -45,7 +45,7 @@ def battle_check_user(call):
                 bot.edit_message_text(common.current_battle.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=markup)
                 bot.answer_callback_query(call.id, common.current_battle.GetVotedText(userChoice))
-                if userChoice == cb.CHECK_LATE_CALLBACK:
+                if userChoice == cb.CHECK_LATE_CALLBACK and ret:
                     text = ICON_LATE + " [%s" % user[2]
                     if user[1] != None:
                         text += " (%s)" % user[1]
@@ -425,9 +425,13 @@ class Battle():
         elif action == cb.CHECK_CANCEL_CALLBACK:
             ret = self.SetCancel(user)
         elif action == cb.CHECK_LATE_CALLBACK:
-            self.SetLate(user)
-        if ret: log.info("Vote successful")
-        else: log.error("Vote failed")
+            ret = self.SetLate(user)
+        # SetLate() always successful, return value indicates
+        # that user has corrected his previous vote with +1 (not actually late)
+        if ret:
+            log.info("Vote successful")
+        elif action != cb.CHECK_LATE_CALLBACK:
+            log.error("Vote failed")
         return ret
 
     def SetCheck(self, user):
@@ -545,17 +549,26 @@ class Battle():
         userid = user[0]
         nick = user[1]
         name = user[2]
+        # now we use twinks so support late +1s
+        if userid in self.checks:
+            self.SetCheck(user)
+            return False
+        elif userid in self.rages:
+            self.SetRageOnly(user)
+            return False
+        elif userid in self.fasts:
+            self.SetFast(user)
+            return False
+        elif userid in self.arsenals:
+            self.SetArsenalOnly(user)
+            return False
         for user in self.lates:
             if userid == user: # check +1 (twink case)
                 oldrecord = self.lates[userid]
                 oldrecord[2] = oldrecord[2]+1
                 self.lates[userid] = oldrecord
-                return
-        if  userid in self.checks or \
-            userid in self.rages or  \
-            userid in self.fasts or  \
-            userid in self.arsenals:
-            return False
+                return False
         if userid in self.cancels: del self.cancels[userid]
         if userid in self.thinking: del self.thinking[userid]
         self.lates[userid] = [name, nick, 0]
+        return True
