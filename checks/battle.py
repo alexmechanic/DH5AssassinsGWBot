@@ -324,7 +324,7 @@ class Battle():
     def GetText(self):
         text = self.GetHeader()
         if self.is_rolling:
-            text += "⏳ Поиск: %0.2d:%0.2d\n" % (self.time["roll"].hour, self.time["roll"].minute)
+            text += "⏳ *Поиск:* %0.2d:%0.2d\n" % (self.time["roll"].hour, self.time["roll"].minute)
         text += "❗ Бой начался ❗\n" * (self.is_started and not self.is_postponed)
         if self.is_postponed:
             text += "🛑 Бой"
