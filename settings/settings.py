@@ -108,7 +108,6 @@ class MenuItem():
         foundItem = None
         if active:
             if self.is_active:
-                print("by active: ", self.id)
                 return self
             for child in self.children:
                 foundItem = child.FindItem(active=active)
@@ -116,7 +115,6 @@ class MenuItem():
                     break
         elif name:
             if self.name == name:
-                print("by name: ", str(self.id), self.name)
                 return self
             for child in self.children:
                 foundItem = child.FindItem(name=name)
@@ -124,7 +122,6 @@ class MenuItem():
                     break
         elif responce:
             if self.responce_cb == responce:
-                print("by responce: ", str(self.id), self.responce_cb)
                 return self
             for child in self.children:
                 foundItem = child.FindItem(responce=responce)
@@ -132,7 +129,6 @@ class MenuItem():
                     break
         else:
             if callback in self.callbacks:
-                print("by callback: ", self.id)
                 return self
             for child in self.children:
                 foundItem = child.FindItem(callback=callback)
@@ -221,7 +217,6 @@ def CreateMenu():
                        kb.SETTINGS_EMPTY_OPTIONS,
                        cb.SETTINGS_STATISTIC_CYCLE_TIME_CALLBACK,
                        4)
-    # print(menu)
     return menu
 
 Menu = CreateMenu()
@@ -232,11 +227,8 @@ activeMenu = Menu
 #
 @bot.callback_query_handler(func=lambda call: call.data in kb.buttonBack.callback_data)
 def settings_back(c):
-    print("BACK BUTTON")
     global activeMenu
     retfunc = None
-    print ("ACTIVE: ", activeMenu)
-    print ("ACTIVE PARENT: ", activeMenu.parent)
     if activeMenu.parent == None:
         retfunc = change_settings
     elif activeMenu.parent.parent == None:
@@ -249,9 +241,6 @@ def settings_back(c):
         bot.answer_callback_query(c.id)
     except:
         pass
-    print(retfunc)
-    print(c.data)
-    print("NEW ACTIVE: ", activeMenu)
     retfunc(c)
 
 #
@@ -260,7 +249,6 @@ def settings_back(c):
 @bot.message_handler(func=lambda message: activeMenu and activeMenu.parent and is_wait_command)
 def update_setting(m):
     global activeMenu, is_wait_command, need_send_again
-    print("update_setting, activeMenu: ", activeMenu)
     result = False
     if activeMenu.name == "critical_threshold":
         try:
@@ -450,7 +438,6 @@ class PersistentSettings():
         global Menu
         try:
             if not isinstance(key, type(Menu.id)): # by name
-                print("by name", key)
                 item = Menu.FindItem(name=key)
                 key = item.id
                 default = item.default_value
