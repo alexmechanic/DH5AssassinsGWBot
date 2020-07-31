@@ -60,6 +60,7 @@ current_numcheck  = None
 current_cryscheck = None
 current_snowwhite = {}
 screen_message_list = []
+user_guiding = {} # {userid: Guide}
 
 import statistics
 statistics = statistics.Statistic(cycle_time=4) # set 2 for first GW test

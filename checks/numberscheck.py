@@ -32,21 +32,35 @@ def numbers_check_user(call):
     message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
-    if common.current_numcheck:
-        if message_id == common.current_numcheck.check_id:
-            ret = common.current_numcheck.CheckUser(user, call.data)
-            if (ret):
-                if not common.current_numcheck.Is1000(): # if reached 1000 - no need to continue numbers check
-                    bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
-                                        parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
-                    common.current_numcheck.CheckNotifyIfAchieved()
-                else:
-                    common.current_numcheck.DoEndCheck()
-                    bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=message_id, 
-                                        parse_mode="markdown")
-                    common.current_numcheck.CheckNotifyIfAchieved()
-            bot.answer_callback_query(call.id)
+    if common.current_numcheck and message_id == common.current_numcheck.check_id:
+        is_guide_training = False
+        battle_object = common.current_numcheck
+    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+        is_guide_training = True
+        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user[0]].demonstration
+        else:
+            log.error("Not at training stage, aborting")
+            bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
             return
+    else:
+        battle_object = None
+    if battle_object:
+        if battle_object.CheckUser(user, call.data):
+            if not battle_object.Is1000(): # if reached 1000 - no need to continue numbers check
+                reply = kb.KEYBOARD_NUMBERS
+            else:
+                battle_object.DoEndCheck()
+                reply = None
+            if is_guide_training:
+                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                                      parse_mode="markdown", reply_markup=reply)
+            else:
+                bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id, 
+                                      parse_mode="markdown", reply_markup=reply)
+                battle_object.CheckNotifyIfAchieved()
+        bot.answer_callback_query(call.id)
+        return
     log.error("Numbers check not found!")
     bot.answer_callback_query(call.id, "Неверный чек номеров! Пожалуйста, создайте новый")
 
@@ -58,6 +72,7 @@ def numbers_check_user(call):
 def numbers_control(call):
     # print("numbers_control")
     # print(call)
+    message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
     if not hlp.IsUserAdmin(user[0]):
@@ -65,7 +80,7 @@ def numbers_control(call):
         log.error("Failed (not an admin)")
         return
     userChoice = call.data
-    if common.current_numcheck:
+    if common.current_numcheck and message_id == common.current_numcheck.check_id:
         if userChoice == kb.NUMBERS_CONTROL_OPTIONS[0]: # make 500
             common.current_numcheck.Do500()
             bot.edit_message_text(common.current_numcheck.GetText(),

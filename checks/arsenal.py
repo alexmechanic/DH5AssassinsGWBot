@@ -33,16 +33,31 @@ def arsenal_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for arsenal (%s)" % (*user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
-    if common.current_arscheck:
-        if message_id == common.current_arscheck.check_id:
-            ret = common.current_arscheck.Increment(user, userChoice)
-            if (ret):
-                bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=message_id,
-                                    parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
-            else:
-                log.error("Failed")
-            bot.answer_callback_query(call.id)
+    if common.current_arscheck and message_id == common.current_arscheck.check_id:
+        is_guide_training = False
+        battle_object = common.current_arscheck
+    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+        is_guide_training = True
+        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user[0]].demonstration
+        else:
+            log.error("Not at training stage, aborting")
+            bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
             return
+    else:
+        battle_object = None
+    if battle_object:
+        if battle_object.Increment(user, userChoice, notify=not is_guide_training):
+            if is_guide_training:
+                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                                      parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+            else:
+                bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id,
+                                      parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
+        else:
+            log.error("Failed")
+        bot.answer_callback_query(call.id)
+        return
     log.error("Ars check not found!")
     bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
 
@@ -54,6 +69,7 @@ def arsenal_check_user(call):
 def arsenal_control(call):
     # print("arsenal_control")
     # print(call)
+    message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to control arsenal check" % (*user,))
     if not hlp.IsUserAdmin(user[0]):
@@ -62,7 +78,7 @@ def arsenal_control(call):
         return
     userChoice = call.data
     if userChoice == kb.ARS_CONTROL_OPTIONS[0]: # stop
-        if (common.current_arscheck):
+        if common.current_arscheck and message_id == common.current_arscheck.check_id:
             common.current_arscheck.DoEndArsenal()
             bot.edit_message_text(common.current_arscheck.GetText(),
                                   inline_message_id=common.current_arscheck.check_id,
@@ -230,7 +246,7 @@ class Arsenal():
             text += "](tg://user?id=%d) (x%d)\n" % (user, count)
         return text
 
-    def Increment(self, user, value):
+    def Increment(self, user, value, notify=True):
         userid = user[0]
         nick = user[1]
         name = user[2]
@@ -273,8 +289,12 @@ class Arsenal():
         log.debug("User %d (%s %s) total impact: %s" % (*user, str(user_record[2:])))
         self.done_users[userid] = user_record
         log.info("Vote successful")
-        if not self.CheckNotifyIfFired(except_user=user):
-            self.CheckNotifyIfCritical()
+        if notify:
+            try:
+                if not self.CheckNotifyIfFired(except_user=user):
+                    self.CheckNotifyIfCritical()
+            except:
+                pass # guide case, do nothing
         return True
 
     # undo arsenal result for user if user made mistake

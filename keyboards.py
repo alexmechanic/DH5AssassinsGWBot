@@ -230,3 +230,12 @@ RESET_CONTROL_OPTIONS = [buttonReset.text, buttonCancelPrivate.text]
 KEYBOARD_SNOWWHITE = types.InlineKeyboardMarkup(row_width=1)
 buttonPraise       = types.InlineKeyboardButton(text=ICON_PRAISE+" Привет!", callback_data=SNOW_PRAISE_CALLBACK)
 KEYBOARD_SNOWWHITE.add(buttonPraise)
+
+KEYBOARD_GUIDE_START  = types.InlineKeyboardMarkup(row_width=1)
+KEYBOARD_GUIDE_NEXT   = types.InlineKeyboardMarkup(row_width=1)
+KEYBOARD_GUIDE_FINISH = types.InlineKeyboardMarkup(row_width=1)
+KEYBOARD_GUIDE_START.add(types.InlineKeyboardButton(text=GUIDE_START_TEXT, callback_data=GUIDE_START_CALLBACK))
+KEYBOARD_GUIDE_NEXT.add(types.InlineKeyboardButton(text=GUIDE_NEXT_TEXT, callback_data=GUIDE_NEXT_CALLBACK))
+KEYBOARD_GUIDE_FINISH.add(types.InlineKeyboardButton(text=GUIDE_FINISH_TEXT, callback_data=GUIDE_FINISH_CALLBACK))
+
+GUIDE_OPTIONS = [GUIDE_START_CALLBACK, GUIDE_NEXT_CALLBACK, GUIDE_FINISH_CALLBACK]

@@ -23,6 +23,7 @@ from checks.numberscheck import *
 from checks.screens import *
 from settings.settings import *
 from statistics import *
+from guide import *
 from commands import COMMANDS
 import keyboards as kb
 import callbacks as cb

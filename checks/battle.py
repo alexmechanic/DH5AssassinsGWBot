@@ -33,29 +33,45 @@ def battle_check_user(call):
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     userChoice = call.data
     log.debug("User %d (%s %s) is trying to vote for battle (%s)" % (*user, userChoice.replace(cb.CHECK_CALLBACK_PREFIX, "")))
-    if common.current_battle:
-        if message_id == common.current_battle.check_id:
-            ret = common.current_battle.CheckUser(user, userChoice)
-            if ret or userChoice == cb.CHECK_LATE_CALLBACK:
-                markup = kb.KEYBOARD_CHECK
-                if common.current_battle.is_rolling:
-                    markup = kb.KEYBOARD_CHECK_ROLLED
-                elif common.current_battle.is_started:
-                    markup = kb.KEYBOARD_LATE
-                bot.edit_message_text(common.current_battle.GetText(), inline_message_id=message_id, 
-                                    parse_mode="markdown", reply_markup=markup)
-                bot.answer_callback_query(call.id, common.current_battle.GetVotedText(userChoice))
-                if userChoice == cb.CHECK_LATE_CALLBACK and ret:
-                    text = ICON_LATE + " [%s" % user[2]
-                    if user[1] != None:
-                        text += " (%s)" % user[1]
-                    text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
-                    bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
-                    log.debug("Battle user late notification posted")
-            else:
-                log.error("Failed")
-                bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
+    if common.current_battle and message_id == common.current_battle.check_id:
+        is_guide_training = False
+        battle_object = common.current_battle
+    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+        is_guide_training = True
+        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user[0]].demonstration
+        else:
+            log.error("Not at training stage, aborting")
+            bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
             return
+    else:
+        battle_object = None
+    if battle_object:
+        ret = battle_object.CheckUser(user, userChoice)
+        if ret or userChoice == cb.CHECK_LATE_CALLBACK:
+            markup = kb.KEYBOARD_CHECK
+            if battle_object.is_rolling:
+                markup = kb.KEYBOARD_CHECK_ROLLED
+            elif battle_object.is_started:
+                markup = kb.KEYBOARD_LATE
+            if is_guide_training:
+                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                                      parse_mode="markdown", reply_markup=markup)
+            else:
+                bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id, 
+                                      parse_mode="markdown", reply_markup=markup)
+            bot.answer_callback_query(call.id, battle_object.GetVotedText(userChoice))
+            if userChoice == cb.CHECK_LATE_CALLBACK and ret and not is_guide_training:
+                text = ICON_LATE + " [%s" % user[2]
+                if user[1] != None:
+                    text += " (%s)" % user[1]
+                text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
+                bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
+                log.debug("Battle user late notification posted")
+        else:
+            log.error("Failed")
+            bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CHECK_CALLBACK_PREFIX, ""))
+        return
     log.error("Battle not found!")
     bot.answer_callback_query(call.id, "Неверный чек боя! Пожалуйста, создайте новый")
 
@@ -67,6 +83,7 @@ def battle_check_user(call):
 def battle_control(call):
     # print("battle_control")
     # print(call)
+    message_id = call.inline_message_id
     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
     log.debug("User %d (%s %s) is trying to control battle" % (*user,))
     if not hlp.IsUserAdmin(user[0]):
@@ -75,7 +92,7 @@ def battle_control(call):
         return
     userChoice = call.data
     need_send_notification = True
-    if common.current_battle:
+    if common.current_battle and message_id == common.current_battle.check_id:
         notification_text = ""
         user_addend = " ([%s](tg://user?id=%d))" % (user[2], user[0])
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
