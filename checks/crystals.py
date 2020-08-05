@@ -191,10 +191,8 @@ class Crystals():
             if len(self.users[step]) > 0:
                 text += "\n*%s (%d):*\n" % (step, len(self.users[step]))
                 for user in self.users[step]:
-                    text += ICON_MEMBER+" [%s" % user.name
-                    if user.username != None:
-                        text += " (%s)" % user.username
-                    text += "](tg://user?id=%d)\n" % user._id
+                    text += ICON_MEMBER + " "
+                    text += user.GetString()
         return text
 
     def GetVotedText(self, user, action):

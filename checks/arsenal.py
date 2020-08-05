@@ -240,10 +240,9 @@ class Arsenal():
             is_fired = self.done_users[user][4]
             text += ICON_RAGE*is_fired
             text += " *+%d*" % inc
-            text += " %s[%s" % (self.GetNominatedPrefix(user), name)
-            if nick != None:
-                text += " (%s)" % nick
-            text += "](tg://user?id=%d) (x%d)\n" % (user, count)
+            text += " %s" % self.GetNominatedPrefix(user)
+            text += User(user, name, nick).GetString()
+            text += " (x%d)\n" % count
         return text
 
     def Increment(self, user, value, notify=True):

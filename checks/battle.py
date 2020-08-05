@@ -276,7 +276,7 @@ class Battle():
         users = set()
         for group in [self.checks, self.rages, self.fasts, self.arsenals, self.lates]:
             for user in group:
-                username = self.GetUserString(user, group)
+                username = User(user, group[user][0], group[user][1]).GetString(with_link=False)
                 username += self.GetPlusNumericSuffix(user, group)
                 users.add(username)
         return users
@@ -314,17 +314,6 @@ class Battle():
             statistic[User(k, v[0], v[1])] = Score(battle=1)
         return statistic
 
-    def GetUserString(self, user, group, with_link=False):
-        text = ""
-        if with_link:
-            text += "["
-        text += "%s" % group[user][0]
-        if group[user][1] != None:
-            text += " (%s)" % group[user][1]
-        if with_link:
-            text += "](tg://user?id=%d)" % user
-        return text
-
     def GetNominatedPrefix(self, user, group):
         user = User(user, group[user][0], group[user][1])
         return common.statistics.GetNominatedPrefix(user)
@@ -357,21 +346,21 @@ class Battle():
             text += ICON_CHECK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.checks)
-            text += self.GetUserString(user, self.checks, with_link=True)
+            text += User(user, self.checks[user][0], self.checks[user][1]).GetString()
             text += self.GetPlusNumericSuffix(user, self.checks) + "\n"
 
         for user in self.rages:
             text += ICON_RAGE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.rages)
-            text += self.GetUserString(user, self.rages, with_link=True)
+            text += User(user, self.rages[user][0], self.rages[user][1]).GetString()
             text += self.GetPlusNumericSuffix(user, self.rages) + "\n"
 
         for user in self.fasts:
             text += ICON_FAST + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.fasts)
-            text += self.GetUserString(user, self.fasts, with_link=True)
+            text += User(user, self.fasts[user][0], self.fasts[user][1]).GetString()
             text += self.GetPlusNumericSuffix(user, self.fasts) + "\n"
 
         if len(self.arsenals) > 0:
@@ -380,7 +369,7 @@ class Battle():
             text += ICON_ARS + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.arsenals)
-            text += self.GetUserString(user, self.arsenals, with_link=True)
+            text += User(user, self.arsenals[user][0], self.arsenals[user][1]).GetString()
             text += self.GetPlusNumericSuffix(user, self.arsenals) + "\n"
 
         if len(self.thinking) > 0:
@@ -389,7 +378,7 @@ class Battle():
             text += ICON_THINK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.thinking)
-            text += self.GetUserString(user, self.thinking, with_link=True)  + "\n"
+            text += User(user, self.thinking[user][0], self.thinking[user][1]).GetString()
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
@@ -397,7 +386,7 @@ class Battle():
             text += ICON_CANCEL + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.cancels)
-            text += self.GetUserString(user, self.cancels, with_link=True) + "\n"
+            text += User(user, self.cancels[user][0], self.cancels[user][1]).GetString()
 
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
@@ -405,7 +394,7 @@ class Battle():
             text += ICON_LATE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.lates)
-            text += self.GetUserString(user, self.lates, with_link=True)
+            text += User(user, self.lates[user][0], self.lates[user][1]).GetString()
             text += self.GetPlusNumericSuffix(user, self.lates) + "\n"
 
         return text

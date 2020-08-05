@@ -60,12 +60,10 @@ def GetBestListText(best_list, key="battles"):
     MEDALS = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
     text = ""
     for i in range(0, len(best_list)):
-        user  = best_list[i]["user"].GetData()
         score = best_list[i]["score"].GetData()
-        text += MEDALS[i] + " [%s" % user["name"]
-        if user["username"]:
-            text += " (%s)" % user["username"]
-        text += "](tg://user?id=%d) _(%d)_\n" % (user["id"], score[key])
+        text += MEDALS[i] + " "
+        text += best_list[i]["user"].GetString()
+        text += " _(%d)_\n" % score[key]
     return text if text != "" else "_нет победителей_"
 
 
@@ -333,6 +331,20 @@ class User(Jsonable):
                 "name"    : self.name,
                 "username": self.username
                 }
+
+    def GetString(self, with_link=True):
+        text = ""
+        if with_link:
+            text += "["
+        if self.name:
+            text += self.name
+        if self.username:
+            if self.name:
+                text += "/"
+            text += self.username
+        if with_link:
+            text += "](tg://user?id=%d)" % self._id
+        return text
 
 
 #
