@@ -192,7 +192,7 @@ class Crystals():
                 text += "\n*%s (%d):*\n" % (step, len(self.users[step]))
                 for user in self.users[step]:
                     text += ICON_MEMBER + " "
-                    text += user.GetString()
+                    text += user.GetString() + "\n"
         return text
 
     def GetVotedText(self, user, action):
