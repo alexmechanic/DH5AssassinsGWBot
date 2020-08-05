@@ -14,6 +14,7 @@ import common
 from common import bot
 from icons import *
 from commands import COMMANDS
+from statistics import User
 import keyboards as kb
 import callbacks as cb
 import helpers as hlp
@@ -169,45 +170,41 @@ class WarPreCheck():
         text = self.GetHeader()
         text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
-        if len(self.friday) > 0:
-            text += "\n" + ICON_CALENDAR+" *Пятница (%d):*\n" % len(self.friday)
-        for user in self.friday:
-            text += ICON_MEMBER+" [%s" % self.friday[user][0]
-            if self.friday[user][1] != None:
-                text += " (%s)" % self.friday[user][1]
-            text += "](tg://user?id=%d)\n" % user
-
-        if len(self.saturday) > 0:
-            text += "\n" + ICON_CALENDAR+" *Суббота (%d):*\n" % len(self.saturday)
-        for user in self.saturday:
-            text += ICON_MEMBER+" [%s" % self.saturday[user][0]
-            if self.saturday[user][1] != None:
-                text += " (%s)" % self.saturday[user][1]
-            text += "](tg://user?id=%d)\n" % user
-
-        if len(self.sunday) > 0:
-            text += "\n" + ICON_CALENDAR+" *Воскресенье (%d):*\n" % len(self.sunday)
-        for user in self.sunday:
-            text += ICON_MEMBER+" [%s" % self.sunday[user][0]
-            if self.sunday[user][1] != None:
-                text += " (%s)" % self.sunday[user][1]
-            text += "](tg://user?id=%d)\n" % user
+        active = len(self.friday) + len(self.saturday) + len(self.sunday)
+        activeDict = {**self.friday, **self.saturday, **self.sunday}
+        if active > 0:
+            text += "\n" + ICON_CALENDAR+" *%d идут:*\n" % active
+        for k, v in activeDict.items():
+            text += ICON_MEMBER+" "
+            text += User(k, v[0], v[1]).GetString()
+            text += " _("
+            if k in self.friday and k in self.saturday and k in self.sunday:
+                text += "все дни"
+            else:
+                dayPrinted = False
+                if k in self.friday:
+                    text += "Пт"
+                    dayPrinted = True
+                if k in self.saturday:
+                    text += ", " * dayPrinted
+                    text += "Сб"
+                    dayPrinted = True
+                if k in self.sunday:
+                    text += ", " * dayPrinted
+                    text += "Вс"
+            text += ")_\n"
 
         if len(self.thinking) > 0:
-            text += "\n" + "*Думают (%d):*\n" % len(self.thinking)
-        for user in self.thinking:
-            text += ICON_THINK + " [%s" % self.thinking[user][0]
-            if self.thinking[user][1] != None:
-                text += " (%s)" % self.thinking[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += "\n" + "*%d думают:*\n" % len(self.thinking)
+        for k, v in self.thinking.items():
+            text += ICON_THINK + " " 
+            text += User(k, v[0], v[1]).GetString() + "\n"
 
         if len(self.cancels) > 0:
-            text += "\n" + "*Не идут (%d):*\n" % len(self.cancels)
-        for user in self.cancels:
-            text += ICON_CANCEL + " [%s" % self.cancels[user][0]
-            if self.cancels[user][1] != None:
-                text += " (%s)" % self.cancels[user][1]
-            text += "](tg://user?id=%d)\n" % user
+            text += "\n" + "*%d не идут:*\n" % len(self.cancels)
+        for k, v in self.cancels.items():
+            text += ICON_CANCEL + " "
+            text += User(k, v[0], v[1]).GetString() + "\n"
 
         return text
 
