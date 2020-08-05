@@ -178,7 +178,7 @@ class Arsenal():
         critical = common.settings.GetSetting("critical_threshold")
         if self.progress > critical and self.progress < 120: # critical value is calculated on thoughts that further 14+14 hits will trigger Rage
             log.info("Arsenal is critical! %s/120", self.progress)
-            text = ICON_ARS+" Прогресс арсенала: %s/120!\n‼️ Вставайте на паузу!" % self.progress
+            text = ICON_ARS+"‼️ Прогресс арсенала: %s/120.\nВставайте на паузу!" % self.progress
             notification = common.bot.send_message(common.warchat_id, text).wait()
             if common.settings.GetSetting("pin"):
                 common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
