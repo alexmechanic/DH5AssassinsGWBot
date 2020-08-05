@@ -32,9 +32,9 @@ def precheck_check_user(call):
     # print("precheck_check_user")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
     userChoice = call.data
-    log.debug("User %d (%s %s) is trying to vote for pre-check (%s)" % (*user, userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
+    log.debug("%s is trying to vote for pre-check (%s)" % (user, userChoice.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
     if not hlp.CanStartNewPrecheck():
         if message_id == common.current_precheck.check_id:
             ret = common.current_precheck.CheckUser(user, userChoice)
@@ -57,9 +57,9 @@ def precheck_check_user(call):
 def precheck_control(call):
     # print("precheck_control")
     # print(call)
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control pre-check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]):
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to control pre-check" % user)
+    if not hlp.IsUserAdmin(user._id):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком!")
         log.error("Failed (not an admin)")
         return
@@ -80,9 +80,9 @@ def precheck_control(call):
 def precheck_query_inline(q):
     # print("precheck_query_inline")
     # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create pre-check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
+    user = User(q.from_user.id, q.from_user.first_name, q.from_user.username)
+    log.debug("%s is trying to create pre-check" % user)
+    if not hlp.IsUserAdmin(user._id): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
@@ -140,16 +140,14 @@ def aws_precheck_restore():
 class WarPreCheck():
     check_id = None
     is_postponed = False
-    friday = {}
-    saturday = {}
-    sunday = {}
+    daily = {}
     thinking = {}
     cancels = {}
 
+    dayKeys = { 5: TEXT_FR, 6: TEXT_SAT, 7: TEXT_SUN }
+
     def __init__(self):
-        self.friday = {}
-        self.saturday = {}
-        self.sunday = {}
+        self.daily = {}
         self.thinking = {}
         self.cancels = {}
         log.info("New pre-check created")
@@ -170,56 +168,44 @@ class WarPreCheck():
         text = self.GetHeader()
         text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
-        active = len(self.friday) + len(self.saturday) + len(self.sunday)
-        activeDict = {**self.friday, **self.saturday, **self.sunday}
-        if active > 0:
-            text += "\n" + ICON_CALENDAR+" *%d идут:*\n" % active
-        for k, v in activeDict.items():
+        if len(self.daily) > 0:
+            text += "\n" + ICON_CALENDAR+" *%d идут:*\n" % len(self.daily)
+        for user, days in self.daily.items():
             text += ICON_MEMBER+" "
-            text += User(k, v[0], v[1]).GetString()
+            text += user.GetString()
             text += " _("
-            if k in self.friday and k in self.saturday and k in self.sunday:
+            if len(days) == 3:
                 text += "все дни"
             else:
-                dayPrinted = False
-                if k in self.friday:
-                    text += "Пт"
-                    dayPrinted = True
-                if k in self.saturday:
-                    text += ", " * dayPrinted
-                    text += "Сб"
-                    dayPrinted = True
-                if k in self.sunday:
-                    text += ", " * dayPrinted
-                    text += "Вс"
+                text += ", ".join(self.dayKeys[i] for i in days)
             text += ")_\n"
 
         if len(self.thinking) > 0:
             text += "\n" + "*%d думают:*\n" % len(self.thinking)
-        for k, v in self.thinking.items():
+        for user in self.thinking:
             text += ICON_THINK + " " 
-            text += User(k, v[0], v[1]).GetString() + "\n"
+            text += user.GetString() + "\n"
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d не идут:*\n" % len(self.cancels)
-        for k, v in self.cancels.items():
+        for user in self.cancels:
             text += ICON_CANCEL + " "
-            text += User(k, v[0], v[1]).GetString() + "\n"
+            text += user.GetString() + "\n"
 
         return text
 
     def GetVotedText(self, user, action):
         text = "Вы "
         if action == cb.PRECHECK_FR_CALLBACK:
-            if user[0] not in self.friday:
+            if user not in self.daily or 5 not in self.daily[user]:
                 text += "не "
             return text + "участвуете в пятницу"
         if action == cb.PRECHECK_SAT_CALLBACK:
-            if user[0] not in self.saturday:
+            if not self.daily[user] or 6 not in self.daily[user]:
                 text += "не "
             return text + "участвуете в субботу"
         if action == cb.PRECHECK_SUN_CALLBACK:
-            if user[0] not in self.sunday:
+            if not self.daily[user] or 7 not in self.daily[user]:
                 text += "не "
             return text + "участвуете в воскресенье"
         elif action == cb.PRECHECK_FULL_CALLBACK:
@@ -227,19 +213,13 @@ class WarPreCheck():
         elif action == cb.PRECHECK_THINK_CALLBACK:
             return text + "еще не решили. Постарайтесь определиться к началу ВГ!"
         elif action == cb.PRECHECK_CANCEL_CALLBACK:
-            return text + "не будете участвовать в этой ВГ. Жаль"
+            return text + "не будете участвовать в этой ВГ"
 
     def CheckUser(self, user, action):
         ret = True
-        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
-        if action == cb.PRECHECK_FR_CALLBACK:
-            ret = self.SetFriday(user)
-        if action == cb.PRECHECK_SAT_CALLBACK:
-            ret = self.SetSaturday(user)
-        if action == cb.PRECHECK_SUN_CALLBACK:
-            ret = self.SetSunday(user)
-        elif action == cb.PRECHECK_FULL_CALLBACK:
-            ret = self.SetFull(user)
+        log.info("User %s voted for %s" % (user, action.replace(cb.PRECHECK_CALLBACK_PREFIX, "")))
+        if action in [cb.PRECHECK_FULL_CALLBACK, cb.PRECHECK_FR_CALLBACK, cb.PRECHECK_SAT_CALLBACK, cb.PRECHECK_SUN_CALLBACK]:
+            ret = self.SetDaily(user, action)
         elif action == cb.PRECHECK_THINK_CALLBACK:
             ret = self.SetThinking(user)
         elif action == cb.PRECHECK_CANCEL_CALLBACK:
@@ -251,86 +231,43 @@ class WarPreCheck():
         aws_precheck_backup()
         return ret
 
-    def SetFriday(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        if userid in self.friday: # if already checked - uncheck
-            del self.friday[userid]
-        else: # if not - check
-            self.friday[userid] = [name, nick]
+    def SetDaily(self, user, action):
+        if action == cb.PRECHECK_FULL_CALLBACK:
+            self.daily[user] = [5, 6, 7]
+        else:
+            daysList = [cb.PRECHECK_FR_CALLBACK, cb.PRECHECK_SAT_CALLBACK, cb.PRECHECK_SUN_CALLBACK]
+            dayIndex = daysList.index(action)+5
+            try: # if already checked - uncheck
+                self.daily[user].remove(dayIndex)
+            except: # if not - check
+                try:
+                    self.daily[user].append(dayIndex)
+                except KeyError: # if list is empty - create one with only item
+                    self.daily[user] = [dayIndex]
+        if self.daily[user] == []: # empty list workaround - delete user key
+            del self.daily[user]
+        else: # sort days keys to stay in calendary order
+            print(self.daily[user])
+            self.daily[user].sort()
         # remove user from other lists
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
-        return True
-
-    def SetSaturday(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        if userid in self.saturday: # if already checked - uncheck
-            del self.saturday[userid]
-        else: # if not - check
-            self.saturday[userid] = [name, nick]
-        # remove user from other lists
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
-        return True
-
-    def SetSunday(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        if userid in self.sunday: # if already checked - uncheck
-            del self.sunday[userid]
-        else: # if not - check
-            self.sunday[userid] = [name, nick]
-        # remove user from other lists
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
-        return True
-
-    def SetFull(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        if userid not in self.friday:
-            self.friday[userid] = [name, nick]
-        if userid not in self.saturday:
-            self.saturday[userid] = [name, nick]
-        if userid not in self.sunday:
-            self.sunday[userid] = [name, nick]
-        # remove user from other lists
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.cancels: del self.cancels[user]
         return True
 
     def SetThinking(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.thinking:
-            if userid == user: # cannot think more than once
-                return False
+        if user in self.thinking: # cannot think more than once
+            return False
         # remove user from other lists
-        if userid in self.friday: del self.friday[userid]
-        if userid in self.saturday: del self.saturday[userid]
-        if userid in self.sunday: del self.sunday[userid]
-        if userid in self.cancels: del self.cancels[userid]
-        self.thinking[userid] = [name, nick]
+        if user in self.daily: del self.daily[user]
+        if user in self.cancels: del self.cancels[user]
+        self.thinking[user] = 1 # just a placeholder
         return True
 
     def SetCancel(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.cancels:
-            if userid == user: # cannot cancel more than once
-                return False
+        if user in self.cancels: # cannot cancel more than once
+            return False
         # remove user from other lists
-        if userid in self.friday: del self.friday[userid]
-        if userid in self.saturday: del self.saturday[userid]
-        if userid in self.sunday: del self.sunday[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        self.cancels[userid] = [name, nick]
+        if user in self.daily: del self.daily[user]
+        if user in self.thinking: del self.thinking[user]
+        self.cancels[user] = 1
         return True

@@ -18,9 +18,12 @@ ICON_ROLL   = "🎲"
 ICON_START  = "▶️"
 ICON_STOP   = "⏹"
 ICON_EXIT   = "#️⃣"
-ICON_FR     = "🗓 Пт"
-ICON_SAT    = "🗓 Сб"
-ICON_SUN    = "🗓 Вс"
+TEXT_FR     = "Пт"
+ICON_FR     = "🗓 "+TEXT_FR
+TEXT_SAT    = "Сб"
+ICON_SAT    = "🗓 "+TEXT_SAT
+TEXT_SUN    = "Вс"
+ICON_SUN    = "🗓 "+TEXT_SUN
 
 # contextual icons
 ICON_STAR     = "⭐️"
