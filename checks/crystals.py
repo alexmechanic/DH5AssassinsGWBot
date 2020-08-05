@@ -151,7 +151,7 @@ class Crystals():
         self.max = int(ranges[0])
         self.step = int(ranges[1])
         self.users = {}
-        value = (0, self.step)
+        value = (0, self.step-1)
         # calculate avaliable keys for choices
         keys = []
         while value[1] <= self.max:
@@ -160,7 +160,7 @@ class Crystals():
             value = (value[1]+1, value[1]+self.step)
         # do not forget remainder
         if self.max % self.step:
-            value = (value[0], self.max)
+            value = (value[0]+1, self.max)
             key = "%d-%d" % value
             keys.append(key)
         # add one key for more than max value
