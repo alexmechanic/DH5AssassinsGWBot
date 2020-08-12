@@ -133,6 +133,7 @@ def arsenal_query_inline(q):
 
 class Arsenal():
     check_id = None
+    crit_notification = None
     progress = 0
     is_fired = False
     is_fire_notified = False
@@ -149,6 +150,7 @@ class Arsenal():
         now = datetime.datetime.now()
         self.rage_time = now.replace(hour=int(times[0]), minute=int(times[1]))
         self.rage_msg_id = None
+        self.crit_notification = None
         self.is_postponed = False
         log.info("New arsenal check created")
 
@@ -180,8 +182,13 @@ class Arsenal():
             log.info("Arsenal is critical! %s/120", self.progress)
             text = ICON_ARS+"‼️ Прогресс арсенала: %s/120.\nВставайте на паузу!" % self.progress
             notification = common.bot.send_message(common.warchat_id, text).wait()
+            if self.crit_notification:
+                common.bot.delete_message(self.crit_notification.chat.id, self.crit_notification.message_id).wait()
+            self.crit_notification = common.bot.send_message(common.warchat_id, text).wait()
             if common.settings.GetSetting("pin"):
-                common.bot.pin_chat_message(notification.chat.id, notification.message_id, disable_notification=False)
+                common.bot.pin_chat_message(self.crit_notification.chat.id,
+                                            self.crit_notification.message_id,
+                                            disable_notification=False)
             log.debug("Arsenal critical status notification posted")
             return True
         return False
@@ -290,7 +297,7 @@ class Arsenal():
         log.info("Vote successful")
         if notify:
             try:
-                if not self.CheckNotifyIfFired(except_user=user):
+                if not self.CheckNotifyIfFired(except_user=user) and inc != 0:
                     self.CheckNotifyIfCritical()
             except:
                 pass # guide case, do nothing
