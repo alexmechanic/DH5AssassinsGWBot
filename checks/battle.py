@@ -156,6 +156,7 @@ def battle_query_inline(q):
             # to help admin not doing exact battle stop but start another with auto-stopping the previous
             if hlp.CanStopCurrentBattle():
                 q.data = kb.CHECK_CONTROL_OPTIONS[2]
+                q.inline_message_id = common.current_battle.check_id
                 battle_control(q)
         else:
             log.error("Trying to setup another battle while current is not finished")
