@@ -378,7 +378,7 @@ class Battle():
             text += ICON_THINK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.thinking)
-            text += User(user, self.thinking[user][0], self.thinking[user][1]).GetString()
+            text += User(user, self.thinking[user][0], self.thinking[user][1]).GetString() + "\n"
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
@@ -386,7 +386,7 @@ class Battle():
             text += ICON_CANCEL + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.cancels)
-            text += User(user, self.cancels[user][0], self.cancels[user][1]).GetString()
+            text += User(user, self.cancels[user][0], self.cancels[user][1]).GetString() + "\n"
 
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
