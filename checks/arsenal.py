@@ -86,6 +86,7 @@ def arsenal_control(call):
             # unpin rage time message
             bot.unpin_chat_message(common.warchat_id)
             bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
+            hlp.LogEvent("🏁 %s завершил чек арсенала" % user.GetString(with_link=False))
             return
     log.error("Ars check not found!")
     bot.answer_callback_query(call.id, "Неверный чек арсенала! Пожалуйста, создайте новый")
@@ -202,6 +203,7 @@ class Arsenal():
             log.debug(activeUsers)
             now = datetime.datetime.now()
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
+            hlp.LogEvent(text)
             for user in activeUsers:
                 if user != except_user:
                     common.bot.send_message(user._id, text)

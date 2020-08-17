@@ -119,6 +119,7 @@ def battle_control(call):
                              notification_text + " (%s)" % user.GetString(),
                              parse_mode="markdown")
             log.debug("Battle status notification posted: %s" % notification_text)
+        hlp.LogEvent(notification_text + " (%s)" % user.GetString(with_link=False))
         bot.answer_callback_query(call.id, notification_text)
         return
     log.error("Battle not found!")

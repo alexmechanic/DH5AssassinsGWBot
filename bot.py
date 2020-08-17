@@ -67,6 +67,7 @@ def chosen_inline_handler(r):
     elif r.result_id == 'arsenal':
         log.debug("%s created arsenal check" % user)
         _, time = hlp.IsArsQuery(r)
+        hlp.LogEvent(ICON_ARS + " %s создал чек арсенала (ярость в %s)" % (user.GetString(with_link=False), time))
         common.current_arscheck = Arsenal(time)
         common.current_arscheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=r.inline_message_id,
@@ -80,10 +81,12 @@ def chosen_inline_handler(r):
         log.debug("%s created numbers check" % user)
         _, numbers = hlp.IsNumbersQuery(r)
         if len(numbers) == 1:
+            hlp.LogEvent(ICON_NUMBERS + " %s создал чек номеров (%s)" % (user.GetString(with_link=False), numbers[0]))
             log.debug("%s created screens numbers check (%s)" % (user, numbers[0]))
             common.current_numcheck = NumbersCheck(int(numbers[0]))
             common.current_numcheck.SetMessageID(r.inline_message_id)
         else:
+            hlp.LogEvent(ICON_NUMBERS + " %s создал чек номеров по игре (%s)" % (user.GetString(with_link=False), len(numbers)))
             log.debug("%s created in-game numbers check (%s)" % (user, ' '.join(str(num) for num in numbers)))
             common.current_numcheck = NumbersCheck(len(numbers), ingame=True, ingame_nums=numbers)
             common.current_numcheck.SetMessageID(r.inline_message_id)
@@ -198,6 +201,27 @@ def command_set_warchat(m):
         common.warchat_id = m.chat.id
         log.info("war chat set: %d", common.warchat_id)
         bot.send_message(m.from_user.id, ICON_CHECK+" Военный чат успешно задан!")
+
+
+#
+# Set log chat
+# (chat command)
+#
+@bot.message_handler(commands=['logchat'])
+def command_set_logchat(m):
+    if hlp.IsInPrivateChat(m):
+        hlp.SendHelpWrongChat(m.from_user.id, "/logchat", "запомнить чат событий", False)
+        return
+    bot.delete_message(m.chat.id, m.message_id)
+    if not hlp.IsUserAdmin(m.from_user.id):
+        hlp.SendHelpNonAdmin(m)
+        return
+    if common.logchat_id != None and common.logchat_id == m.chat.id:
+        bot.send_message(m.from_user.id, ICON_CANCEL+" Чат событий уже задан!")
+    else:
+        common.logchat_id = m.chat.id
+        log.info("log chat set: %d", common.logchat_id)
+        bot.send_message(m.from_user.id, ICON_CHECK+" Чат событий успешно задан!")
 
 
 #

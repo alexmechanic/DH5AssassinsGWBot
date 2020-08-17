@@ -103,6 +103,7 @@ def numbers_control(call):
                                   inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
             bot.answer_callback_query(call.id, "🏁 Чек номеров завершен")
+            hlp.LogEvent("🏁 %s завершил чек номеров" % user.GetString(with_link=False))
             return
         else:
             log.error("invalid action!")
@@ -257,6 +258,7 @@ class NumbersCheck():
             self._500["notified"] = True
         if text:
             common.bot.send_message(common.warchat_id, text)
+            hlp.LogEvent("%s отметил %s" % (user.GetString(with_link=False), text))
 
     def GetHeader(self):
         return ICON_NUMBERS+" *Прогресс номеров:*\n"
@@ -338,6 +340,7 @@ class NumbersCheck():
         # user record is new
         if not done:
             self.users[user] = [number_to_check]
+        hlp.LogEvent("%s снял звезду с %d (%s → %s)" % (
             user.GetString(with_link=False),
             number_to_check,
             ICON_STAR*oldValue,
