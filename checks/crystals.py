@@ -31,16 +31,16 @@ def crystals_check_user(call):
     # print("crystals_check_user")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.first_name, call.from_user.username]
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
     userChoice = call.data
-    log.debug("User %d (%s %s) is trying to vote for crystals (%s)" % (*user, userChoice.replace(cb.CRYSTALS_CALLBACK_PREFIX, "")))
+    log.debug("%s is trying to vote for crystals (%s)" % (user, userChoice.replace(cb.CRYSTALS_CALLBACK_PREFIX, "")))
     if not hlp.CanStartNewCryscheck():
         if message_id == common.current_cryscheck.check_id:
-            ret = common.current_cryscheck.CheckUser(User(*user,), userChoice)
+            ret = common.current_cryscheck.CheckUser(user, userChoice)
             if (ret):
                 bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=message_id, 
                                     parse_mode="markdown", reply_markup=kb.KEYBOARD_CRYSTALS)
-                bot.answer_callback_query(call.id, common.current_cryscheck.GetVotedText(User(*user,), userChoice))
+                bot.answer_callback_query(call.id, common.current_cryscheck.GetVotedText(user, userChoice))
             else:
                 log.error("Failed")
                 bot.answer_callback_query(call.id, "Вы уже проголосовали (%s)" % userChoice.replace(cb.CRYSTALS_CALLBACK_PREFIX, ""))
@@ -56,9 +56,9 @@ def crystals_check_user(call):
 def crystals_control(call):
     # print("crystals_control")
     # print(call)
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control crystals check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]):
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to control crystals check" % user)
+    if not hlp.IsUserAdmin(user):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком!")
         log.error("Failed (not an admin)")
         return
@@ -80,9 +80,9 @@ def crystals_control(call):
 def crystals_query_inline(q):
     # print("crystals_query_inline")
     # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create crystals check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
+    user = User(q.from_user.id, q.from_user.first_name, q.from_user.username)
+    log.debug("%s is trying to create crystals check" % user)
+    if not hlp.IsUserAdmin(user): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)

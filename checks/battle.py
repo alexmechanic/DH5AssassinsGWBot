@@ -30,16 +30,16 @@ def battle_check_user(call):
     # print("battle_check_user")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
     userChoice = call.data
-    log.debug("User %d (%s %s) is trying to vote for battle (%s)" % (*user, userChoice.replace(cb.CHECK_CALLBACK_PREFIX, "")))
+    log.debug("%s is trying to vote for battle (%s)" % (user, userChoice.replace(cb.CHECK_CALLBACK_PREFIX, "")))
     if common.current_battle and message_id == common.current_battle.check_id:
         is_guide_training = False
         battle_object = common.current_battle
-    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+    elif user._id in common.user_guiding.keys(): # guide battle example workaround
         is_guide_training = True
-        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
-            battle_object = common.user_guiding[user[0]].demonstration
+        if common.user_guiding[user._id].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user._id].demonstration
         else:
             log.error("Not at training stage, aborting")
             bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
@@ -55,17 +55,14 @@ def battle_check_user(call):
             elif battle_object.is_started:
                 markup = kb.KEYBOARD_LATE
             if is_guide_training:
-                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                bot.edit_message_text(battle_object.GetText(), user._id, battle_object.check_id,
                                       parse_mode="markdown", reply_markup=markup)
             else:
                 bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id, 
                                       parse_mode="markdown", reply_markup=markup)
             bot.answer_callback_query(call.id, battle_object.GetVotedText(userChoice))
             if userChoice == cb.CHECK_LATE_CALLBACK and ret and not is_guide_training:
-                text = ICON_LATE + " [%s" % user[2]
-                if user[1] != None:
-                    text += " (%s)" % user[1]
-                text += "](tg://user?id=%d) пришел на бой!\n" % user[0]
+                text = ICON_LATE + " %s пришел на бой!\n" % user.GetString()
                 bot.send_message(common.warchat_id, text, parse_mode="markdown", disable_notification=True)
                 log.debug("Battle user late notification posted")
         else:
@@ -84,9 +81,9 @@ def battle_control(call):
     # print("battle_control")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control battle" % (*user,))
-    if not hlp.IsUserAdmin(user[0]):
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to control battle" % user)
+    if not hlp.IsUserAdmin(user):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять боем!")
         log.error("Failed (not an admin)")
         return
@@ -94,7 +91,6 @@ def battle_control(call):
     need_send_notification = True
     if common.current_battle and message_id == common.current_battle.check_id:
         notification_text = ""
-        user_addend = " ([%s](tg://user?id=%d))" % (user[2], user[0])
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             common.current_battle.DoRollBattle()
             notification_text = ICON_ROLL+" Крутит"
@@ -112,14 +108,15 @@ def battle_control(call):
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             if not common.current_battle.is_started: # if battle was cancelled - do not send notification
                 need_send_notification = False
+                notification_text = ICON_CANCEL+" Бой отменен"
             else: # unpin other battle messages
                 bot.unpin_chat_message(common.warchat_id)
+                notification_text = ICON_FINISH+" Бой завершен"
             reset_battlechecks(call)
-            notification_text = ICON_FINISH+" Бой завершен"
             # do not notify about roll / stop
         if need_send_notification:
             bot.send_message(common.warchat_id,
-                             notification_text + user_addend,
+                             notification_text + " (%s)" % user.GetString(),
                              parse_mode="markdown")
             log.debug("Battle status notification posted: %s" % notification_text)
         bot.answer_callback_query(call.id, notification_text)
@@ -135,9 +132,9 @@ def battle_control(call):
 def battle_query_inline(q):
     # print("battle_query_inline")
     # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create battle check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
+    user = User(q.from_user.id, q.from_user.first_name, q.from_user.username)
+    log.debug("%s is trying to create battle check" % user)
+    if not hlp.IsUserAdmin(user): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
@@ -203,14 +200,13 @@ class Battle():
     is_rolling = False
     is_started = False
     is_postponed = False
-    # { userid: [name, nick, twink_count] }
-    checks = {}
-    rages = {}
-    fasts = {}
-    arsenals = {}
-    thinking = {}
-    cancels = {}
-    lates = {}
+    checks = {}   # { User: twink_count }
+    rages = {}    # { User: twink_count }
+    fasts = {}    # { User: twink_count }
+    arsenals = {} # { User: twink_count }
+    thinking = {} # { User: 0 }
+    cancels = {}  # { User: 0 }
+    lates = {}    # { User: 0 }
 
     def __init__(self, start):
         now = datetime.datetime.now()
@@ -240,24 +236,22 @@ class Battle():
         return []
 
     # Notify participated users if battle has been rolled
-    def BattleRollNotifyActiveUsers(self, except_user=[None]):
-        activeUsers = self.GetActiveUsersID()
+    def BattleRollNotifyActiveUsers(self, except_user=None):
+        activeUsers = self.GetActiveUsers()
         for user in activeUsers:
             # do not notify user if checked for rage or is one preseed the button
-            if user not in self.rages and \
-               user != except_user[0]:
-                bot.send_message(user, ICON_ROLL+" Крутит!")
+            if user not in self.rages and user != except_user:
+                bot.send_message(user._id, ICON_ROLL+" Крутит!")
 
     # Notify participated users if battle has been started
-    def BattleStartNotifyActiveUsers(self, except_user=[None]):
-        activeUsers = self.GetActiveUsersID()
+    def BattleStartNotifyActiveUsers(self, except_user=None):
+        activeUsers = self.GetActiveUsers()
         for user in activeUsers:
             # do not notify user if checked for rage or is one preseed the button
-            if user not in self.rages and \
-               user != except_user[0]:
-                bot.send_message(user, ICON_SWORDS+" Бой начинается!")
+            if user not in self.rages and user != except_user:
+                bot.send_message(user._id, ICON_SWORDS+" Бой начинается!")
 
-    def GetActiveUsersID(self):
+    def GetActiveUsers(self):
         users = set()
         for user in self.checks:
             users.add(user)
@@ -277,7 +271,7 @@ class Battle():
         users = set()
         for group in [self.checks, self.rages, self.fasts, self.arsenals, self.lates]:
             for user in group:
-                username = User(user, group[user][0], group[user][1]).GetString(with_link=False)
+                username = user.GetString(with_link=False)
                 username += self.GetPlusNumericSuffix(user, group)
                 users.add(username)
         return users
@@ -303,25 +297,24 @@ class Battle():
 
     def CollectStatistic(self):
         statistic = {}
-        for k, v in self.checks.items():
-            statistic[User(k, v[0], v[1])] = Score(battle=1)
-        for k, v in self.rages.items():
-            statistic[User(k, v[0], v[1])] = Score(battle=1)
-        for k, v in self.fasts.items():
-            statistic[User(k, v[0], v[1])] = Score(battle=1)
-        for k, v in self.arsenals.items():
-            statistic[User(k, v[0], v[1])] = Score(battle=1)
-        for k, v in self.lates.items():
-            statistic[User(k, v[0], v[1])] = Score(battle=1)
+        for user in self.checks:
+            statistic[user] = Score(battle=1)
+        for user in self.rages:
+            statistic[user] = Score(battle=1)
+        for user in self.fasts:
+            statistic[user] = Score(battle=1)
+        for user in self.arsenals:
+            statistic[user] = Score(battle=1)
+        for user in self.lates:
+            statistic[user] = Score(battle=1)
         return statistic
 
     def GetNominatedPrefix(self, user, group):
-        user = User(user, group[user][0], group[user][1])
         return common.statistics.GetNominatedPrefix(user)
 
     def GetPlusNumericSuffix(self, user, group):
         nums = "0¹²³⁴⁵⁶⁷⁸⁹"
-        count = group[user][2]
+        count = group[user]
         return "⁺" + nums[count] if count > 0 else ""
 
     def GetHeader(self):
@@ -347,30 +340,30 @@ class Battle():
             text += ICON_CHECK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.checks)
-            text += User(user, self.checks[user][0], self.checks[user][1]).GetString()
+            text += user.GetString()
             text += self.GetPlusNumericSuffix(user, self.checks) + "\n"
 
         for user in self.rages:
             text += ICON_RAGE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.rages)
-            text += User(user, self.rages[user][0], self.rages[user][1]).GetString()
+            text += user.GetString()
             text += self.GetPlusNumericSuffix(user, self.rages) + "\n"
 
         for user in self.fasts:
             text += ICON_FAST + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.fasts)
-            text += User(user, self.fasts[user][0], self.fasts[user][1]).GetString()
+            text += user.GetString()
             text += self.GetPlusNumericSuffix(user, self.fasts) + "\n"
 
         if len(self.arsenals) > 0:
             text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
-        for user in self.arsenals:
+        for user in self.arsenals.items():
             text += ICON_ARS + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.arsenals)
-            text += User(user, self.arsenals[user][0], self.arsenals[user][1]).GetString()
+            text += user.GetString()
             text += self.GetPlusNumericSuffix(user, self.arsenals) + "\n"
 
         if len(self.thinking) > 0:
@@ -379,7 +372,7 @@ class Battle():
             text += ICON_THINK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.thinking)
-            text += User(user, self.thinking[user][0], self.thinking[user][1]).GetString() + "\n"
+            text += user.GetString() + "\n"
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
@@ -387,7 +380,7 @@ class Battle():
             text += ICON_CANCEL + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.cancels)
-            text += User(user, self.cancels[user][0], self.cancels[user][1]).GetString() + "\n"
+            text += user.GetString() + "\n"
 
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
@@ -395,7 +388,7 @@ class Battle():
             text += ICON_LATE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
             text += self.GetNominatedPrefix(user, self.lates)
-            text += User(user, self.lates[user][0], self.lates[user][1]).GetString()
+            text += user.GetString()
             text += self.GetPlusNumericSuffix(user, self.lates) + "\n"
 
         return text
@@ -418,7 +411,7 @@ class Battle():
 
     def CheckUser(self, user, action):
         ret = True
-        log.info("User %d (%s %s) voted for %s" % (*user, action.replace(cb.CHECK_CALLBACK_PREFIX, "")))
+        log.info("%s voted for %s" % (user, action.replace(cb.CHECK_CALLBACK_PREFIX, "")))
         if action == cb.CHECK_CHECK_CALLBACK:
             self.SetCheck(user)
         elif action == cb.CHECK_RAGE_CALLBACK:
@@ -442,140 +435,114 @@ class Battle():
         return ret
 
     def SetCheck(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.checks:
-            if userid == user: # check +1 (twink case)
-                oldrecord = self.checks[userid]
-                oldrecord[2] = oldrecord[2]+1
-                self.checks[userid] = oldrecord
+        for _user in self.checks:
+            if user == _user: # check +1 (twink case)
+                oldrecord = self.checks[user]
+                self.checks[user] = oldrecord+1
                 return
         # remove user from other lists
-        if userid in self.rages: del self.rages[userid]
-        if userid in self.arsenals: del self.arsenals[userid]
-        if userid in self.fasts: del self.fasts[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.rages: del self.rages[user]
+        if user in self.arsenals: del self.arsenals[user]
+        if user in self.fasts: del self.fasts[user]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.cancels: del self.cancels[user]
         # create record
-        self.checks[userid] = [name, nick, 0]
+        self.checks[user] = 0
 
     def SetRageOnly(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.rages:
-            if userid == user: # check +1 (twink case)
-                oldrecord = self.rages[userid]
-                oldrecord[2] = oldrecord[2]+1
-                self.rages[userid] = oldrecord
+        for _user in self.rages:
+            if user == _user: # check +1 (twink case)
+                oldrecord = self.rages[user]
+                self.rages[user] = oldrecord+1
                 return
         # remove user from other lists
-        if userid in self.checks: del self.checks[userid]
-        if userid in self.arsenals: del self.arsenals[userid]
-        if userid in self.fasts: del self.fasts[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.checks: del self.checks[user]
+        if user in self.arsenals: del self.arsenals[user]
+        if user in self.fasts: del self.fasts[user]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.cancels: del self.cancels[user]
         # create record
-        self.rages[userid] = [name, nick, 0]
+        self.rages[user] = 0
 
     def SetFast(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.fasts:
-            if userid == user: # check +1 (twink case)
-                oldrecord = self.fasts[userid]
-                oldrecord[2] = oldrecord[2]+1
-                self.fasts[userid] = oldrecord
+        for _user in self.fasts:
+            if user == _user: # check +1 (twink case)
+                oldrecord = self.fasts[user]
+                self.fasts[user] = oldrecord+1
                 return
         # remove user from other lists
-        if userid in self.checks: del self.checks[userid]
-        if userid in self.rages: del self.rages[userid]
-        if userid in self.arsenals: del self.arsenals[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.checks: del self.checks[user]
+        if user in self.rages: del self.rages[user]
+        if user in self.arsenals: del self.arsenals[user]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.cancels: del self.cancels[user]
         # create record
-        self.fasts[userid] = [name, nick, 0]
+        self.fasts[user] = 0
 
     def SetArsenalOnly(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.arsenals:
-            if userid == user: # check +1 (twink case)
-                oldrecord = self.arsenals[userid]
-                oldrecord[2] = oldrecord[2]+1
-                self.arsenals[userid] = oldrecord
+        for _user in self.arsenals:
+            if user == _user: # check +1 (twink case)
+                oldrecord = self.arsenals[user]
+                self.arsenals[user] = oldrecord+1
                 return
         # remove user from other lists
-        if userid in self.checks: del self.checks[userid]
-        if userid in self.rages: del self.rages[userid]
-        if userid in self.fasts: del self.fasts[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.checks: del self.checks[user]
+        if user in self.rages: del self.rages[user]
+        if user in self.fasts: del self.fasts[user]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.cancels: del self.cancels[user]
         # create record
-        self.arsenals[userid] = [name, nick, 0]
+        self.arsenals[user] = 0
 
     def SetThinking(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.thinking:
-            if userid == user: # cannot think more than once
+        for _user in self.thinking:
+            if user == _user: # cannot think more than once
                 return False
         # remove user from other lists
-        if userid in self.checks: del self.checks[userid]
-        if userid in self.rages: del self.rages[userid]
-        if userid in self.fasts: del self.fasts[userid]
-        if userid in self.arsenals: del self.arsenals[userid]
-        if userid in self.cancels: del self.cancels[userid]
+        if user in self.checks: del self.checks[user]
+        if user in self.rages: del self.rages[user]
+        if user in self.fasts: del self.fasts[user]
+        if user in self.arsenals: del self.arsenals[user]
+        if user in self.cancels: del self.cancels[user]
         # create record
-        self.thinking[userid] = [name, nick]
+        self.thinking[user] = 0
         return True
 
     def SetCancel(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
-        for user in self.cancels:
-            if userid == user: # cannot cancel more than once
+        for _user in self.cancels:
+            if user == _user: # cannot cancel more than once
                 return False
         # remove user from other lists
-        if userid in self.checks: del self.checks[userid]
-        if userid in self.rages: del self.rages[userid]
-        if userid in self.fasts: del self.fasts[userid]
-        if userid in self.arsenals: del self.arsenals[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        if userid in self.lates: del self.lates[userid]
+        if user in self.checks: del self.checks[user]
+        if user in self.rages: del self.rages[user]
+        if user in self.fasts: del self.fasts[user]
+        if user in self.arsenals: del self.arsenals[user]
+        if user in self.thinking: del self.thinking[user]
+        if user in self.lates: del self.lates[user]
         # create record
-        self.cancels[userid] = [name, nick]
+        self.cancels[user] = 0
         return True
 
     def SetLate(self, user):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
         # now we use twinks so support late +1s
-        if userid in self.checks:
+        if user in self.checks:
             self.SetCheck(user)
             return False
-        elif userid in self.rages:
+        elif user in self.rages:
             self.SetRageOnly(user)
             return False
-        elif userid in self.fasts:
+        elif user in self.fasts:
             self.SetFast(user)
             return False
-        elif userid in self.arsenals:
+        elif user in self.arsenals:
             self.SetArsenalOnly(user)
             return False
-        for user in self.lates:
-            if userid == user: # check +1 (twink case)
-                oldrecord = self.lates[userid]
-                oldrecord[2] = oldrecord[2]+1
-                self.lates[userid] = oldrecord
+        for _user in self.lates:
+            if user == _user: # check +1 (twink case)
+                oldrecord = self.lates[user]
+                self.lates[user] = oldrecord+1
                 return False
-        if userid in self.cancels: del self.cancels[userid]
-        if userid in self.thinking: del self.thinking[userid]
-        self.lates[userid] = [name, nick, 0]
+        if user in self.cancels: del self.cancels[user]
+        if user in self.thinking: del self.thinking[user]
+        self.lates[user] = 0
         return True

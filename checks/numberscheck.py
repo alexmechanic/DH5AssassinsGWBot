@@ -30,15 +30,15 @@ def numbers_check_user(call):
     # print("numbers_check_user")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to vote for numbers (%s)" % (*user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to vote for numbers (%s)" % (user, call.data.replace(cb.NUMBERS_CALLBACK_PREFIX, "")))
     if common.current_numcheck and message_id == common.current_numcheck.check_id:
         is_guide_training = False
         battle_object = common.current_numcheck
-    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+    elif user._id in common.user_guiding.keys(): # guide battle example workaround
         is_guide_training = True
-        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
-            battle_object = common.user_guiding[user[0]].demonstration
+        if common.user_guiding[user._id].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user._id].demonstration
         else:
             log.error("Not at training stage, aborting")
             bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
@@ -53,12 +53,12 @@ def numbers_check_user(call):
                 battle_object.DoEndCheck()
                 reply = None
             if is_guide_training:
-                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                bot.edit_message_text(battle_object.GetText(), user._id, battle_object.check_id,
                                       parse_mode="markdown", reply_markup=reply)
             else:
                 bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id, 
                                       parse_mode="markdown", reply_markup=reply)
-                battle_object.CheckNotifyIfAchieved()
+                battle_object.CheckNotifyIfAchieved(user)
         bot.answer_callback_query(call.id)
         return
     log.error("Numbers check not found!")
@@ -73,9 +73,9 @@ def numbers_control(call):
     # print("numbers_control")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control numbers check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]):
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to control numbers check" % user)
+    if not hlp.IsUserAdmin(user):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком номеров!")
         log.error("Failed (not an admin)")
         return
@@ -86,7 +86,7 @@ def numbers_control(call):
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
-            common.current_numcheck.CheckNotifyIfAchieved()
+            common.current_numcheck.CheckNotifyIfAchieved(user)
             bot.answer_callback_query(call.id, "Отмечено "+ICON_500)
             return
         elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[1]: # make 1000
@@ -94,7 +94,7 @@ def numbers_control(call):
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
                                   parse_mode="markdown")
-            common.current_numcheck.CheckNotifyIfAchieved()
+            common.current_numcheck.CheckNotifyIfAchieved(user)
             bot.answer_callback_query(call.id, "Отмечено "+ICON_1000)
             return
         elif userChoice == kb.NUMBERS_CONTROL_OPTIONS[2]: # stop
@@ -118,9 +118,9 @@ def numbers_control(call):
 def numbers_query_inline(q):
     # print("numbers_query_inline")
     # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create numbers check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
+    user = User(q.from_user.id, q.from_user.first_name, q.from_user.username)
+    log.debug("%s is trying to create numbers check" % user)
+    if not hlp.IsUserAdmin(user): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
@@ -247,13 +247,16 @@ class NumbersCheck():
         self._1000["time"] = now
         self.DoEndCheck()
 
-    def CheckNotifyIfAchieved(self):
+    def CheckNotifyIfAchieved(self, user):
+        text = None
         if self._1000["done"] and not self._1000["notified"]:
-            common.bot.send_message(common.warchat_id, "%s ❗" % ICON_1000)
+            text = "%s ❗" % ICON_1000
             self._1000["notified"] = True
         elif self._500["done"] and not self._500["notified"]:
-            common.bot.send_message(common.warchat_id, "%s ❗" % ICON_500)
+            text = "%s ❗" % ICON_500
             self._500["notified"] = True
+        if text:
+            common.bot.send_message(common.warchat_id, text)
 
     def GetHeader(self):
         return ICON_NUMBERS+" *Прогресс номеров:*\n"
@@ -312,12 +315,11 @@ class NumbersCheck():
 
     def CheckUser(self, user, value):
         ret = True
-        newUser = User(*user,)
         try:
             number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
         except: # user hit Cancel
             return self.UncheckUser(user) 
-        log.info("User %d (%s %s) voted for %d" % (*user, number_to_check))
+        log.info("%s voted for %d" % (user, number_to_check))
         oldValue = self.numbers[number_to_check]
         if oldValue == 0: # can't set number below 0
             log.error("Vote failed - number is already empty")
@@ -326,8 +328,8 @@ class NumbersCheck():
         self.numbers[number_to_check] = (oldValue - 1)
         # record user action
         done = False
-        for user in self.users:
-            if user == newUser: # record exist
+        for _user in self.users:
+            if _user == user: # record exist
                 oldRecord = self.users[user]
                 oldRecord.append(number_to_check)
                 self.users[user] = oldRecord
@@ -335,20 +337,24 @@ class NumbersCheck():
                 break
         # user record is new
         if not done:
-            self.users[newUser] = [number_to_check]
+            self.users[user] = [number_to_check]
+            user.GetString(with_link=False),
+            number_to_check,
+            ICON_STAR*oldValue,
+            ICON_STAR*(oldValue-1) if oldValue-1 > 0 else "пустой")
+            )
         self.CheckAchievements()
         log.info("Vote successful")
         return True
 
     # undo last number result for user if user made mistake
     def UncheckUser(self, user):
-        log.debug("User %d (%s %s) reverting his last vote" % (user[0], user[1], user[2]))
+        log.debug("%s reverting his last vote" % user)
         lastNumber = None
-        newUser = User(*user,)
         modified = False
         # obtain user impact
-        for user in self.users:
-            if user == newUser: # record exist
+        for _user in self.users:
+            if _user == user: # record exist
                 lastNumber = self.users[user][-1]
                 modified = True
                 # revert last number record
@@ -382,7 +388,7 @@ class NumbersCheck():
             if not self._500["done"]:
                 log.debug("Reached 500")
                 log.debug("Users impact:")
-                log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
+                log.debug(' '.join('{}: {}'.format(user, count) for user, count in self.users.items()))
         if is_1000:
             if not self._1000["time"]:
                 self._1000["time"] = now
@@ -390,6 +396,6 @@ class NumbersCheck():
             if not self._1000["done"]:
                 log.debug("Reached 1000")
                 log.debug("Users impact:")
-                log.debug(' '.join('{}: {}'.format(*user) for user in self.users.items()))
+                log.debug(' '.join('{}: {}'.format(user, count) for user, count in self.users.items()))
         self._500["done"] = is_500
         self._1000["done"] = is_1000

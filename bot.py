@@ -42,29 +42,30 @@ log = get_logger("bot.root")
 def chosen_inline_handler(r):
     # print("chosen_inline_handler")
     # print(r)
-    user = [r.from_user.id, r.from_user.username, r.from_user.first_name]
+    user = User(r.from_user.id, r.from_user.first_name, r.from_user.username)
     if r.result_id == 'battle':
-        log.debug("User %d (%s %s) created battle check (%s)" % (*user, r.query))
+        log.debug("%s created battle check (%s)" % (user, r.query))
         _, time = hlp.IsCheckTimeQuery(r)
+        hlp.LogEvent(ICON_SWORDS + " %s назначил бой на %s" % (user.GetString(with_link=False), time))
         common.current_battle = Battle(time)
         common.current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK)
     elif r.result_id == 'precheck':
-        log.debug("User %d (%s %s) created pre-check" % (*user,))
+        log.debug("%s created pre-check" % user)
         common.current_precheck = WarPreCheck()
         common.current_precheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_precheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_PRECHECK)
     elif r.result_id == 'cryscheck':
         ranges = common.settings.GetSetting("crystals_ranges")
-        log.debug("User %d (%s %s) created crystals check" % (*user,))
+        log.debug("%s created crystals check" % user)
         common.current_cryscheck = Crystals(ranges)
         common.current_cryscheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_cryscheck.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=kb.KEYBOARD_CRYSTALS)
     elif r.result_id == 'arsenal':
-        log.debug("User %d (%s %s) created arsenal check" % (*user,))
+        log.debug("%s created arsenal check" % user)
         _, time = hlp.IsArsQuery(r)
         common.current_arscheck = Arsenal(time)
         common.current_arscheck.SetMessageID(r.inline_message_id)
@@ -76,14 +77,14 @@ def chosen_inline_handler(r):
         if common.settings.GetSetting("pin"):
             bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
     elif r.result_id == 'numbers':
-        log.debug("User %d (%s %s) created numbers check" % (*user,))
+        log.debug("%s created numbers check" % user)
         _, numbers = hlp.IsNumbersQuery(r)
         if len(numbers) == 1:
-            log.debug("User %d (%s %s) created screens numbers check (%s)" % (*user, numbers[0]))
+            log.debug("%s created screens numbers check (%s)" % (user, numbers[0]))
             common.current_numcheck = NumbersCheck(int(numbers[0]))
             common.current_numcheck.SetMessageID(r.inline_message_id)
         else:
-            log.debug("User %d (%s %s) created in-game numbers check (%s)" % (*user, ' '.join(str(num) for num in numbers)))
+            log.debug("%s created in-game numbers check (%s)" % (user, ' '.join(str(num) for num in numbers)))
             common.current_numcheck = NumbersCheck(len(numbers), ingame=True, ingame_nums=numbers)
             common.current_numcheck.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_numcheck.GetText(), inline_message_id=r.inline_message_id,
@@ -179,8 +180,8 @@ def show_help_officer(m):
     bot.delete_message(m.chat.id, m.message_id)
 
 #
-# Start pending battle
-# (private bot chat)
+# Set war chat
+# (chat command)
 #
 @bot.message_handler(commands=['warchat'])
 def command_set_warchat(m):
@@ -191,7 +192,6 @@ def command_set_warchat(m):
     if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
-    
     if common.warchat_id != None and common.warchat_id == m.chat.id:
         bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
     else:

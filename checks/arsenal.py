@@ -30,16 +30,16 @@ def arsenal_check_user(call):
     # print("arsenal_check_user")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
     userChoice = call.data
-    log.debug("User %d (%s %s) is trying to vote for arsenal (%s)" % (*user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
+    log.debug("%s is trying to vote for arsenal (%s)" % (user, userChoice.replace(cb.ARS_CALLBACK_PREFIX, "")))
     if common.current_arscheck and message_id == common.current_arscheck.check_id:
         is_guide_training = False
         battle_object = common.current_arscheck
-    elif user[0] in common.user_guiding.keys(): # guide battle example workaround
+    elif user._id in common.user_guiding.keys(): # guide battle example workaround
         is_guide_training = True
-        if common.user_guiding[user[0]].IsTrainingStage(): # using check is allowed only at several steps of guide
-            battle_object = common.user_guiding[user[0]].demonstration
+        if common.user_guiding[user._id].IsTrainingStage(): # using check is allowed only at several steps of guide
+            battle_object = common.user_guiding[user._id].demonstration
         else:
             log.error("Not at training stage, aborting")
             bot.answer_callback_query(call.id, "На данный момент использование чека недоступно")
@@ -49,7 +49,7 @@ def arsenal_check_user(call):
     if battle_object:
         if battle_object.Increment(user, userChoice, notify=not is_guide_training):
             if is_guide_training:
-                bot.edit_message_text(battle_object.GetText(), user[0], battle_object.check_id,
+                bot.edit_message_text(battle_object.GetText(), user._id, battle_object.check_id,
                                       parse_mode="markdown", reply_markup=kb.KEYBOARD_ARS)
             else:
                 bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id,
@@ -70,9 +70,9 @@ def arsenal_control(call):
     # print("arsenal_control")
     # print(call)
     message_id = call.inline_message_id
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to control arsenal check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]):
+    user = User(call.from_user.id, call.from_user.first_name, call.from_user.username)
+    log.debug("%s is trying to control arsenal check" % user)
+    if not hlp.IsUserAdmin(user):
         bot.answer_callback_query(call.id, "Только офицеры могут управлять чеком арсенала!")
         log.error("Failed (not an admin)")
         return
@@ -98,9 +98,9 @@ def arsenal_control(call):
 def arsenal_query_inline(q):
     # print("arsenal_query_inline")
     # print(q)
-    user = [q.from_user.id, q.from_user.username, q.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to create arsenal check" % (*user,))
-    if not hlp.IsUserAdmin(user[0]): # non-admins cannot post votes
+    user = User(q.from_user.id, q.from_user.first_name, q.from_user.username)
+    log.debug("%s is trying to create arsenal check" % user)
+    if not hlp.IsUserAdmin(user): # non-admins cannot post votes
         log.error("Failed (not an admin)")
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
@@ -139,7 +139,7 @@ class Arsenal():
     is_fire_notified = False
     rage_time = None
     rage_msg_id = None
-    done_users = {} # {userid: [name, nick, value, count, is_fired]}
+    done_users = {} # {User: [value, count, is_fired]}
     is_postponed = False
 
     def __init__(self, rage):
@@ -172,8 +172,8 @@ class Arsenal():
 
     def CollectStatistic(self):
         statistic = {}
-        for k, v in self.done_users.items():
-            statistic[User(k, v[0], v[1])] = Score(arsenal=v[2])
+        for user in self.done_users:
+            statistic[user] = Score(arsenal=self.done_users[user][0])
         return statistic
 
     def CheckNotifyIfCritical(self):
@@ -193,18 +193,18 @@ class Arsenal():
         return False
 
     # Notify participated users if arsenal has been fired
-    def CheckNotifyIfFired(self, except_user=[None]):
+    def CheckNotifyIfFired(self, except_user=None):
         if self.is_fired and not self.is_fire_notified:
             # get active users from battle check
-            activeUsers = common.current_battle.GetActiveUsersID()
+            activeUsers = common.current_battle.GetActiveUsers()
             for user in self.done_users:
                 activeUsers.add(user)
             log.debug(activeUsers)
             now = datetime.datetime.now()
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
             for user in activeUsers:
-                if user != except_user[0]:
-                    common.bot.send_message(user, text)
+                if user != except_user:
+                    common.bot.send_message(user._id, text)
             self.is_fire_notified = True
             notification = common.bot.send_message(common.warchat_id, text).wait()
             if common.settings.GetSetting("pin"):
@@ -214,7 +214,6 @@ class Arsenal():
         return False
 
     def GetNominatedPrefix(self, user):
-        user = User(user, self.done_users[user][0], self.done_users[user][1])
         return common.statistics.GetNominatedPrefix(user)
 
     def GetHeader(self):
@@ -239,29 +238,24 @@ class Arsenal():
             text += ICON_RAGE+" %0.2d:%0.2d ГОРИТ! " % (now.hour, now.minute) +ICON_RAGE+"\n"
         text += "\n"*(len(self.done_users) != 0)
         for user in self.done_users:
-            name = self.done_users[user][0]
-            nick = self.done_users[user][1]
-            inc = self.done_users[user][2]
-            count = self.done_users[user][3]
-            is_fired = self.done_users[user][4]
+            inc = self.done_users[user][0]
+            count = self.done_users[user][1]
+            is_fired = self.done_users[user][2]
             text += ICON_RAGE*is_fired
             text += " *+%d*" % inc
             text += " %s" % self.GetNominatedPrefix(user)
-            text += User(user, name, nick).GetString()
+            text += user.GetString()
             text += " (x%d)\n" % count
         return text
 
     def Increment(self, user, value, notify=True):
-        userid = user[0]
-        nick = user[1]
-        name = user[2]
         arsValue = value.replace(cb.ARS_CALLBACK_PREFIX, "")
         inc = 0
         user_fired = False # this variable is needed in order to count ars value for user even if ars is already fired now
         user_newcount = 1
-        log.info("User %d (%s %s) voted for %s" % (*user, arsValue))
+        log.info("%s voted for %s" % (user, arsValue))
         if arsValue == "Cancel":
-            if userid in self.done_users:
+            if user in self.done_users:
                 self.UndoIncrement(user)
                 return True
             log.error("Vote failed - user already reverted his votes")
@@ -287,12 +281,12 @@ class Arsenal():
             self.is_postponed = True
         user_oldvalue = 0
         user_oldcount = 0
-        if userid in self.done_users:
-            user_oldvalue = self.done_users[userid][2]
-            user_oldcount = self.done_users[userid][3]
-        user_record = [name, nick, user_oldvalue+inc, user_oldcount+user_newcount, user_fired]
-        log.debug("User %d (%s %s) total impact: %s" % (*user, str(user_record[2:])))
-        self.done_users[userid] = user_record
+        if user in self.done_users:
+            user_oldvalue = self.done_users[user][0]
+            user_oldcount = self.done_users[user][1]
+        user_record = [user_oldvalue+inc, user_oldcount+user_newcount, user_fired]
+        log.debug("%s total impact: %s" % (user, str(user_record)))
+        self.done_users[user] = user_record
         log.info("Vote successful")
         if notify:
             try:
@@ -304,16 +298,14 @@ class Arsenal():
 
     # undo arsenal result for user if user made mistake
     def UndoIncrement(self, user):
-        userid = user[0]
-        dec = self.done_users[userid][2]
-        log.debug("User %d (%s %s) reverting all his votes" % (user[0], user[1], user[2]))
-        del self.done_users[userid]
-        self.progress -= dec
+        log.debug("%s reverting all his votes" % user)
+        self.progress -= self.done_users[user][0]
+        del self.done_users[user]
         if self.progress < 120:
             log.warning("Rage might've been reverted!")
             self.is_fired = False
             self.is_fire_notified = False
             self.is_postponed = False
             for user in self.done_users:
-                self.done_users[user][4] = False
+                self.done_users[user][2] = False
         log.info("Revert successful")
