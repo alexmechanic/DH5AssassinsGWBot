@@ -161,6 +161,9 @@ def GetScreenMessageByMediaID(_id):
     return None
 
 def IsUserAdmin(id):
+    from statistics import User
+    if isinstance(id, User):
+        id = id._id
     if str(id) in common.admins or \
        str(id) == common.ROOT_ADMIN[0]:
         return True
