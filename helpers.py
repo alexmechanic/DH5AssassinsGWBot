@@ -97,8 +97,8 @@ def SendHelpNonAdmin(message):
 
 def SendHelpNoBattle(chat_id):
     error_text =  "Текущий активный бой отсутствует.\n"
-    error_text += "Начните новый бой, упомянув меня в военном чате и задав время чека/боя.\n"
-    error_text += "*Пример*: @assassinsgwbot 13:40 14:00"
+    error_text += "Начните новый бой, упомянув меня в военном чате и задав время боя.\n"
+    error_text += "*Пример*: @assassinsgwbot бой 14-00"
     common.bot.send_message(chat_id, error_text, parse_mode="markdown")
 
 def SendHelpWrongChat(toUser, command, description, needPrivate):
