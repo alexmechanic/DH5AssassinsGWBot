@@ -54,7 +54,9 @@ KEYBOARD_SETTINGS_CHECKS.add(*buttonsChecks, buttonBack)
 SETTINGS_CHECKS_OPTIONS = [button.callback_data for button in buttonsChecks]
 
 # checks - ars
-buttonsArs = [types.InlineKeyboardButton(text=msg.BUTTON_ARSENAL_CRIT,  callback_data=SETTINGS_CHECKS_ARSENAL_CRIT_THRESHOLD_CALLBACK)]
+buttonsArs = [types.InlineKeyboardButton(text=msg.BUTTON_ARSENAL_CRIT, callback_data=SETTINGS_CHECKS_ARSENAL_CRIT_THRESHOLD_CALLBACK),
+              types.InlineKeyboardButton(text=msg.BUTTON_ARSENAL_PIN,  callback_data=SETTINGS_CHECKS_ARSENAL_CRIT_PIN_CALLBACK)
+             ]
 KEYBOARD_SETTINGS_ARS = types.InlineKeyboardMarkup(row_width=1)
 KEYBOARD_SETTINGS_ARS.add(*buttonsArs, buttonBack)
 SETTINGS_ARS_OPTIONS = [button.callback_data for button in buttonsArs]

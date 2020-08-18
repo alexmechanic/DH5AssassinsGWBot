@@ -177,6 +177,12 @@ def CreateMenu():
                  kb.SETTINGS_EMPTY_OPTIONS,
                  cb.SETTINGS_CHECKS_ARSENAL_CRIT_THRESHOLD_CALLBACK,
                  120)
+    ars.AddChild("critical_pin",
+                 msg.BUTTON_ARSENAL_PIN, msg.TEXT_ARSENAL_PIN,
+                 kb.KEYBOARD_SETTINGS_COMMON_PIN,
+                 kb.SETTINGS_COMMON_PIN_OPTIONS,
+                 cb.SETTINGS_CHECKS_ARSENAL_CRIT_PIN_CALLBACK,
+                 0)
     checks.AddChild("numbers",
                     msg.BUTTON_NUMBERS, msg.TEXT_NUMBERS + "\n" + msg.TEXT_UNKNOWN,
                     kb.KEYBOARD_SETTINGS_EMPTY,
@@ -339,7 +345,7 @@ def settings_navigate(c):
     text = ""
     if activeMenu:
         text = activeMenu.description
-        if activeMenu.name == "pin":
+        if activeMenu.name in ["pin", "critical_pin"]:
             text += "\nСостояние: *%s*" % (msg.BUTTON_ON if common.settings.GetSetting(activeMenu.id, activeMenu.default_value) else msg.BUTTON_OFF)
         elif activeMenu.name == "critical_threshold":
             text += "\nТекущее значение: *%d/120*." % common.settings.GetSetting(activeMenu.id, activeMenu.default_value)
@@ -357,7 +363,7 @@ def settings_navigate(c):
             else:
                 text += "10):"
             is_wait_command = True
-    elif prevMenu.name == "pin":
+    elif prevMenu.name in ["pin", "critical_pin"]:
         activeMenu = prevMenu
         text = activeMenu.description
         if c.data == kb.SETTINGS_COMMON_PIN_OPTIONS[0]: # on

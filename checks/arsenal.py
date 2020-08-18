@@ -185,7 +185,7 @@ class Arsenal():
             if self.crit_notification:
                 common.bot.delete_message(self.crit_notification.chat.id, self.crit_notification.message_id).wait()
             self.crit_notification = common.bot.send_message(common.warchat_id, text).wait()
-            if common.settings.GetSetting("pin"):
+            if common.settings.GetSetting("critical_pin"):
                 common.bot.pin_chat_message(self.crit_notification.chat.id,
                                             self.crit_notification.message_id,
                                             disable_notification=False)

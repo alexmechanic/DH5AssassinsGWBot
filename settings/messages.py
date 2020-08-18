@@ -37,6 +37,9 @@ TEXT_ARSENAL    = ICON_ARS+" Настройки чека арсенала:"
 BUTTON_ARSENAL_CRIT = ICON_RAGE+" Крит. отметка"
 TEXT_ARSENAL_CRIT   = ICON_RAGE+" Настройки критического значения арсенала."
 
+BUTTON_ARSENAL_PIN = ICON_PIN+" Закрепление крит. отметки"
+TEXT_ARSENAL_PIN   = ICON_PIN+" Включение/отключение закрепления критического значения арсенала в военном чате."
+
 
 BUTTON_NUMBERS  = ICON_NUMBERS+" Номера"
 TEXT_NUMBERS    = ICON_NUMBERS+" Настройки чека номеров:"
