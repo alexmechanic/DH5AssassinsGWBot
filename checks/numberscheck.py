@@ -340,7 +340,7 @@ class NumbersCheck():
         # user record is new
         if not done:
             self.users[user] = [number_to_check]
-        hlp.LogEvent("%s снял звезду с %d (%s → %s)" % (
+        hlp.LogEvent("%s снял звезду с %d\n(%s → %s)" % (
             user.GetString(with_link=False),
             number_to_check,
             ICON_STAR*oldValue,
