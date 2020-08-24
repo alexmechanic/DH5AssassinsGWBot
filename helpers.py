@@ -111,7 +111,7 @@ def SendHelpWrongChat(toUser, command, description, needPrivate):
     common.bot.send_message(toUser, text)
 
 def LogEvent(message):
-    common.bot.send_message(common.logchat_id, message)
+    common.bot.send_message(common.logchat_id, message, disable_notification=True)
 
 def CanStartNewPrecheck():
     res = common.current_precheck == None
