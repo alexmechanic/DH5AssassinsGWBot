@@ -94,14 +94,12 @@ def battle_control(call):
         if userChoice == kb.CHECK_CONTROL_OPTIONS[0]: # roll
             common.current_battle.DoRollBattle()
             notification_text = ICON_ROLL+" Крутит"
-            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_CHECK_ROLLED
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
             common.current_battle.BattleRollNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             common.current_battle.DoStartBattle()
             notification_text = ICON_SWORDS+" Бой начался"
-            KEYBOARD_CHECK_CURRENT = kb.KEYBOARD_LATE
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
                                   parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
             common.current_battle.BattleStartNotifyActiveUsers(except_user=user)
