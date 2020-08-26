@@ -210,6 +210,7 @@ class Battle():
     def __init__(self, start):
         now = datetime.datetime.now()
         times = re.findall(r'\d+', start)
+        self.time = {"start": None, "end": None}
         self.time["start"] = now.replace(hour=int(times[0]), minute=int(times[1]))
         self.checks = {}
         self.rages = {}
