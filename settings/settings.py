@@ -150,6 +150,12 @@ def CreateMenu():
                     kb.SETTINGS_COMMON_PIN_OPTIONS,
                     cb.SETTINGS_COMMON_PIN_CALLBACK,
                     0)
+    common.AddChild("backup_timeout",
+                    msg.BUTTON_COMMON_BACKUP_TIMEOUT, msg.TEXT_COMMON_BACKUP_TIMEOUT,
+                    kb.KEYBOARD_SETTINGS_EMPTY,
+                    kb.SETTINGS_EMPTY_OPTIONS,
+                    cb.SETTINGS_COMMON_BACKUP_TIMEOUT_CALLBACK,
+                    15)
     # Checks
     checks = menu.AddChild("checks",
                            msg.BUTTON_CHECKS, msg.TEXT_CHECKS,
@@ -265,6 +271,15 @@ def update_setting(m):
             result = True
         except Exception as err:
             bot.send_message(m.from_user.id, str(err))
+    if activeMenu.name == "backup_timeout":
+        try:
+            newvalue = int(m.text)
+            if newvalue < 0 or newvalue > 1440:
+                raise ValueError("Некорректное значение! Попробуйте снова.")
+            common.settings.SetSetting(activeMenu.id, newvalue)
+            result = True
+        except Exception as err:
+            bot.send_message(m.from_user.id, str(err))
     elif activeMenu.name == "crystals_ranges":
         try:
             values = re.findall(r'\b(\d+)\b', m.text)
@@ -362,6 +377,10 @@ def settings_navigate(c):
                 text += "100):"
             else:
                 text += "10):"
+            is_wait_command = True
+        elif activeMenu.name in ["backup_timeout"]:
+            text += "\nТекущее значение: *%d минут*." % common.settings.GetSetting(activeMenu.id, activeMenu.default_value)
+            text += "\nВведите новое значение, от 0 (бекап после каждого действия) до 1440 (24 часа):"
             is_wait_command = True
     elif prevMenu.name in ["pin", "critical_pin"]:
         activeMenu = prevMenu

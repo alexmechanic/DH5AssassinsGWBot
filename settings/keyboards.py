@@ -31,7 +31,8 @@ KEYBOARD_SETTINGS_EMPTY.add(buttonBack)
 SETTINGS_EMPTY_OPTIONS = [buttonBack.callback_data]
 
 # common
-buttonsCommon = [types.InlineKeyboardButton(text=msg.BUTTON_COMMON_PIN, callback_data=SETTINGS_COMMON_PIN_CALLBACK)
+buttonsCommon = [types.InlineKeyboardButton(text=msg.BUTTON_COMMON_PIN,            callback_data=SETTINGS_COMMON_PIN_CALLBACK),
+                 types.InlineKeyboardButton(text=msg.BUTTON_COMMON_BACKUP_TIMEOUT, callback_data=SETTINGS_COMMON_BACKUP_TIMEOUT_CALLBACK)
                 ]
 KEYBOARD_SETTINGS_COMMON = types.InlineKeyboardMarkup(row_width=1)
 KEYBOARD_SETTINGS_COMMON.add(*buttonsCommon, buttonBack)

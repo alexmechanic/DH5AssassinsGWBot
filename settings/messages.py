@@ -15,23 +15,26 @@ BUTTON_ON  = "🔔 Вкл."
 BUTTON_OFF = "🔕 Выкл."
 
 BUTTON_COMMON    = ICON_GLOBE+" Общие настройки"
-TEXT_COMMON      = ICON_GLOBE+" Список общих настроек:"
+TEXT_COMMON      = BUTTON_COMMON
 
 BUTTON_COMMON_PIN = ICON_PIN+" Закрепление сообщений"
 TEXT_COMMON_PIN   = ICON_PIN+" Включение/отключение закрепления сообщений боя в военном чате."
 
+BUTTON_COMMON_BACKUP_TIMEOUT = "💽 Тайм-аут резервных копий"
+TEXT_COMMON_BACKUP_TIMEOUT   = "💽 Период времени (мин) между резервным копированием чеков."
+
 
 BUTTON_CHECKS    = ICON_LIST+" Настройки чеков"
-TEXT_CHECKS      = ICON_LIST+" Настройки чеков:"
+TEXT_CHECKS      = BUTTON_CHECKS
 
 BUTTON_PRECHECK = ICON_LIST+" Чек перед ВГ"
-TEXT_PRECHECK   = ICON_LIST+" Настройки чека перед ВГ:"
+TEXT_PRECHECK   = ICON_LIST+" Настройки чека перед ВГ"
 
 BUTTON_BATTLE   = ICON_SWORDS+" Бой"
-TEXT_BATTLE     = ICON_SWORDS+" Настройки чека боя:"
+TEXT_BATTLE     = ICON_SWORDS+" Настройки чека боя"
 
 BUTTON_ARSENAL  = ICON_ARS+" Арсенал"
-TEXT_ARSENAL    = ICON_ARS+" Настройки чека арсенала:"
+TEXT_ARSENAL    = ICON_ARS+" Настройки чека арсенала"
 
 
 BUTTON_ARSENAL_CRIT = ICON_RAGE+" Крит. отметка"
@@ -42,10 +45,10 @@ TEXT_ARSENAL_PIN   = ICON_PIN+" Включение/отключение закр
 
 
 BUTTON_NUMBERS  = ICON_NUMBERS+" Номера"
-TEXT_NUMBERS    = ICON_NUMBERS+" Настройки чека номеров:"
+TEXT_NUMBERS    = ICON_NUMBERS+" Настройки чека номеров"
 
 BUTTON_CRYSTALS = ICON_CRYSTAL+" Чек по кри"
-TEXT_CRYSTALS   = ICON_CRYSTAL+" Настройки чека по кри:"
+TEXT_CRYSTALS   = ICON_CRYSTAL+" Настройки чека по кри"
 
 
 BUTTON_CRYSTALS_RANGES = "📊 Диапазоны"
@@ -53,7 +56,7 @@ TEXT_CRYSTALS_RANGES   = "📊 Настройки вариантов ответ�
 
 
 BUTTON_STATISTIC = ICON_CALENDAR+" Настройки статистики"
-TEXT_STATISTIC   = ICON_CALENDAR+" Список настроек статистики:"
+TEXT_STATISTIC   = BUTTON_STATISTIC
 
 BUTTON_STATISTIC_BESTLIST    = "🥇 Список лучших"
 TEXT_STATISTIC_BESTLIST      = "🥇 Настройки размера списка лучших игроков."
