@@ -554,6 +554,12 @@ def AWSRestore():
     aws_stat_restore()
     aws_precheck_restore()
     aws_crystals_restore()
+    # attempt to restore battle checks (use class names here!)
+    hlp.AWSCheckRestore("Battle")
+    hlp.AWSCheckRestore("Arsenal")
+    hlp.AWSCheckRestore("NumbersCheck")
+
+
 if __name__ == '__main__':
     if "HEROKU" in list(os.environ.keys()):
         log.warning("Running on Heroku, setup webhook")

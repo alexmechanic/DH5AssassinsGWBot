@@ -219,14 +219,14 @@ class Guide():
                 reply = kb.KEYBOARD_ARS
             elif self.step == 9: # numbers check [buttons example]
                 self.demonstration.CheckUser(sampleUser1, cb.NUMBERS_5_CALLBACK)
-                reply = kb.KEYBOARD_NUMBERS
+                reply = self.demonstration.keyboard
             elif self.step == 10: # numbers check [empty example]
                 self.demonstration.CheckUser(sampleUser1, cb.NUMBERS_5_CALLBACK)
                 self.demonstration.CheckUser(sampleUser1, cb.NUMBERS_5_CALLBACK)
-                reply = kb.KEYBOARD_NUMBERS
+                reply = self.demonstration.keyboard
             elif self.step == 11: # numbers check [500 example]
                 self.demonstration.Do500()
-                reply = kb.KEYBOARD_NUMBERS
+                reply = self.demonstration.keyboard
             bot.edit_message_text(self.demonstration.GetText(), self.userid, self.demonstration.check_id, 
                       parse_mode="markdown", reply_markup=reply)
         elif self.step == 13: # finish step

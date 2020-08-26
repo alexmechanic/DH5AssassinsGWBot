@@ -6,7 +6,7 @@
 # Various support functions
 #
 
-import re, datetime, os
+import re, datetime, os, pickle
 from random import sample
 from logger import get_logger
 import common
@@ -196,6 +196,59 @@ def IsGWEndingTime():
        now <= avail_time[1]:
        return True
     return False
+
+def NeedCheckBackup(check):
+    if check.last_backup:
+        elapsed = int((datetime.datetime.now() - check.last_backup).total_seconds())
+        if elapsed >= common.settings.GetSetting("backup_timeout")*60:
+            return True
+    else:
+        return True
+    return False
+
+def AWSCheckBackup(check):
+    """
+    Backup selected battle check into pickle file.
+    Upload to AWS
+    """
+    log.debug("AWS Battle check (%s) backup started", type(check).__name__)
+    BACKUP_NAME = "GWBotCurrent" + type(check).__name__ + ".BAK"
+    with open(BACKUP_NAME, 'wb') as backup:
+        pickle.dump(check, backup, pickle.HIGHEST_PROTOCOL)
+        backup.close()
+    if AWSUploadFile(BACKUP_NAME):
+        log.debug("Battle check (%s) has been successfully uploaded to AWS cloud.", type(check).__name__)
+    else:
+        log.error("Battle check (%s) AWS upload failed.", type(check).__name__)
+
+def AWSCheckRestore(className):
+    """
+    Restore selected battle check from pickle file (download from AWS).
+    Commonly used after bot start (thanks Heroku for daily restarts)
+    """
+    log.debug("AWS Battle check (%s) restore started", className)
+    try:
+        BACKUP_NAME = "GWBotCurrent" + className + ".BAK"
+        # download backup
+        filepath = AWSDownloadFile(BACKUP_NAME)
+        if filepath == None:
+            raise Exception("Battle check (%s) AWS download failed.", className)
+        log.debug("Battle check (%s) has been successfully downloaded from AWS cloud.", className)
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            check = pickle.load(f)
+            f.close()
+        if className == "Battle":
+            common.current_battle = check
+        elif className == "Arsenal":
+            common.current_arscheck = check
+        elif className == "NumbersCheck":
+            common.current_numcheck = check
+        log.debug("Restoring Battle check (%s) successful.", className)
+        common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Чек %s восстановлен!" % className)
+        print(check.__dict__)
+    except Exception as err:
+        log.error("Restoring Battle check (%s) failed: %s", className, str(err))
 
 # generate Snow White praise text for user (random pool) 
 def SnowGeneratePraise(user):

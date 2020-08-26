@@ -196,6 +196,7 @@ def reset_battlechecks(m):
 class Battle():
     check_id = None
     time = {"start": None, "end": None}
+    last_backup = None
     is_rolling = False
     is_started = False
     is_postponed = False
@@ -212,6 +213,7 @@ class Battle():
         times = re.findall(r'\d+', start)
         self.time = {"start": None, "end": None}
         self.time["start"] = now.replace(hour=int(times[0]), minute=int(times[1]))
+        self.last_backup = None
         self.checks = {}
         self.rages = {}
         self.fasts = {}
@@ -280,12 +282,18 @@ class Battle():
         self.time["roll"] = datetime.datetime.now()
         self.is_rolling = True
         log.warning("Battle rolled at %0.2d:%0.2d" % (self.time["roll"].hour, self.time["roll"].minute))
+        if hlp.NeedCheckBackup(common.current_battle):
+            common.current_battle.last_backup = self.time["roll"]
+            hlp.AWSCheckBackup(common.current_battle)
 
     def DoStartBattle(self):
         self.time["start"] = datetime.datetime.now()
         self.is_started = True
         self.is_rolling = False
         log.warning("Battle started at %0.2d:%0.2d" % (self.time["start"].hour, self.time["start"].minute))
+        if hlp.NeedCheckBackup(common.current_battle):
+            common.current_battle.last_backup = self.time["start"]
+            hlp.AWSCheckBackup(common.current_battle)
 
     def DoEndBattle(self):
         self.time["end"] = datetime.datetime.now()
@@ -294,6 +302,9 @@ class Battle():
         if self.is_started:
             common.statistics.Update(self.CollectStatistic())
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
+        # force backup
+        common.current_battle.last_backup = self.time["end"]
+        hlp.AWSCheckBackup(common.current_battle)
 
     def CollectStatistic(self):
         statistic = {}
@@ -432,6 +443,9 @@ class Battle():
             log.info("Vote successful")
         elif action != cb.CHECK_LATE_CALLBACK:
             log.error("Vote failed")
+        if hlp.NeedCheckBackup(common.current_battle):
+            common.current_battle.last_backup = datetime.datetime.now()
+            hlp.AWSCheckBackup(common.current_battle)
         return ret
 
     def SetCheck(self, user):

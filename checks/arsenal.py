@@ -142,6 +142,7 @@ class Arsenal():
     rage_msg_id = None
     done_users = {} # {User: [value, count, is_fired]}
     is_postponed = False
+    last_backup = None
 
     def __init__(self, rage):
         self.progress = 0
@@ -153,6 +154,7 @@ class Arsenal():
         self.rage_msg_id = None
         self.crit_notification = None
         self.is_postponed = False
+        self.last_backup = None
         log.info("New arsenal check created")
 
     def SetMessageID(self, message_id):
@@ -170,6 +172,9 @@ class Arsenal():
         self.is_postponed = True
         common.statistics.Update(self.CollectStatistic())
         log.info("Arsenal check stopped")
+        # force backup
+        common.current_arscheck.last_backup = datetime.datetime.now()
+        hlp.AWSCheckBackup(common.current_arscheck)
 
     def CollectStatistic(self):
         statistic = {}
@@ -259,8 +264,14 @@ class Arsenal():
         if arsValue == "Cancel":
             if user in self.done_users:
                 self.UndoIncrement(user)
+                if hlp.NeedCheckBackup(common.current_arscheck):
+                    common.current_arscheck.last_backup = datetime.datetime.now()
+                    hlp.AWSCheckBackup(common.current_arscheck)
                 return True
             log.error("Vote failed - user already reverted his votes")
+            if hlp.NeedCheckBackup(common.current_arscheck):
+                common.current_arscheck.last_backup = datetime.datetime.now()
+                hlp.AWSCheckBackup(common.current_arscheck)
             return False
         if arsValue == "Full":
             if not self.is_fired:
@@ -296,6 +307,9 @@ class Arsenal():
                     self.CheckNotifyIfCritical()
             except:
                 pass # guide case, do nothing
+        if hlp.NeedCheckBackup(common.current_arscheck):
+            common.current_arscheck.last_backup = datetime.datetime.now()
+            hlp.AWSCheckBackup(common.current_arscheck)
         return True
 
     # undo arsenal result for user if user made mistake

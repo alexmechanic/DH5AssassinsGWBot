@@ -47,17 +47,14 @@ def numbers_check_user(call):
         battle_object = None
     if battle_object:
         if battle_object.CheckUser(user, call.data):
-            if not battle_object.Is1000(): # if reached 1000 - no need to continue numbers check
-                reply = kb.KEYBOARD_NUMBERS
-            else:
+            if battle_object.Is1000(): # if reached 1000 - no need to continue numbers check
                 battle_object.DoEndCheck()
-                reply = None
             if is_guide_training:
                 bot.edit_message_text(battle_object.GetText(), user._id, battle_object.check_id,
-                                      parse_mode="markdown", reply_markup=reply)
+                                      parse_mode="markdown", reply_markup=battle_object.keyboard)
             else:
                 bot.edit_message_text(battle_object.GetText(), inline_message_id=message_id, 
-                                      parse_mode="markdown", reply_markup=reply)
+                                      parse_mode="markdown", reply_markup=battle_object.keyboard)
                 battle_object.CheckNotifyIfAchieved(user)
         bot.answer_callback_query(call.id)
         return
@@ -85,7 +82,7 @@ def numbers_control(call):
             common.current_numcheck.Do500()
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_NUMBERS)
+                                  parse_mode="markdown", reply_markup=common.current_numcheck.keyboard)
             common.current_numcheck.CheckNotifyIfAchieved(user)
             bot.answer_callback_query(call.id, "Отмечено "+ICON_500)
             return
@@ -166,8 +163,10 @@ class NumbersCheck():
     check_id = None
     count = 1
     ingame = False
+    last_backup = None
     numbers = {} # {number: value (0-3)}
     users = {}   # {User: [numbers done]}
+    keyboard = None
     _500 = {
         "done": False,
         "notified": False,
@@ -181,6 +180,7 @@ class NumbersCheck():
     is_postponed = False # set when 500 or 1000 is gained
 
     def __init__(self, count=30, ingame=False, ingame_nums=None):
+        self.last_backup = None
         self.numbers = {}
         self.ingame = ingame
         if ingame:
@@ -203,6 +203,7 @@ class NumbersCheck():
             "time": None
             }
         self.is_postponed = False
+        self.keyboard = kb.KEYBOARD_NUMBERS
         log.info("New numbers check created (%d)" % count)
 
     def SetMessageID(self, message_id):
@@ -211,8 +212,12 @@ class NumbersCheck():
 
     def DoEndCheck(self):
         self.is_postponed = True
+        self.keyboard = None
         common.statistics.Update(self.CollectStatistic())
         log.info("Numbers check stopped")
+        # force backup
+        common.current_numcheck.last_backup = datetime.datetime.now()
+        hlp.AWSCheckBackup(common.current_numcheck)
 
     def CollectStatistic(self):
         statistic = {}
@@ -231,6 +236,9 @@ class NumbersCheck():
                 self.numbers[number] = value - 1
         self._500["time"] = datetime.datetime.now()
         self._500["done"] = True
+        if hlp.NeedCheckBackup(common.current_numcheck):
+            common.current_numcheck.last_backup = self._500["time"]
+            hlp.AWSCheckBackup(common.current_numcheck)
 
     def Is1000(self):
         return self._1000["done"]
@@ -246,6 +254,7 @@ class NumbersCheck():
             self._500["time"] = now
         self._1000["done"] = True
         self._1000["time"] = now
+        self.keyboard = None
         self.DoEndCheck()
 
     def CheckNotifyIfAchieved(self, user):
@@ -259,6 +268,10 @@ class NumbersCheck():
         if text:
             common.bot.send_message(common.warchat_id, text)
             hlp.LogEvent("%s отметил %s" % (user.GetString(with_link=False), text))
+        # need to do backup here because notified field for achievement is updated here
+        common.current_numcheck.last_backup = datetime.datetime.now()
+        hlp.AWSCheckBackup(common.current_numcheck)
+
 
     def GetHeader(self):
         return ICON_NUMBERS+" *Прогресс номеров:*\n"
@@ -320,11 +333,18 @@ class NumbersCheck():
         try:
             number_to_check = int(value.replace(cb.NUMBERS_CALLBACK_PREFIX, ""))
         except: # user hit Cancel
-            return self.UncheckUser(user) 
+            ret = self.UncheckUser(user)
+            if hlp.NeedCheckBackup(common.current_numcheck):
+                common.current_numcheck.last_backup = datetime.datetime.now()
+                hlp.AWSCheckBackup(common.current_numcheck)
+            return ret
         log.info("%s voted for %d" % (user, number_to_check))
         oldValue = self.numbers[number_to_check]
         if oldValue == 0: # can't set number below 0
             log.error("Vote failed - number is already empty")
+            if hlp.NeedCheckBackup(common.current_numcheck):
+                common.current_numcheck.last_backup = datetime.datetime.now()
+                hlp.AWSCheckBackup(common.current_numcheck)
             return False
         # update number value
         self.numbers[number_to_check] = (oldValue - 1)
@@ -348,6 +368,9 @@ class NumbersCheck():
             )
         self.CheckAchievements()
         log.info("Vote successful")
+        if hlp.NeedCheckBackup(common.current_numcheck):
+            common.current_numcheck.last_backup = datetime.datetime.now()
+            hlp.AWSCheckBackup(common.current_numcheck)
         return True
 
     # undo last number result for user if user made mistake
