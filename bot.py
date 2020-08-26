@@ -547,16 +547,19 @@ def snow_control(call):
     log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
     bot.answer_callback_query(call.id)
 
+
+def AWSRestore():
+    aws_settings_restore()
+    common.aws_admins_restore()
+    aws_stat_restore()
+    aws_precheck_restore()
+    aws_crystals_restore()
 if __name__ == '__main__':
     if "HEROKU" in list(os.environ.keys()):
         log.warning("Running on Heroku, setup webhook")
         server = Flask(__name__)
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
-        aws_settings_restore()
-        common.aws_admins_restore()
-        aws_stat_restore()
-        aws_precheck_restore()
-        aws_crystals_restore()
+        AWSRestore()
 
         @server.route('/bot' + common.TOKEN, methods=['POST'])
         def getMessage():
@@ -573,9 +576,6 @@ if __name__ == '__main__':
         log.warning("Running locally, start polling")
         bot.remove_webhook()
         bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
-        aws_settings_restore()
-        common.aws_admins_restore()
-        aws_stat_restore()
-        aws_precheck_restore()
-        aws_crystals_restore()
+        AWSRestore()
+
         bot.polling(none_stop=True, interval=0, timeout=20)
