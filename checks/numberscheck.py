@@ -216,8 +216,11 @@ class NumbersCheck():
         common.statistics.Update(self.CollectStatistic())
         log.info("Numbers check stopped")
         # force backup
-        common.current_numcheck.last_backup = datetime.datetime.now()
-        hlp.AWSCheckBackup(common.current_numcheck)
+        if not common.current_numcheck: # guide case, ignore that
+            pass
+        elif common.current_numcheck.check_id == self.check_id: # or that
+            common.current_numcheck.last_backup = datetime.datetime.now()
+            hlp.AWSCheckBackup(common.current_numcheck)
 
     def CollectStatistic(self):
         statistic = {}
@@ -269,8 +272,11 @@ class NumbersCheck():
             common.bot.send_message(common.warchat_id, text)
             hlp.LogEvent("%s отметил %s" % (user.GetString(with_link=False), text))
         # need to do backup here because notified field for achievement is updated here
-        common.current_numcheck.last_backup = datetime.datetime.now()
-        hlp.AWSCheckBackup(common.current_numcheck)
+        if not common.current_numcheck: # guide case, ignore that
+            pass
+        elif common.current_numcheck.check_id == self.check_id: # or that
+            common.current_numcheck.last_backup = datetime.datetime.now()
+            hlp.AWSCheckBackup(common.current_numcheck)
 
 
     def GetHeader(self):

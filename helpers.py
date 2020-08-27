@@ -198,6 +198,8 @@ def IsGWEndingTime():
     return False
 
 def NeedCheckBackup(check):
+    if not check: # guide case, ignore that
+        return False
     if check.last_backup:
         elapsed = int((datetime.datetime.now() - check.last_backup).total_seconds())
         if elapsed >= common.settings.GetSetting("backup_timeout")*60:

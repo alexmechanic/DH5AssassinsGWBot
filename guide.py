@@ -163,8 +163,8 @@ class Guide():
 
     def DemonstrateStep(self):
         # sample users
-        sampleUser1 = [582244665, None, "Nagibator9000"]
-        sampleUser2 = [187678932, "Alex", "alex_mech"]
+        sampleUser1 = User(582244665, None, "Nagibator9000")
+        sampleUser2 = User(187678932, "Alex", "alex_mech")
         if self.step in [1, 4, 8]: # check start
             if self.demonstration:
                 # FIX: do we need this?
@@ -184,8 +184,8 @@ class Guide():
                 self.demonstration = Arsenal("09 15")
                 reply = kb.KEYBOARD_ARS
             elif self.step == 8: # numbers check
-                self.demonstration = NumbersCheck(9)
                 kb.SetupNumbersKeyboard(count=9)
+                self.demonstration = NumbersCheck(9)
                 reply = kb.KEYBOARD_NUMBERS
             msg = bot.send_message(self.userid, self.demonstration.GetText(),
                                    parse_mode="markdown", reply_markup=reply).wait()
