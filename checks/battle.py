@@ -320,12 +320,11 @@ class Battle():
             statistic[user] = Score(battle=1)
         return statistic
 
-    def GetNominatedPrefix(self, user, group):
+    def GetNominatedPrefix(self, user):
         return common.statistics.GetNominatedPrefix(user)
 
-    def GetPlusNumericSuffix(self, user, group):
+    def GetPlusNumericSuffix(self, count):
         nums = "0¹²³⁴⁵⁶⁷⁸⁹"
-        count = group[user]
         return "⁺" + nums[count] if count > 0 else ""
 
     def GetHeader(self):
@@ -347,60 +346,60 @@ class Battle():
 
         if len(self.checks) + len(self.rages) + len(self.fasts) > 0:
             text += "\n" + "*%d идут:*\n" % (len(self.checks) + len(self.rages) + len(self.fasts))
-        for user in self.checks:
+        for user, count in self.checks.items():
             text += ICON_CHECK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.checks)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString()
-            text += self.GetPlusNumericSuffix(user, self.checks) + "\n"
+            text += self.GetPlusNumericSuffix(count) + "\n"
 
-        for user in self.rages:
+        for user, count in self.rages.items():
             text += ICON_RAGE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.rages)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString()
-            text += self.GetPlusNumericSuffix(user, self.rages) + "\n"
+            text += self.GetPlusNumericSuffix(count) + "\n"
 
-        for user in self.fasts:
+        for user, count in self.fasts.items():
             text += ICON_FAST + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.fasts)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString()
-            text += self.GetPlusNumericSuffix(user, self.fasts) + "\n"
+            text += self.GetPlusNumericSuffix(count) + "\n"
 
         if len(self.arsenals) > 0:
             text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
-        for user in self.arsenals.items():
+        for user, count in self.arsenals.items():
             text += ICON_ARS + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.arsenals)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString()
-            text += self.GetPlusNumericSuffix(user, self.arsenals) + "\n"
+            text += self.GetPlusNumericSuffix(count) + "\n"
 
         if len(self.thinking) > 0:
             text += "\n" + "*%d думают:*\n" % len(self.thinking)
-        for user in self.thinking:
+        for user, _ in self.thinking.items():
             text += ICON_THINK + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.thinking)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString() + "\n"
 
         if len(self.cancels) > 0:
             text += "\n" + "*%d передумали:*\n" % len(self.cancels)
-        for user in self.cancels:
+        for user, _ in self.cancels.items():
             text += ICON_CANCEL + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.cancels)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString() + "\n"
 
         if len(self.lates) > 0:
             text += "\n" + "*%d опоздали:*\n" % len(self.lates)
-        for user in self.lates:
+        for user, count in self.lates.items():
             text += ICON_LATE + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
-            text += self.GetNominatedPrefix(user, self.lates)
+            text += self.GetNominatedPrefix(user)
             text += user.GetString()
-            text += self.GetPlusNumericSuffix(user, self.lates) + "\n"
+            text += self.GetPlusNumericSuffix(count) + "\n"
 
         return text
 
