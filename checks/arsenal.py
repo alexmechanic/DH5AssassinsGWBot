@@ -208,7 +208,8 @@ class Arsenal():
             log.debug(activeUsers)
             now = datetime.datetime.now()
             text = ICON_RAGE+" %0.2d:%0.2d ГОРИТ!" % (now.hour, now.minute)
-            hlp.LogEvent(text)
+            if common.current_arscheck and self.check_id == common.current_arscheck.check_id:
+                hlp.LogEvent(text)
             for user in activeUsers:
                 if user != except_user:
                     common.bot.send_message(user._id, text)
