@@ -270,7 +270,7 @@ class NumbersCheck():
             self._500["notified"] = True
         if text:
             common.bot.send_message(common.warchat_id, text)
-            if common.current_arscheck and self.check_id == common.current_arscheck.check_id:
+            if common.current_numcheck and self.check_id == common.current_numcheck.check_id:
                 hlp.LogEvent("%s отметил %s" % (user.GetString(with_link=False), text))
         # need to do backup here because notified field for achievement is updated here
         if not common.current_numcheck: # guide case, ignore that
@@ -367,7 +367,7 @@ class NumbersCheck():
         # user record is new
         if not done:
             self.users[user] = [number_to_check]
-        if common.current_arscheck and self.check_id == common.current_arscheck.check_id:
+        if common.current_numcheck and self.check_id == common.current_numcheck.check_id:
             hlp.LogEvent("%s снял звезду с %d\n(%s → %s)" % (
                 user.GetString(with_link=False),
                 number_to_check,
