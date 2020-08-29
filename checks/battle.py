@@ -272,9 +272,9 @@ class Battle():
     def GetActiveUsersNames(self):
         users = set()
         for group in [self.checks, self.rages, self.fasts, self.arsenals, self.lates]:
-            for user in group:
+            for user, count in group.items():
                 username = user.GetString(with_link=False)
-                username += self.GetPlusNumericSuffix(user, group)
+                username += self.GetPlusNumericSuffix(count)
                 users.add(username)
         return users
 
