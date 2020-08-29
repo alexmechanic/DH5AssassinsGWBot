@@ -285,9 +285,9 @@ class Battle():
         self.is_rolling = True
         self.keyboard = kb.KEYBOARD_CHECK_ROLLED
         log.warning("Battle rolled at %0.2d:%0.2d" % (self.time["roll"].hour, self.time["roll"].minute))
-        if hlp.NeedCheckBackup(common.current_battle):
-            common.current_battle.last_backup = self.time["roll"]
-            hlp.AWSCheckBackup(common.current_battle)
+        # force backup
+        common.current_battle.last_backup = self.time["roll"]
+        hlp.AWSCheckBackup(common.current_battle)
 
     def DoStartBattle(self):
         self.time["start"] = datetime.datetime.now()
@@ -295,9 +295,9 @@ class Battle():
         self.is_rolling = False
         self.keyboard = kb.KEYBOARD_LATE
         log.warning("Battle started at %0.2d:%0.2d" % (self.time["start"].hour, self.time["start"].minute))
-        if hlp.NeedCheckBackup(common.current_battle):
-            common.current_battle.last_backup = self.time["start"]
-            hlp.AWSCheckBackup(common.current_battle)
+        # force backup
+        common.current_battle.last_backup = self.time["start"]
+        hlp.AWSCheckBackup(common.current_battle)
 
     def DoEndBattle(self):
         self.time["end"] = datetime.datetime.now()
