@@ -95,13 +95,13 @@ def battle_control(call):
             common.current_battle.DoRollBattle()
             notification_text = ICON_ROLL+" Крутит"
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK_ROLLED)
+                                  parse_mode="markdown", reply_markup=common.current_battle.keyboard)
             common.current_battle.BattleRollNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[1]: # start
             common.current_battle.DoStartBattle()
             notification_text = ICON_SWORDS+" Бой начался"
             bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
-                                  parse_mode="markdown", reply_markup=kb.KEYBOARD_LATE)
+                                  parse_mode="markdown", reply_markup=common.current_battle.keyboard)
             common.current_battle.BattleStartNotifyActiveUsers(except_user=user)
         elif userChoice == kb.CHECK_CONTROL_OPTIONS[2]: # stop
             if not common.current_battle.is_started: # if battle was cancelled - do not send notification
@@ -200,6 +200,7 @@ class Battle():
     is_rolling = False
     is_started = False
     is_postponed = False
+    keyboard = None
     checks = {}   # { User: twink_count }
     rages = {}    # { User: twink_count }
     fasts = {}    # { User: twink_count }
@@ -224,6 +225,7 @@ class Battle():
         self.is_rolling = False
         self.is_started = False
         self.is_postponed = False
+        self.keyboard = kb.KEYBOARD_CHECK
         log.info("New battle created (%0.2d:%0.2d)" % (self.time["start"].hour, self.time["start"].minute))
 
     def SetMessageID(self, message_id):
@@ -281,6 +283,7 @@ class Battle():
     def DoRollBattle(self):
         self.time["roll"] = datetime.datetime.now()
         self.is_rolling = True
+        self.keyboard = kb.KEYBOARD_CHECK_ROLLED
         log.warning("Battle rolled at %0.2d:%0.2d" % (self.time["roll"].hour, self.time["roll"].minute))
         if hlp.NeedCheckBackup(common.current_battle):
             common.current_battle.last_backup = self.time["roll"]
@@ -290,6 +293,7 @@ class Battle():
         self.time["start"] = datetime.datetime.now()
         self.is_started = True
         self.is_rolling = False
+        self.keyboard = kb.KEYBOARD_LATE
         log.warning("Battle started at %0.2d:%0.2d" % (self.time["start"].hour, self.time["start"].minute))
         if hlp.NeedCheckBackup(common.current_battle):
             common.current_battle.last_backup = self.time["start"]
@@ -299,6 +303,7 @@ class Battle():
         self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
         self.is_rolling = False
+        self.keyboard = None
         if self.is_started:
             common.statistics.Update(self.CollectStatistic())
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))

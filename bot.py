@@ -50,7 +50,7 @@ def chosen_inline_handler(r):
         common.current_battle = Battle(time)
         common.current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=r.inline_message_id,
-                              parse_mode="markdown", reply_markup=kb.KEYBOARD_CHECK)
+                              parse_mode="markdown", reply_markup=common.current_battle.keyboard)
     elif r.result_id == 'precheck':
         log.debug("%s created pre-check" % user)
         common.current_precheck = WarPreCheck()
