@@ -564,8 +564,8 @@ if __name__ == '__main__':
     if "HEROKU" in list(os.environ.keys()):
         log.warning("Running on Heroku, setup webhook")
         server = Flask(__name__)
-        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
         AWSRestore()
+        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
 
         @server.route('/bot' + common.TOKEN, methods=['POST'])
         def getMessage():
@@ -581,7 +581,7 @@ if __name__ == '__main__':
     else:
         log.warning("Running locally, start polling")
         bot.remove_webhook()
-        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
         AWSRestore()
+        bot.send_message(int(common.ROOT_ADMIN[0]), "🔧 Бот запущен!")
 
         bot.polling(none_stop=True, interval=0, timeout=20)
