@@ -248,7 +248,6 @@ def AWSCheckRestore(className):
             common.current_numcheck = check
         log.debug("Restoring Battle check (%s) successful.", className)
         # common.bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Чек %s восстановлен!" % className)
-        print(check.__dict__)
     except Exception as err:
         log.error("Restoring Battle check (%s) failed: %s", className, str(err))
 
