@@ -213,7 +213,8 @@ class NumbersCheck():
     def DoEndCheck(self):
         self.is_postponed = True
         self.keyboard = None
-        common.statistics.Update(self.CollectStatistic())
+        if not common.DEBUG_MODE:
+            common.statistics.Update(self.CollectStatistic())
         log.info("Numbers check stopped")
         # force backup
         if not common.current_numcheck: # guide case, ignore that
@@ -273,7 +274,7 @@ class NumbersCheck():
             if common.current_numcheck and self.check_id == common.current_numcheck.check_id:
                 hlp.LogEvent("%s отметил %s" % (user.GetString(with_link=False), text))
         # need to do backup here because notified field for achievement is updated here
-        if not common.current_numcheck: # guide case, ignore that
+        if not common.current_numcheck or common.DEBUG_MODE: # guide case, debug case, ignore that
             pass
         elif common.current_numcheck.check_id == self.check_id: # or that
             common.current_numcheck.last_backup = datetime.datetime.now()

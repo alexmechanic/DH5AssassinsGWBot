@@ -170,7 +170,8 @@ def battle_query_inline(q):
 # (private bot chat)
 #
 def reset_battlechecks(m):
-    common.statistics.CycleIfNeed()
+    if not common.DEBUG_MODE:
+        common.statistics.CycleIfNeed()
     if not hlp.CanStartNewBattle(): # should hit 'end' to start another
         common.current_battle.DoEndBattle()
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=common.current_battle.check_id,
@@ -181,10 +182,7 @@ def reset_battlechecks(m):
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                               parse_mode="markdown")
         # unpin rage time message if can
-        try:
-            bot.unpin_chat_message(common.warchat_id)
-        except:
-            pass
+        bot.unpin_chat_message(common.warchat_id)
         common.current_arscheck = None
     if common.current_numcheck: # postponed is not a condition that check ended
         common.current_numcheck.DoEndCheck()
@@ -304,7 +302,7 @@ class Battle():
         self.is_postponed = True
         self.is_rolling = False
         self.keyboard = None
-        if self.is_started:
+        if self.is_started and not common.DEBUG_MODE:
             common.statistics.Update(self.CollectStatistic())
         log.warning("Battle ended at %0.2d:%0.2d" % (self.time["end"].hour, self.time["end"].minute))
         # force backup

@@ -75,7 +75,7 @@ def chosen_inline_handler(r):
         rage_msg_text = ICON_RAGE+" *Ярость в %0.2d:%0.2d*" % (common.current_arscheck.rage_time.hour, common.current_arscheck.rage_time.minute)
         rage_msg = bot.send_message(common.warchat_id, rage_msg_text, parse_mode="markdown").wait()
         common.current_arscheck.SetRageMessageID(rage_msg.message_id)
-        if common.settings.GetSetting("pin"):
+        if common.settings.GetSetting("pin") and not common.DEBUG_MODE:
             bot.pin_chat_message(common.warchat_id, rage_msg.message_id)
     elif r.result_id == 'numbers':
         log.debug("%s created numbers check" % user)
@@ -116,6 +116,7 @@ def show_help(m):
             text += "/settings изменить глобальные настройки бота\n"
             text += "/statbackup создать резервную копию текущей статистики\n"
             text += "/statrestore восстановить статистику по резервной копии\n"
+            text += "/debug ВКЛ/ВЫКЛ режим отладки\n"
         text += "/officer инструкция для офицеров\n"
         text += "/reset аварийный сброс бота\n"
         # text += "\nТакже я умею `составлять список противников по скриншотам` из поиска гильдий, " + \
@@ -130,6 +131,7 @@ def show_help(m):
         if str(userid) == common.ROOT_ADMIN[0]:
             text += "/setadmins обновить список офицеров (в военном чате)\n"
             text += "/logchat запомнить чат событий\n"
+            text += "/debugchat запомнить чат отладки\n"
         text += "/warchat запомнить военный чат _(для отправки сообщений боя)_\n"
         text += "/best показать список лучших _(только в Вс после окончания ВГ)_\n"
         text += "/snow вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n"
@@ -196,12 +198,16 @@ def command_set_warchat(m):
     if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
-    if common.warchat_id != None and common.warchat_id == m.chat.id:
-        bot.send_message(m.from_user.id, ICON_CANCEL+" Военный чат уже задан!")
+    # if common.warchat_id != None and common.warchat_id == m.chat.id:
+    current = common.settings.GetSetting("bot_warchat")
+    if current and current == m.chat.id:
+        bot.send_message(m.from_user.id, ICON_CANCEL+" Этот чат уже задан как военный!")
     else:
         common.warchat_id = m.chat.id
+        common.settings.SetSetting("bot_warchat", m.chat.id)
         log.info("war chat set: %d", common.warchat_id)
         bot.send_message(m.from_user.id, ICON_CHECK+" Военный чат успешно задан!")
+        aws_settings_backup()
 
 
 #
@@ -217,12 +223,76 @@ def command_set_logchat(m):
     if not hlp.IsUserAdmin(m.from_user.id):
         hlp.SendHelpNonAdmin(m)
         return
-    if common.logchat_id != None and common.logchat_id == m.chat.id:
-        bot.send_message(m.from_user.id, ICON_CANCEL+" Чат событий уже задан!")
+    # if common.logchat_id != None and common.logchat_id == m.chat.id:
+    current = common.settings.GetSetting("bot_logchat")
+    if current and current == m.chat.id:
+        bot.send_message(m.from_user.id, ICON_CANCEL+" Этот чат уже задан как чат событий!")
     else:
         common.logchat_id = m.chat.id
+        common.settings.SetSetting("bot_logchat", m.chat.id)
         log.info("log chat set: %d", common.logchat_id)
         bot.send_message(m.from_user.id, ICON_CHECK+" Чат событий успешно задан!")
+        aws_settings_backup()
+
+
+#
+# Set log chat
+# (chat command)
+#
+@bot.message_handler(commands=['debugchat'])
+def command_set_debugchat(m):
+    if hlp.IsInPrivateChat(m):
+        hlp.SendHelpWrongChat(m.from_user.id, "/debugchat", "запомнить чат отладки", False)
+        return
+    bot.delete_message(m.chat.id, m.message_id)
+    if not hlp.IsUserAdmin(m.from_user.id):
+        hlp.SendHelpNonAdmin(m)
+        return
+    # if common.logchat_id != None and common.logchat_id == m.chat.id:
+    current = common.settings.GetSetting("bot_debugchat")
+    if current and current == m.chat.id:
+        bot.send_message(m.from_user.id, ICON_CANCEL+" Этот чат уже задан как чат отладки!")
+    else:
+        common.debugchat_id = m.chat.id
+        common.settings.SetSetting("bot_debugchat", m.chat.id)
+        log.info("debug chat set: %d", common.debugchat_id)
+        bot.send_message(m.from_user.id, ICON_CHECK+" Чат отладки успешно задан!")
+        aws_settings_backup()
+
+
+#
+# Toggle debug mode
+# (private bot chat)
+#
+@bot.message_handler(commands=['debug'])
+def command_toggle_debug_mode(m):
+    if not hlp.IsInPrivateChat(m):
+        hlp.SendHelpWrongChat(m.from_user.id, "/debug", "ВКЛ/ВЫКЛ режим отладки", True)
+        return
+    bot.delete_message(m.chat.id, m.message_id)
+    if not hlp.IsUserAdmin(m.from_user.id) or str(m.from_user.id) != common.ROOT_ADMIN[0]:
+        hlp.SendHelpNonAdmin(m)
+        return
+    # switch mode
+    common.DEBUG_MODE = not common.DEBUG_MODE
+    bot.send_message(m.from_user.id, "🔨 Режим отладки *%s*!" % ("ВКЛЮЧЕН" if common.DEBUG_MODE else "ОТКЛЮЧЕН"), parse_mode="markdown").wait()
+    if common.DEBUG_MODE:
+        text  = "🛸 Все сообщения перенаправляются в чат отладки\n"
+        text += "📌 Закрепление сообщений отключено\n"
+        text += "📈 Запись статистики не ведется\n\n"
+        text += "‼️ Не забудьте выключить режим после завершения отладки"
+        bot.send_message(m.from_user.id, text)
+        # switch war chat and debug chat
+        warchat_backup = common.warchat_id
+        common.warchat_id = common.debugchat_id
+        common.debugchat_id = warchat_backup
+    else:
+        # switch war chat and debug chat back
+        warchat_backup = common.debugchat_id
+        common.debugchat_id = common.warchat_id
+        common.warchat_id = warchat_backup
+
+
 
 
 #

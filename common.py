@@ -28,6 +28,8 @@ if "HEROKU" in list(os.environ.keys()):
     log.info("[HEROKU] read default warchat_id: %d" % DEFAULT_WARCHAT_ID)
     DEFAULT_LOGCHAT_ID = int(os.environ['DEFAULT_LOGCHAT'])
     log.info("[HEROKU] read default logchat_id: %d" % DEFAULT_LOGCHAT_ID)
+    DEFAULT_DEBUGCHAT_ID = int(os.environ['DEFAULT_DEBUGCHAT'])
+    log.info("[HEROKU] read default debug chat_id: %d" % DEFAULT_DEBUGCHAT_ID)
 else:
     with open("TOKEN", "r") as tfile: # local run
         TOKEN = tfile.readline().strip('\n')
@@ -49,6 +51,10 @@ else:
         DEFAULT_LOGCHAT_ID = int(f.readline().strip('\n'))
         log.info("[LOCAL] read default logchat_id: %d" % DEFAULT_LOGCHAT_ID)
         f.close()
+    with open("DEFAULT_DEBUGCHAT", "r") as f: # local run
+        DEFAULT_DEBUGCHAT_ID = int(f.readline().strip('\n'))
+        log.info("[LOCAL] read default debug chat_id: %d" % DEFAULT_DEBUGCHAT_ID)
+        f.close()
 
 bot = telebot.AsyncTeleBot(TOKEN)
 
@@ -60,6 +66,7 @@ admins = {}
 
 warchat_id        = DEFAULT_WARCHAT_ID
 logchat_id        = DEFAULT_LOGCHAT_ID
+debugchat_id      = DEFAULT_DEBUGCHAT_ID
 current_battle    = None
 current_precheck  = None
 current_arscheck  = None
@@ -68,6 +75,7 @@ current_cryscheck = None
 current_snowwhite = {}
 screen_message_list = []
 user_guiding = {} # {userid: Guide}
+DEBUG_MODE = False
 
 import statistics
 statistics = statistics.Statistic(cycle_time=4) # set 2 for first GW test

@@ -569,7 +569,8 @@ class Statistic(Jsonable):
 
     def BackupIfNeed(self, msg):
         # new AWS backup
-        aws_stat_backup()
+        if not common.DEBUG_MODE:
+            aws_stat_backup()
 
 
     def CycleIfNeed(self):

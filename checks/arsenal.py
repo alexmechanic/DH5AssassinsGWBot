@@ -170,7 +170,8 @@ class Arsenal():
 
     def DoEndArsenal(self):
         self.is_postponed = True
-        common.statistics.Update(self.CollectStatistic())
+        if not common.DEBUG_MODE:
+            common.statistics.Update(self.CollectStatistic())
         log.info("Arsenal check stopped")
         # force backup
         common.current_arscheck.last_backup = datetime.datetime.now()
@@ -190,7 +191,7 @@ class Arsenal():
             if self.crit_notification:
                 common.bot.delete_message(self.crit_notification.chat.id, self.crit_notification.message_id).wait()
             self.crit_notification = common.bot.send_message(common.warchat_id, text).wait()
-            if common.settings.GetSetting("critical_pin"):
+            if common.settings.GetSetting("critical_pin") and not common.DEBUG_MODE:
                 common.bot.pin_chat_message(self.crit_notification.chat.id,
                                             self.crit_notification.message_id,
                                             disable_notification=False)
@@ -215,7 +216,7 @@ class Arsenal():
                     common.bot.send_message(user._id, text)
             self.is_fire_notified = True
             notification = common.bot.send_message(common.warchat_id, text).wait()
-            if common.settings.GetSetting("pin"):
+            if common.settings.GetSetting("pin") and not common.DEBUG_MODE:
                 common.bot.pin_chat_message(notification.chat.id, notification.message_id)
             log.debug("Arsenal status notification posted")
             return True
