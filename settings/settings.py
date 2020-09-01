@@ -441,6 +441,10 @@ def aws_settings_restore(filename="GWBotSettings.BAK", force=True):
         with open(filepath, 'rb') as f:
             common.settings = pickle.load(f)
             f.close()
+        # restore bot chats ids
+        common.warchat_id = common.settings.GetSetting("bot_warchat", common.DEFAULT_WARCHAT_ID)
+        common.logchat_id = common.settings.GetSetting("bot_logchat", common.DEFAULT_LOGCHAT_ID)
+        common.debugchat_id = common.settings.GetSetting("bot_debugchat", common.DEFAULT_DEBUGCHAT_ID)
         log.debug("Restoring settings successful (AWS)")
     except Exception as err:
         log.error("Restoring settings failed (AWS): %s", str(err))
@@ -457,8 +461,11 @@ class PersistentSettings():
         try:
             if not isinstance(key, type(Menu.id)): # by name
                 item = Menu.FindItem(name=key)
-                key = item.id
-                default = item.default_value
+                if item: # if setting belong to Settings Menu
+                    key = item.id
+                    default = item.default_value
+                else: # if setting is global (e.g. chat ids)
+                    pass
             return self.settings[key]
         except:
             return default
