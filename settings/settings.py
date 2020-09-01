@@ -317,7 +317,6 @@ def update_setting(m):
         is_wait_command = False
         need_send_again = True
         aws_settings_backup()
-        # bot.send_message(m.from_user.id, ICON_CHECK+" Изменения успешно сохранены")
         settings_back(m)
 
 
@@ -411,7 +410,6 @@ def aws_settings_backup(filename="GWBotSettings.BAK", burst=False):
     @param burst Do not save backup to file
     """
     log.debug("AWS Statistic backup started")
-    # bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Сохраняю настройки (AWS)...")
     # if burst-upload requested (no additional file backup)
     if not burst:
         with open(filename, 'wb') as backup:
@@ -420,10 +418,8 @@ def aws_settings_backup(filename="GWBotSettings.BAK", burst=False):
     # upload file
     if hlp.AWSUploadFile(filename):
         log.debug("Settings has been successfully uploaded to AWS cloud.")
-        # bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Настройки успешно сохранены!")
     else:
         log.error("Settings AWS upload failed.")
-        # bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CANCEL+" Ошибка сохранения настроек!")
 
 def aws_settings_restore(filename="GWBotSettings.BAK", force=True):
     """
@@ -431,7 +427,6 @@ def aws_settings_restore(filename="GWBotSettings.BAK", force=True):
     @param force Remove old local backup
     """
     log.debug("AWS Settings restore started")
-    # bot.send_message(int(common.ROOT_ADMIN[0]), "🌐 Восстанавливаю настройки (AWS)...")
     try:
         # remove old statistics backup if forced update
         if force:
@@ -446,11 +441,9 @@ def aws_settings_restore(filename="GWBotSettings.BAK", force=True):
         with open(filepath, 'rb') as f:
             common.settings = pickle.load(f)
             f.close()
-        # bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CHECK+" Настройки успешно восстановлены!")
         log.debug("Restoring settings successful (AWS)")
     except Exception as err:
         log.error("Restoring settings failed (AWS): %s", str(err))
-        # bot.send_message(int(common.ROOT_ADMIN[0]), ICON_CANCEL+" Ошибка восстановления настроек!")
 
 
 class PersistentSettings():
