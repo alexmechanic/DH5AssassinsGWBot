@@ -388,7 +388,7 @@ class Battle():
             text += user.GetString() + "\n"
 
         if len(self.cancels) > 0:
-            text += "\n" + "*%d передумали:*\n" % len(self.cancels)
+            text += "\n" + "*%d не идут:*\n" % len(self.cancels)
         for user, _ in self.cancels.items():
             text += ICON_CANCEL + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
