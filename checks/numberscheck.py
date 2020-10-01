@@ -282,7 +282,7 @@ class NumbersCheck():
 
 
     def GetHeader(self):
-        return ICON_NUMBERS+" *Прогресс номеров:*\n"
+        return ICON_NUMBERS+" *Номера:*\n"
 
     def GetText(self):
         text = self.GetHeader()

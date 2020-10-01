@@ -233,7 +233,7 @@ class Arsenal():
         percent = iteration if iteration <= 120 else 120
         filledLength = int(length * percent // total)
         bar = '█' * filledLength + '-' * (length - filledLength)
-        text =  ICON_ARS+" *Прогресс арсенала:* %s/120\n" % percent
+        text =  ICON_ARS+" *Арсенал:* %s/120\n" % percent
         if self.rage_time:
             text += ICON_RAGE+" *Ярость в %0.2d:%0.2d*\n" % (self.rage_time.hour, self.rage_time.minute)
         text += "\n`|%s|`\n" % bar
