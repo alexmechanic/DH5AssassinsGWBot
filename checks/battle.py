@@ -372,7 +372,7 @@ class Battle():
             text += self.GetPlusNumericSuffix(count) + "\n"
 
         if len(self.arsenals) > 0:
-            text += "\n" + "*%d только в арс:*\n" % len(self.arsenals)
+            text += "\n" + "*%d в арс:*\n" % len(self.arsenals)
         for user, count in self.arsenals.items():
             text += ICON_ARS + " "
             text += (ICON_OFFICER + " ")*hlp.IsUserAdmin(user)
