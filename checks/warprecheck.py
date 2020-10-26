@@ -162,14 +162,14 @@ class WarPreCheck():
         log.info("Pre-check ended")
 
     def GetHeader(self):
-        return "📝 *Чек перед ВГ:*\n"
+        return ICON_LIST+" *Чек перед ВГ:*\n"
 
     def GetText(self):
         text = self.GetHeader()
         text += "🛑 Голование завершено 🛑\n" * self.is_postponed
 
         if len(self.daily) > 0:
-            text += "\n" + ICON_CALENDAR+" *%d идут:*\n" % len(self.daily)
+            text += "\n" + " *%d идут:*\n" % len(self.daily)
         for user, days in self.daily.items():
             text += ICON_MEMBER+" "
             text += user.GetString()
