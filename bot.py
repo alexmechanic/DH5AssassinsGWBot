@@ -618,6 +618,29 @@ def battle_control(m):
 #     bot.answer_callback_query(call.id)
 
 
+#
+# Test command
+# (debug command)
+#
+@bot.message_handler(commands=["test"])
+def debug_test_command(m):
+    log.info("debug_test_command")
+    # print(m)
+    if common.DEBUG_MODE:
+        import tempfile
+        log.debug("Debug mode is ON, processing...")
+        user = User(m.from_user.id, m.from_user.first_name, m.from_user.username)
+        text = "User %s sent /test command." % user.GetString(with_link=False)
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.txt', prefix=user.username+"_")
+        # write whole message object into file (change on needs)
+        temp_file.write(str(m))
+        temp_file.close()
+        with open(temp_file.name, "r") as tfile:
+            bot.send_document(common.warchat_id, tfile, caption=text, disable_notification=True).wait()
+            tfile.close()
+        os.remove(temp_file.name)
+
+
 def AWSRestore():
     aws_settings_restore()
     common.aws_admins_restore()
