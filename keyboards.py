@@ -227,9 +227,9 @@ KEYBOARD_RESET.add(buttonReset, buttonCancelPrivate)
 
 RESET_CONTROL_OPTIONS = [buttonReset.text, buttonCancelPrivate.text]
 
-KEYBOARD_SNOWWHITE = types.InlineKeyboardMarkup(row_width=1)
-buttonPraise       = types.InlineKeyboardButton(text=ICON_PRAISE+" Привет!", callback_data=SNOW_PRAISE_CALLBACK)
-KEYBOARD_SNOWWHITE.add(buttonPraise)
+# KEYBOARD_SNOWWHITE = types.InlineKeyboardMarkup(row_width=1)
+# buttonPraise       = types.InlineKeyboardButton(text=ICON_PRAISE+" Привет!", callback_data=SNOW_PRAISE_CALLBACK)
+# KEYBOARD_SNOWWHITE.add(buttonPraise)
 
 KEYBOARD_GUIDE_START  = types.InlineKeyboardMarkup(row_width=1)
 KEYBOARD_GUIDE_NEXT   = types.InlineKeyboardMarkup(row_width=1)

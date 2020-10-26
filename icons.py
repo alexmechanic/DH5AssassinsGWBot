@@ -43,4 +43,4 @@ ICON_NOMINATE = "🎖"
 ICON_500      = "5️⃣0️⃣0️⃣"
 ICON_1000     = "1️⃣0️⃣0️⃣0️⃣"
 
-ICON_SNOW     = "💁🏼‍♀️"
+# ICON_SNOW     = "💁🏼‍♀️"

@@ -134,7 +134,7 @@ def show_help(m):
             text += "/debugchat запомнить чат отладки\n"
         text += "/warchat запомнить военный чат _(для отправки сообщений боя)_\n"
         text += "/best показать список лучших _(только после окончания ВГ [Вс, Пн] )_\n"
-        text += "/snow вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n"
+        # text += "/snow вызвать Снегурочку! _(только в Вс после окончания ВГ)_\n"
     else:
         pass # stub for adding only non-admin help
     bot.send_message(userid, text, parse_mode="markdown")
@@ -558,64 +558,64 @@ def battle_control(m):
 # Call for fun mode 'Snow White'
 # (war chat command)
 #
-@bot.message_handler(commands=['snow'])
-def command_snow(m):
-    # print(m)
-    user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
-    log.debug("User %d (%s %s) is trying to call Snow!" % (*user,))
-    if hlp.IsInPrivateChat(m):
-        hlp.SendHelpWrongChat(m.from_user.id, "/snow", "вызвать Снегурочку", False)
-        return
-    bot.delete_message(m.chat.id, m.message_id)
-    if not hlp.IsUserAdmin(m.from_user.id):
-        log.error("Failed: not an admin")
-        hlp.SendHelpNonAdmin(m)
-        return
-    if not hlp.IsGWEndingTime():
-        bot.send_message(user[0], "Ой! Вызвать Снегурочку можно только в воскресенье после окончания ВГ!")
-        log.error("Failed: wrong time")
-        return
+# @bot.message_handler(commands=['snow'])
+# def command_snow(m):
+#     # print(m)
+#     user = [m.from_user.id, m.from_user.username, m.from_user.first_name]
+#     log.debug("User %d (%s %s) is trying to call Snow!" % (*user,))
+#     if hlp.IsInPrivateChat(m):
+#         hlp.SendHelpWrongChat(m.from_user.id, "/snow", "вызвать Снегурочку", False)
+#         return
+#     bot.delete_message(m.chat.id, m.message_id)
+#     if not hlp.IsUserAdmin(m.from_user.id):
+#         log.error("Failed: not an admin")
+#         hlp.SendHelpNonAdmin(m)
+#         return
+#     if not hlp.IsGWEndingTime():
+#         bot.send_message(user[0], "Ой! Вызвать Снегурочку можно только в воскресенье после окончания ВГ!")
+#         log.error("Failed: wrong time")
+#         return
     
-    if common.current_snowwhite == {}:
-        common.current_snowwhite["message"] = bot.send_message(m.chat.id,
-                                             ICON_SNOW+" Всем привет!",
-                                             reply_markup=kb.KEYBOARD_SNOWWHITE).wait()
-        common.current_snowwhite["praised"] = []
-        log.info("Snow White called!")
-    else:
-        log.error("Snow White is already here!")
+#     if common.current_snowwhite == {}:
+#         common.current_snowwhite["message"] = bot.send_message(m.chat.id,
+#                                              ICON_SNOW+" Всем привет!",
+#                                              reply_markup=kb.KEYBOARD_SNOWWHITE).wait()
+#         common.current_snowwhite["praised"] = []
+#         log.info("Snow White called!")
+#     else:
+#         log.error("Snow White is already here!")
 
 #
 # Snow White control
 # (war chat keyboard action)
 #
-@bot.callback_query_handler(func=lambda call: call.data == cb.SNOW_PRAISE_CALLBACK)
-def snow_control(call):
-    # print("snow_control")
-    # print(call)
-    user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
-    log.debug("User %d (%s %s) is cheering Snow White" % (*user,))
+# @bot.callback_query_handler(func=lambda call: call.data == cb.SNOW_PRAISE_CALLBACK)
+# def snow_control(call):
+#     # print("snow_control")
+#     # print(call)
+#     user = [call.from_user.id, call.from_user.username, call.from_user.first_name]
+#     log.debug("User %d (%s %s) is cheering Snow White" % (*user,))
     
-    if common.current_snowwhite != {}:
-        if not user[0] in common.current_snowwhite["praised"]:
-            log.debug("Praised")
-            bot.send_message(call.message.chat.id, hlp.SnowGeneratePraise(user),
-                             parse_mode="markdown", disable_notification=True)
-            common.current_snowwhite["praised"].append(user[0])
-            bot.answer_callback_query(call.id)
-        else:
-            log.error("Failed: already praised")
-            bot.answer_callback_query(call.id, "Поприветствовать Снегурочку можно только один раз!")
-        if not hlp.IsGWEndingTime():
-            log.info("Snow White overtime, ending")
-            bot.delete_message(common.current_snowwhite["message"].chat.id, common.current_snowwhite["message"].message_id)
-            bot.send_message(call.message.chat.id,
-                             ICON_SNOW+" До встречи в следюущее воскресенье!",
-                             disable_notification=True)
-            common.current_snowwhite = {}
-        return
-    log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
-    bot.answer_callback_query(call.id)
+#     if common.current_snowwhite != {}:
+#         if not user[0] in common.current_snowwhite["praised"]:
+#             log.debug("Praised")
+#             bot.send_message(call.message.chat.id, hlp.SnowGeneratePraise(user),
+#                              parse_mode="markdown", disable_notification=True)
+#             common.current_snowwhite["praised"].append(user[0])
+#             bot.answer_callback_query(call.id)
+#         else:
+#             log.error("Failed: already praised")
+#             bot.answer_callback_query(call.id, "Поприветствовать Снегурочку можно только один раз!")
+#         if not hlp.IsGWEndingTime():
+#             log.info("Snow White overtime, ending")
+#             bot.delete_message(common.current_snowwhite["message"].chat.id, common.current_snowwhite["message"].message_id)
+#             bot.send_message(call.message.chat.id,
+#                              ICON_SNOW+" До встречи в следюущее воскресенье!",
+#                              disable_notification=True)
+#             common.current_snowwhite = {}
+#         return
+#     log.error("Bug! User pressed Snow White keyboard button with to current_snowwhite!")
+#     bot.answer_callback_query(call.id)
 
 
 def AWSRestore():
