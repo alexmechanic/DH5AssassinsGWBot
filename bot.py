@@ -658,7 +658,7 @@ def debug_test_command(m):
         log.debug("Debug mode is ON, processing...")
         user = User(m.from_user.id, m.from_user.first_name, m.from_user.username)
         text = "User %s sent /test command." % user
-        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.txt', prefix=user.username+"_")
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix='.txt')
         # write whole message object into file (change on needs)
         temp_file.write(str(m))
         temp_file.close()
