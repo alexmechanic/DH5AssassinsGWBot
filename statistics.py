@@ -223,7 +223,7 @@ def command_best(m):
         return
     common.bot.delete_message(m.chat.id, m.message_id)
     if not hlp.IsGWEndingTime():
-        common.bot.send_message(user[0], "Получить статистику можно только в воскресенье после окончания ВГ!")
+        common.bot.send_message(user[0], "Получить статистику можно только после окончания ВГ [Вс, Пн]!")
         log.error("Failed: wrong time")
         return
     

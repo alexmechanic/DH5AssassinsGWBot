@@ -186,14 +186,15 @@ def IsGWDurationTime():
     return False
 
 def IsGWEndingTime():
+    """
+    Allow to request best users statistic and other 'after-gw' commands
+    At Sunday (18:00+ MSK) and Monday (whole day)
+    """
     now = datetime.datetime.now()
-    avail_weekday = 6 # Sunday
-    avail_time = [now.replace(hour=18, minute=0, second=0),
-                  now.replace(day=now.day+1, hour=2, minute=59, second=59)
-                 ]
-    if now.weekday() == avail_weekday and \
-       now >= avail_time[0]           and \
-       now <= avail_time[1]:
+    avail_time = now.replace(hour=18, minute=0, second=0)
+    if now.weekday() == 0    or \
+       now.weekday() == 6   and \
+       now >= avail_time:
        return True
     return False
 
