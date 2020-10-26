@@ -6,7 +6,7 @@
 # Common shared resources for modules 
 #
 
-import telebot, sys, os, json, boto3, pickle
+import telebot, sys, os, json, boto3, pickle, datetime
 from logger import get_logger
 import helpers as hlp
 
@@ -63,6 +63,7 @@ aws_client = boto3.client('s3', aws_access_key_id=AWS_KEY, aws_secret_access_key
 BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
 admins = {}
+WarChatMembers = {"187678932": {"is_active": True, "blame_cnt": 0}} # {userid: {is_active: bool, blame_cnt: int}}
 
 warchat_id        = DEFAULT_WARCHAT_ID
 logchat_id        = DEFAULT_LOGCHAT_ID
@@ -76,6 +77,7 @@ current_cryscheck = None
 screen_message_list = []
 user_guiding = {} # {userid: Guide}
 DEBUG_MODE = False
+gwblame_timestamp = datetime.datetime.now().replace(year=1990)
 
 import statistics
 statistics = statistics.Statistic(cycle_time=4) # set 2 for first GW test
@@ -156,3 +158,47 @@ def aws_admins_restore(filename="GWBotAdmins.BAK", force=True):
         log.debug("Restoring admins successful (AWS)")
     except Exception as err:
         log.error("Restoring admins failed (AWS): %s", str(err))
+
+def aws_warchat_members_backup(filename="GWBotChatMembers.BAK", burst=False):
+    """
+    Backup war chat members into pickle file.
+    Upload to AWS
+    @param burst Do not save backup to file
+    """
+    global WarChatMembers, gwblame_timestamp
+    log.debug("AWS WarChatMembers backup started")
+    # if burst-upload requested (no additional file backup)
+    if not burst:
+        with open(filename, 'wb') as backup:
+            pickle.dump([WarChatMembers, gwblame_timestamp], backup, pickle.HIGHEST_PROTOCOL)
+            backup.close()
+    # upload file
+    if hlp.AWSUploadFile(filename):
+        log.debug("WarChatMembers have been successfully uploaded to AWS cloud.")
+    else:
+        log.error("WarChatMembers AWS upload failed.")
+
+def aws_warchat_members_restore(filename="GWBotChatMembers.BAK", force=True):
+    """
+    Restore war chat members from pickle file (download from AWS).
+    @param force Remove old local backup
+    """
+    global WarChatMembers, gwblame_timestamp
+    log.debug("AWS WarChatMembers restore started")
+    try:
+        # remove old admins backup if forced update
+        if force:
+            if os.path.isfile(filename):
+                os.remove(filename)
+        # download backup
+        filepath = hlp.AWSDownloadFile(filename)
+        if filepath == None:
+            raise Exception("WarChatMembers AWS download failed.")
+        log.debug("WarChatMembers have been successfully downloaded from AWS cloud.")
+        # unwrap and set object
+        with open(filepath, 'rb') as f:
+            WarChatMembers, gwblame_timestamp = pickle.load(f)
+            f.close()
+        log.debug("Restoring WarChatMembers successful (AWS)")
+    except Exception as err:
+        log.error("Restoring WarChatMembers failed (AWS): %s", str(err))

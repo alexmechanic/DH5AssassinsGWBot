@@ -7,7 +7,7 @@
 # Main bot module
 #
 
-import telebot, os, time
+import telebot, os, time, datetime
 from telebot import types
 from logger import get_logger
 from flask import Flask, request
@@ -554,6 +554,33 @@ def battle_control(m):
     else: # Отмена
         bot.send_message(m.chat.id, "⛔️ Действие отменено", reply_markup=markup)
 
+
+#
+# Handler updating internal chat members list
+# (add new user)
+#
+@bot.message_handler(func=lambda m: True, content_types=['new_chat_participant'])
+def on_user_joins(m):
+    id = str(m.new_chat_participant.id)
+    if id not in common.WarChatMembers.keys():
+        common.WarChatMembers[id] = { "blame_cnt": 0 }
+    common.WarChatMembers[id]["is_active"] = True
+    common.aws_warchat_members_backup()
+
+
+
+#
+# Handler updating internal chat members list
+# (disactivate left user)
+#
+@bot.message_handler(func=lambda m: True, content_types=['left_chat_participant'])
+def on_user_leaves(m):
+    id = str(m.left_chat_participant.id)
+    if id in common.WarChatMembers.keys():
+        del common.WarChatMembers[id]
+        # TODO how to fix leave-join abuse? this does not work if user was actually kicked from guild
+        # common.WarChatMembers[id]["is_active"] = False
+        common.aws_warchat_members_backup()
 #
 # Call for fun mode 'Snow White'
 # (war chat command)
@@ -644,6 +671,7 @@ def debug_test_command(m):
 def AWSRestore():
     aws_settings_restore()
     common.aws_admins_restore()
+    common.aws_warchat_members_restore()
     aws_stat_restore()
     aws_precheck_restore()
     aws_crystals_restore()
