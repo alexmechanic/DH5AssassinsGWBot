@@ -581,6 +581,118 @@ def on_user_leaves(m):
         # TODO how to fix leave-join abuse? this does not work if user was actually kicked from guild
         # common.WarChatMembers[id]["is_active"] = False
         common.aws_warchat_members_backup()
+
+
+#
+# Blame command
+# (chat command)
+# NOTE: blame list is not updated for past GW if this command was not called!
+#
+@bot.message_handler(commands=["gwblame"])
+def blame_for_gw(m):
+    # print("blame_for_gw")
+    # print(m)
+    user = User(m.from_user.id, m.from_user.first_name, m.from_user.username)
+    log.debug("User %s is trying to use /gwblame" % user)
+    if not hlp.IsUserAdmin(user._id):
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(m)
+        return
+    if hlp.IsInPrivateChat(m):
+        log.error("Failed (in private chat)")
+        hlp.SendHelpWrongChat(user._id, "/gwblame", "поругать тунеядцев за ВГ", False)
+        return
+    # allow only once per week
+    elapsed = int((datetime.datetime.now() - common.gwblame_timestamp).total_seconds())
+    if elapsed < 1*60*60*24*6:
+        common.bot.send_message(user._id, "Поругать тунеядцев можно только один раз в неделю!")
+        log.error("Failed: wrong time")
+        return
+
+    users_to_blame = {} # {userid: {blame_desc}}
+    users_to_kick  = [] # [userid]
+    users_checked  = [user._id for user in common.current_precheck.daily.keys()]
+    users_bailed   = [user._id for user in common.current_precheck.cancels.keys()]
+    users_scored   = [user._id for user in common.statistics.statistics[0].stats.keys()] 
+    # form list of users to blame
+    for user in common.WarChatMembers.keys():
+        blame_desc = { "is_going": False,
+                       "is_scored": False
+                     }
+        # WarChatMembers user -> checked in preckeck as not-going? -> dont blame
+        if int(user) in users_bailed:
+            continue
+        elif int(user) in users_checked:
+            blame_desc["is_going"] = True
+        # WarChatMembers user -> in any statistics? -> dont blame
+        # TODO add option to check for minimal scores
+        if int(user) in users_scored:
+            continue
+        else:
+            blame_desc["is_scored"] = False
+        users_to_blame[str(user)] = blame_desc
+    # set text for blame message
+    common.bot.send_chat_action(common.warchat_id, "typing")
+    text = "🦞 *Список тунеядцев последней ВГ*:\n\n"
+    if len(users_to_blame) > 0:
+        for user in users_to_blame:
+            user_o = bot.get_chat_member(common.warchat_id, int(user)).wait()
+            print(user_o)
+            user_string = User(user_o.user.id, user_o.user.first_name, user_o.user.username).GetString()
+            text += ICON_MEMBER+" %s" % user_string
+            text += " " + ICON_LIST*(not users_to_blame[user]["is_going"])
+            text += " " + ICON_STAR*(not users_to_blame[user]["is_scored"])
+            text += "\n"
+            common.WarChatMembers[user]["blame_cnt"] = common.WarChatMembers[user]["blame_cnt"] + 1
+    else:
+        text += "_(список пуст)_"
+    # hide command from chat history
+    bot.delete_message(m.chat.id, m.message_id)
+    bot.send_message(common.warchat_id, text, parse_mode="markdown")
+    # imitate typing
+    common.bot.send_chat_action(common.warchat_id, "typing").wait()
+    time.sleep(3)
+    # form users list to suggest kick
+    for user in common.WarChatMembers.keys():
+        if common.WarChatMembers[user]["blame_cnt"] > 2:
+            users_to_kick.append(int(user))
+    # set text to kick message
+    if len(users_to_kick) > 0:
+        text = "☠️ Рекомендуется кик:\n\n"
+        for user in users_to_kick:
+            user_o = bot.get_chat_member(common.warchat_id, user).wait()
+            print(user_o)
+            user_string = User(user_o.user.id, user_o.user.first_name, user_o.user.username).GetString()
+            text += ICON_MEMBER+" %s _(%d)_\n" % (user_string, common.WarChatMembers[str(user)]["blame_cnt"])
+        bot.send_message(common.warchat_id, text, parse_mode="markdown")
+    common.gwblame_timestamp = datetime.datetime.now()
+    common.aws_warchat_members_backup()
+
+#
+# Forgive command
+# (chat command)
+#
+@bot.message_handler(commands=["gwforgive"])
+def forgive_for_gw(m):
+    # print("forgive_for_gw")
+    # print(m)
+    user = User(m.from_user.id, m.from_user.first_name, m.from_user.username)
+    log.debug("User %s is trying to use /gwforgive" % user)
+    if not hlp.IsUserAdmin(user._id):
+        log.error("Failed (not an admin)")
+        hlp.SendHelpNonAdmin(m)
+        return
+    if hlp.IsInPrivateChat(m):
+        log.error("Failed (in private chat)")
+        hlp.SendHelpWrongChat(user._id, "/gwforgive", "простить тунеядцев за ВГ", False)
+        return
+    for user in common.WarChatMembers.keys():
+        common.WarChatMembers[user]["blame_cnt"] = 0
+    # hide command from chat history
+    bot.delete_message(m.chat.id, m.message_id)
+    bot.send_message(m.chat.id, "🙏 Всем игрокам прощено тунеядство на ВГ!")
+
+
 #
 # Call for fun mode 'Snow White'
 # (war chat command)
