@@ -63,22 +63,7 @@ aws_client = boto3.client('s3', aws_access_key_id=AWS_KEY, aws_secret_access_key
 BOT_USERNAME = "assassinsgwbot"
 ROOT_ADMIN = [] # creator
 admins = {}
-WarChatMembers = {"187678932": {"is_active": True, "blame_cnt": 0},
-                  "1218953260": {"is_active": True, "blame_cnt": 0},
-                  "582244665": {"is_active": True, "blame_cnt": 0},
-                  "257066078": {"is_active": True, "blame_cnt": 0},
-                  "898944326": {"is_active": True, "blame_cnt": 0},
-                  "1249203837": {"is_active": True, "blame_cnt": 0},
-                  "1193693545": {"is_active": True, "blame_cnt": 0},
-                  "440680038": {"is_active": True, "blame_cnt": 0},
-                  "948162548": {"is_active": True, "blame_cnt": 0},
-                  "1335854979": {"is_active": True, "blame_cnt": 0},
-                  "411410142": {"is_active": True, "blame_cnt": 0},
-                  "829058138": {"is_active": True, "blame_cnt": 0},
-                  "118397694": {"is_active": True, "blame_cnt": 0},
-                  "1216369006": {"is_active": True, "blame_cnt": 0},
-                  "584957431": {"is_active": True, "blame_cnt": 0},
-                  "420598524": {"is_active": True, "blame_cnt": 0},} # {userid: {is_active: bool, blame_cnt: int}}
+WarChatMembers = {} # {userid: {is_active: bool, blame_cnt: int}}
 
 warchat_id        = DEFAULT_WARCHAT_ID
 logchat_id        = DEFAULT_LOGCHAT_ID
