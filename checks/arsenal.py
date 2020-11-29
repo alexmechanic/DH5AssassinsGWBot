@@ -84,7 +84,7 @@ def arsenal_control(call):
                                   inline_message_id=common.current_arscheck.check_id,
                                   parse_mode="markdown")
             # unpin rage time message
-            bot.unpin_chat_message(common.warchat_id)
+            bot.unpin_all_chat_messages(common.warchat_id)
             bot.answer_callback_query(call.id, "🏁 Чек арсенала завершен")
             hlp.LogEvent("🏁 %s завершил чек арсенала" % user.GetString(with_link=False))
             return

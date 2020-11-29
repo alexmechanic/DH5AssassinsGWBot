@@ -108,7 +108,7 @@ def battle_control(call):
                 need_send_notification = False
                 notification_text = ICON_CANCEL+" Бой отменен"
             else: # unpin other battle messages
-                bot.unpin_chat_message(common.warchat_id)
+                bot.unpin_all_chat_messages(common.warchat_id)
                 need_send_notification = False # disable annoying useless message
                 notification_text = ICON_FINISH+" Бой завершен"
             reset_battlechecks(call)
@@ -183,7 +183,7 @@ def reset_battlechecks(m):
         bot.edit_message_text(common.current_arscheck.GetText(), inline_message_id=common.current_arscheck.check_id,
                               parse_mode="markdown")
         # unpin rage time message if can
-        bot.unpin_chat_message(common.warchat_id)
+        bot.unpin_all_chat_messages(common.warchat_id)
         common.current_arscheck = None
     if common.current_numcheck: # postponed is not a condition that check ended
         common.current_numcheck.DoEndCheck()
