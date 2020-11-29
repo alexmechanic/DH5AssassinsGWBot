@@ -45,9 +45,9 @@ def chosen_inline_handler(r):
     user = User(r.from_user.id, r.from_user.first_name, r.from_user.username)
     if r.result_id == 'battle':
         log.debug("%s created battle check (%s)" % (user, r.query))
-        _, time = hlp.IsCheckTimeQuery(r)
+        _, time, comment = hlp.IsCheckTimeQuery(r)
         hlp.LogEvent(ICON_SWORDS + " %s назначил бой на %s" % (user.GetString(with_link=False), time))
-        common.current_battle = Battle(time)
+        common.current_battle = Battle(time, comment)
         common.current_battle.SetMessageID(r.inline_message_id)
         bot.edit_message_text(common.current_battle.GetText(), inline_message_id=r.inline_message_id,
                               parse_mode="markdown", reply_markup=common.current_battle.keyboard)
@@ -156,7 +156,7 @@ def show_help_officer(m):
                 "`@assassinsgwbot чек` - создать чек перед ВГ.\n" + \
                 "+ _Лучше создавать заранее, а завершать перед первым боем_\n"
         text += "\n1️⃣ *Начало боя*\n" + \
-                "`@assassinsgwbot бой XX:XX` - создать чек на бой\n" + \
+                "`@assassinsgwbot бой XX:XX необязательный_комментарий` - создать чек на бой\n" + \
                 "+ _После запуска поиска нажать на '"+ICON_ROLL+"', чтобы пришло уведомление в чат_\n" + \
                 "+ _Когда бой начнется, нажать на '"+ICON_START+"', чтобы пришло уведомление в чат и в личку участников_\n" + \
                 "+ _Если кто-нибудь опоздает к началу и отметится позже, в чат придет уведомление_\n" + \

@@ -139,7 +139,7 @@ def battle_query_inline(q):
         hlp.SendHelpNonAdmin(q)
         bot.answer_callback_query(q.id)
         return
-    res, time = hlp.IsCheckTimeQuery(q)
+    res, time, comment = hlp.IsCheckTimeQuery(q)
     if res:
         if hlp.CanStartNewBattle() or hlp.CanStopCurrentBattle():
             # stop current battle as the time is passed anyway
@@ -148,9 +148,12 @@ def battle_query_inline(q):
                 q.data = kb.CHECK_CONTROL_OPTIONS[2]
                 q.inline_message_id = common.current_battle.check_id
                 battle_control(q)
+            desc = ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL
+            if comment:
+                desc += "\n" + comment
             res = types.InlineQueryResultArticle('battle',
                                                 title='[%s] Создать чек на бой' % time,
-                                                description=ICON_CHECK+ICON_RAGE+ICON_FAST+ICON_ARS+ICON_THINK+ICON_CANCEL,
+                                                description=desc,
                                                 input_message_content=types.InputTextMessageContent(ICON_SWORDS+" *Бой*: %s" % time, parse_mode="markdown"),
                                                 thumb_url="https://i.ibb.co/jb9nVCm/battle.png",
                                                 reply_markup=kb.KEYBOARD_CHECK)
@@ -195,6 +198,7 @@ def reset_battlechecks(m):
 class Battle():
     check_id = None
     time = {"start": None, "end": None}
+    comment = None
     last_backup = None
     is_rolling = False
     is_started = False
@@ -208,11 +212,12 @@ class Battle():
     cancels = {}  # { User: 0 }
     lates = {}    # { User: 0 }
 
-    def __init__(self, start):
+    def __init__(self, start, comment=None):
         now = datetime.datetime.now()
         times = re.findall(r'\d+', start)
         self.time = {"start": None, "end": None}
         self.time["start"] = now.replace(hour=int(times[0]), minute=int(times[1]))
+        self.comment = comment
         self.last_backup = None
         self.checks = {}
         self.rages = {}
@@ -333,6 +338,8 @@ class Battle():
 
     def GetHeader(self):
         text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)
+        if self.comment:
+            text += "_%s_\n" % self.comment
         return text
 
     def GetText(self):

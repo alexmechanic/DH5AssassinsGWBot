@@ -42,12 +42,21 @@ def CheckInlineQuery(pattern, query): # check query for primary pattern support 
 
 def IsCheckTimeQuery(query): # return if query contains check time and check time list
     pattern = COMMANDS["battle"] + " "
+    res_res = False
+    res_time = None
+    res_comment = None
     if CheckInlineQuery(pattern, query):
-        battle_query = query.query.replace(pattern, "")
+        # get battle time
         time = re.findall(r'(?:\d|[01]\d|2[0-3])\D[0-5]\d', query.query)
-        if time != [] and len(time) == 1:
-            return True, time[0]
-    return False, None
+        if time != []:
+            res_time = time[0]
+            res_res = True
+        # get battle comment if set
+        battle_query = query.query.replace(pattern + res_time, "")
+        comment = re.findall(r'(?:\s[\W\w ]+)', battle_query)
+        if comment != []:
+            res_comment = comment[0][1:]
+    return res_res, res_time, res_comment
 
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
     pattern = COMMANDS["numbers"] + " "
