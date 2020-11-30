@@ -27,6 +27,7 @@ ICON_SUN    = "🗓 "+TEXT_SUN
 
 # contextual icons
 ICON_STAR     = "⭐️"
+ICON_STAR_OPEN= "✨"
 ICON_SWORDS   = "⚔️"
 ICON_NUMBERS  = "📜"
 ICON_CRYSTAL  = "💎"

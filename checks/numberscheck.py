@@ -90,7 +90,7 @@ def numbers_control(call):
             common.current_numcheck.Do1000()
             bot.edit_message_text(common.current_numcheck.GetText(),
                                   inline_message_id=common.current_numcheck.check_id,
-                                  parse_mode="markdown")
+                                  parse_mode="markdown", reply_markup=common.current_numcheck.keyboard)
             common.current_numcheck.CheckNotifyIfAchieved(user)
             bot.answer_callback_query(call.id, "Отмечено "+ICON_1000)
             return
@@ -235,9 +235,9 @@ class NumbersCheck():
     def Do500(self):
         if self._500["done"]:
             return
-        for number, value in self.numbers.items():
-            if value == 3:
-                self.numbers[number] = value - 1
+        # for number, value in self.numbers.items():
+        #     if value == 3:
+        #         self.numbers[number] = value - 1
         self._500["time"] = datetime.datetime.now()
         self._500["done"] = True
         if hlp.NeedCheckBackup(common.current_numcheck):
@@ -245,21 +245,24 @@ class NumbersCheck():
             hlp.AWSCheckBackup(common.current_numcheck)
 
     def Is1000(self):
-        return self._1000["done"]
+        for number in self.numbers:
+            if self.numbers[number] != 0:
+                return False
+        return True
 
     def Do1000(self):
         if self._1000["done"]:
             return
         now = datetime.datetime.now()
-        for number in self.numbers:
-            self.numbers[number] = 0
+        # for number in self.numbers:
+        #     self.numbers[number] = 0
         if not self._500["done"]:
             self._500["done"] = True
             self._500["time"] = now
         self._1000["done"] = True
         self._1000["time"] = now
-        self.keyboard = None
-        self.DoEndCheck()
+        # self.keyboard = None
+        # self.DoEndCheck()
 
     def CheckNotifyIfAchieved(self, user):
         text = None
@@ -308,12 +311,12 @@ class NumbersCheck():
             keys = list(nonempty_nums.keys())
             values = list(nonempty_nums.values())
             for i in range(0, rows):
-                text += ("`%2d: `" % keys[i]) + ICON_STAR*values[i] + " `  `"*(3-values[i])
+                text += ("`%2d: `" % keys[i]) + self.GetNumberStars(values[i]) + " `  `"*(3-values[i])
                 if i < rows-1: # not last row
-                    text += ("` %2d: `" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
+                    text += ("` %2d: `" % keys[i+rows]) + self.GetNumberStars(values[i+rows]) + "\n"
                 else:
                     if odd == 0:
-                        text += ("` %2d: `" % keys[i+rows]) + ICON_STAR*values[i+rows] + "\n"
+                        text += ("` %2d: `" % keys[i+rows]) + self.GetNumberStars(values[i+rows]) + "\n"
                     else:
                         text += "\n"
 
@@ -334,6 +337,14 @@ class NumbersCheck():
             text += "(%0.2d:%0.2d) %s ❗\n" % (self._500["time"].hour, self._500["time"].minute, ICON_500)
         if self._1000["done"]:
             text += "(%0.2d:%0.2d) %s ❗\n" % (self._1000["time"].hour, self._1000["time"].minute, ICON_1000)
+        return text
+
+    def GetNumberStars(self, total):
+        text = (ICON_STAR*(total-1))*(not self._1000["done"]) + (ICON_STAR_OPEN*(total-1))*self._1000["done"]
+        if total == 3:
+            text += ICON_STAR*(not self._500["done"]) + ICON_STAR_OPEN*self._500["done"]
+        else:
+            text += ICON_STAR*(not self._1000["done"]) + ICON_STAR_OPEN*self._1000["done"]
         return text
 
     def CheckUser(self, user, value):
@@ -409,9 +420,9 @@ class NumbersCheck():
         is_500 = True
         is_1000 = True
         for number, value in self.numbers.items():
-            if value > 0:
+            if value > 0 and not self._1000["done"]:
                 is_1000 = False
-            if value == 3:
+            if value == 3 and not self._500["done"]:
                 is_500 = False
             if not is_500 and not is_1000:
                 break # save time consume for iterating list if no condition is already met
