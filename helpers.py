@@ -52,10 +52,13 @@ def IsCheckTimeQuery(query): # return if query contains check time and check tim
             res_time = time[0]
             res_res = True
         # get battle comment if set
-        battle_query = query.query.replace(pattern + res_time, "")
-        comment = re.findall(r'(?:\s[\W\w ]+)', battle_query)
-        if comment != []:
-            res_comment = comment[0][1:]
+        try:
+            battle_query = query.query.replace(pattern + res_time, "")
+            comment = re.findall(r'(?:\s[\W\w ]+)', battle_query)
+            if comment != []:
+                res_comment = comment[0][1:]
+        except Exception:
+            pass # comment field is not such an important option to manage all sort of exceptions for it
     return res_res, res_time, res_comment
 
 def IsNumbersQuery(query): # return if query contains numbers check and the list of numbers
