@@ -339,7 +339,7 @@ class Battle():
     def GetHeader(self):
         text = ICON_SWORDS+" *Бой:* %.2d:%.2d\n" % (self.time["start"].hour, self.time["start"].minute)
         if self.comment:
-            text += "_%s_\n" % self.comment
+            text += "💬 _%s_\n" % self.comment
         return text
 
     def GetText(self):
