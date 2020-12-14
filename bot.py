@@ -603,8 +603,7 @@ def blame_for_gw(m):
         hlp.SendHelpWrongChat(user._id, "/gwblame", "поругать тунеядцев за ВГ", False)
         return
     # allow only once per week
-    elapsed = int((datetime.datetime.now() - common.gwblame_timestamp).total_seconds())
-    if elapsed < 1*60*60*24*6:
+    if not hlp.IsGWEndingTime():
         common.bot.send_message(user._id, "Поругать тунеядцев можно только один раз в неделю!")
         log.error("Failed: wrong time")
         return
@@ -613,7 +612,7 @@ def blame_for_gw(m):
     users_to_kick  = [] # [userid]
     users_checked  = [user._id for user in common.current_precheck.daily.keys()]
     users_bailed   = [user._id for user in common.current_precheck.cancels.keys()]
-    users_scored   = [user._id for user in common.statistics.statistics[0].stats.keys()] 
+    users_scored   = [user._id for user in common.statistics.statistics[0].stats.keys()]
     # form list of users to blame
     for user in common.WarChatMembers.keys():
         blame_desc = { "is_going": False,
@@ -622,7 +621,7 @@ def blame_for_gw(m):
         # WarChatMembers user -> checked in preckeck as not-going? -> dont blame
         if int(user) in users_bailed:
             continue
-        elif int(user) in users_checked:
+        if int(user) in users_checked:
             blame_desc["is_going"] = True
         # WarChatMembers user -> in any statistics? -> dont blame
         # TODO add option to check for minimal scores
@@ -661,7 +660,7 @@ def blame_for_gw(m):
         text = "☠️ Рекомендуется кик:\n\n"
         for user in users_to_kick:
             user_o = bot.get_chat_member(common.warchat_id, user).wait()
-            print(user_o)
+            # print(user_o)
             user_string = User(user_o.user.id, user_o.user.first_name, user_o.user.username).GetString()
             text += ICON_MEMBER+" %s _(%d)_\n" % (user_string, common.WarChatMembers[str(user)]["blame_cnt"])
         bot.send_message(common.warchat_id, text, parse_mode="markdown")
