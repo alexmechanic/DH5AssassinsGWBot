@@ -304,12 +304,11 @@ class Battle():
         hlp.AWSCheckBackup(common.current_battle)
 
     def DoEndBattle(self):
-        now = datetime.datetime.now()
         # if more than 1 hour (max battle time) passed
-        if now.total_seconds() > self.time["start"].total_seconds() + 60*60:
+        if hlp.CanStopCurrentBattle():
             self.time["end"] = self.time["start"].replace(hour=self.time["start"].hour+1)
         else:
-            self.time["end"] = now
+            self.time["end"] = datetime.datetime.now()
         self.is_postponed = True
         self.is_rolling = False
         self.keyboard = None
